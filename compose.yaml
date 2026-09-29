@@ -5,9 +5,34 @@ services:
       - "127.0.0.1:${WINDLASS_PORT:-8080}:8080"
     environment:
       DATABASE_URL: jdbc:sqlite:/data/notifications.db
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:${N8N_PORT:-5678}/}
     volumes:
       - windlass-data:/data
     restart: unless-stopped
 
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:-2.41.3}
+    ports:
+      - "127.0.0.1:${N8N_PORT:-5678}:5678"
+    environment:
+      N8N_PORT: "5678"
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:${N8N_PORT:-5678}/}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:${N8N_PORT:-5678}/}
+      # The default editor uses HTTP on localhost. Set true when using HTTPS.
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE:-false}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      GENERIC_TIMEZONE: ${N8N_TIMEZONE:-Etc/UTC}
+      TZ: ${N8N_TIMEZONE:-Etc/UTC}
+    volumes:
+      - n8n-data:/home/node/.n8n
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5678/healthz/readiness').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
 volumes:
   windlass-data:
+  n8n-data:

@@ -63,15 +63,26 @@ Integration tests exercise the complete CRUD lifecycle, nested metadata, validat
 
 ## Docker image
 
-Run with Docker Compose and persistent SQLite storage:
+Run Windlass and the n8n workflow editor with persistent storage:
 
 ```sh
 docker compose up -d --build
 ```
 
+Open Windlass at http://localhost:8080 and click **Automations ↗** to open n8n
+in a new tab, or open http://localhost:5678 directly. On the first visit to n8n,
+create your owner account. Both services are bound to localhost by default.
+
+n8n workflows can use the HTTP Request node to call
+`http://windlass:8080/api/notifications`. See the
+[n8n setup and first workflow](docs/deployment.md#n8n-automations) for a working
+request and configuration options. n8n stores workflows, credentials, execution
+history, and its encryption key in the separate `n8n-data` volume.
+
 Compose mounts the named volume `windlass-data` at `/data`, where the app stores
 `notifications.db` and SQLite journal files. Data survives container recreation
-and `docker compose down`. `docker compose down --volumes` deletes this storage.
+and `docker compose down`. `docker compose down --volumes` deletes both services'
+storage, including n8n workflows and credentials.
 The volume starts with a separate database; it does not import an existing
 `notifications.db` from the project directory.
 
