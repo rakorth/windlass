@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#101819">
+  <title>Windlass · n8n backups</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/backups.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/automations" target="_blank" rel="noopener noreferrer" aria-label="Automations (opens n8n in a new tab)">Automations ↗</a></nav></header>
+  <main class="backup-page">
+    <div class="heading"><div><p class="eyebrow">AUTOMATIONS</p><h1>n8n backups</h1><p class="muted">Keep a copy of your automations and restore them when needed.</p></div><button id="backup-refresh" class="secondary">Refresh status</button></div>
+    <p id="backup-state" class="muted" role="status" aria-live="polite">Connecting to n8n backups…</p>
+    <p id="backup-message" role="status" aria-live="polite"></p>
+    <div class="backup-grid">
+      <section class="card" aria-labelledby="download-title">
+        <h2 id="download-title">Download a backup</h2>
+        <p>Includes your workflows, credentials, accounts, settings, execution history, and stored files.</p>
+        <p class="muted">n8n pauses while the backup is created, then restarts. Run this when workflows are idle.</p>
+        <button id="backup-download" disabled>Download backup</button>
+        <p class="muted">Keep the ZIP somewhere secure outside this machine. It includes the key that unlocks your saved credentials.</p>
+      </section>
+      <section class="card" aria-labelledby="restore-title">
+        <h2 id="restore-title">Restore a backup</h2>
+        <p>Choose a ZIP downloaded from Windlass using the same n8n version.</p>
+        <form id="restore-form">
+          <label for="restore-file">Backup ZIP <span id="backup-limit" class="muted">(up to 512 MiB)</span></label>
+          <input id="restore-file" type="file" accept=".zip,application/zip" required disabled>
+          <label class="backup-confirm"><input id="restore-confirm" type="checkbox" required disabled><span>I understand this replaces the current n8n workflows, credentials, accounts, and settings. Restored active workflows can run when n8n restarts.</span></label>
+          <button id="backup-restore" type="submit" class="danger" disabled>Restore backup</button>
+        </form>
+        <p class="muted">Windlass checks the backup before making changes and saves a recovery copy of your current data. If startup fails, it restores that copy.</p>
+      </section>
+    </div>
+    <section id="recovery-section" class="card backup-recovery" hidden aria-labelledby="recovery-title">
+      <div><h2 id="recovery-title">Before your last restore</h2><p class="muted">Download the recovery copy saved before the most recent restore attempt. A later restore replaces this copy.</p></div>
+      <button id="recovery-download" class="secondary" disabled>Download recovery backup</button>
+    </section>
+    <p class="muted">These backups cover n8n's stored data. Keep your Compose file and environment settings separately.</p>
+  </main>
+</body>
+</html>

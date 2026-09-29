@@ -69,7 +69,13 @@ Run Windlass and the n8n workflow editor with persistent storage:
 docker compose up -d --build
 ```
 
-Open Windlass at http://localhost:8080 and click **Automations ↗** to open n8n
+Inside the development container, use
+`docker compose -f compose.yaml -f .devcontainer/compose.ports.yaml up -d --build --wait`
+and open http://localhost:18080 for Windlass or http://localhost:15678 for n8n.
+These development ports avoid collisions with existing host services; see
+[dev container access](.devcontainer/README.md#web-app-access-from-the-host).
+
+Open Windlass at http://localhost:6080 and click **Automations ↗** to open n8n
 in a new tab, or open http://localhost:5678 directly. On the first visit to n8n,
 create your owner account. Both services are bound to localhost by default.
 
@@ -79,29 +85,36 @@ n8n workflows can use the HTTP Request node to call
 request and configuration options. n8n stores workflows, credentials, execution
 history, and its encryption key in the separate `n8n-data` volume.
 
+Click **n8n backups** to download a full backup or restore a Windlass backup ZIP.
+n8n pauses briefly for a consistent snapshot. Restores validate the upload and
+save a recovery copy before replacing data. See [backup and restore](docs/n8n-backups.md)
+for what is included, limits, and recovery behavior.
+
 Compose mounts the named volume `windlass-data` at `/data`, where the app stores
 `notifications.db` and SQLite journal files. Data survives container recreation
-and `docker compose down`. `docker compose down --volumes` deletes both services'
-storage, including n8n workflows and credentials.
+and `docker compose down`. `docker compose down --volumes` deletes all project
+volumes, including n8n workflows, credentials, and the saved recovery backup.
 The volume starts with a separate database; it does not import an existing
 `notifications.db` from the project directory.
 
-Open http://localhost:8080. If that port is occupied, use
-`WINDLASS_PORT=8081 docker compose up -d --build` and open http://localhost:8081.
+Open http://localhost:6080. If that port is occupied, use
+`WINDLASS_PORT=6081 docker compose up -d --build` and open http://localhost:6081.
+The app listens on port 8080 inside its container; `WINDLASS_PORT` controls the
+published browser port.
 
 Build the application image (including its integration tests):
 
 ```sh
 docker build -t windlass:local .
-docker run --name windlass-app --rm -p 127.0.0.1:8080:8080 \
+docker run --name windlass-app --rm -p 127.0.0.1:6080:8080 \
   -v windlass-data:/data windlass:local
 ```
 
-Open http://localhost:8080. The image runs as UID/GID `10001`, uses Java 25
+Open http://localhost:6080. The image runs as UID/GID `10001`, uses Java 25
 with the project's Java 24 compilation target, and stores SQLite data under
 `/data`. The named volume preserves notifications when the container is removed.
 If using a host bind mount instead, give UID `10001` write access to that directory.
-Stop any existing app on port 8080 first, or use `-p 127.0.0.1:8081:8080`.
+If host port 6080 is occupied, use `-p 127.0.0.1:6081:8080`.
 
 The [Docker image workflow](.github/workflows/docker.yml) builds on branch
 pushes, pull requests, `v*` tags, and manual runs. Builds on the repository's

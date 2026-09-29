@@ -18,6 +18,8 @@
 | Persistence | SQLite file; startup upgrades for older schemas; Docker named volume |
 | Agent integration | Reusable REST skill and endpoint documentation |
 | Container builds | Multi-stage Docker image and GitHub Actions build/publish workflow |
+| Automations | n8n runs alongside Windlass in Compose; header link opens its editor in a new tab |
+| n8n backup/restore | Full ZIP downloads, validated uploads, automatic recovery copy, rollback on failed startup |
 
 ## Browser UI
 
@@ -25,6 +27,18 @@ The interface uses a dark theme with mint accents, compact spacing, and full-wid
 content. The card grid adapts its column count to the browser width and becomes
 one column on small screens. Cards show source, received time, read state, title,
 description, links, metadata details, and actions.
+
+The **Automations ↗** header link opens the n8n workflow editor in a new tab.
+The editor address is configurable with `N8N_EDITOR_BASE_URL`. Compose runs n8n
+with its own persistent storage. Workflows can create and manage notifications
+through the existing REST API; integrations are configured in n8n. See
+[n8n setup](deployment.md#n8n-automations).
+
+The **n8n backups** header link opens `/backups.html`. Users can download a full
+n8n backup, upload a matching-version backup after confirming replacement, and
+download the recovery copy retained before the last restore attempt. Status and
+errors are shown while operations run. The feature requires the Compose backup
+manager; see [backup and restore](n8n-backups.md).
 
 The editor includes title, description, source, received time, metadata JSON, and
 external-links JSON. The timestamp input uses local browser time and is converted

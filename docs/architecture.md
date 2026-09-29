@@ -13,6 +13,18 @@ Spring Boot also serves static files from `src/main/resources/static` at the
 same origin. The browser calls `/api/notifications` with `fetch`. There is no
 frontend build step or separate frontend server.
 
+The header's Automations link opens `/automations` in a new tab.
+`AutomationController` redirects to the configured n8n editor URL. Compose runs
+n8n as a separate service with its own volume; n8n workflows call Windlass's REST
+API over the shared Compose network.
+
+The `/backups.html` page uses `N8nBackupController` and `N8nBackupClient` to reach
+the private Python backup manager. That manager mounts n8n's data, validates and
+creates ZIPs, and calls the authenticated Node supervisor to stop/start n8n.
+Windlass only mounts the shared control token read-only; no Docker socket is
+mounted. Recovery data and maintenance markers persist across restarts. See
+[n8n backups](n8n-backups.md) for the transaction and recovery behavior.
+
 The stack is Spring Boot 4.1.1, Spring MVC, Jakarta Validation, Spring JDBC,
 Jackson JSON serialization, SQLite JDBC, and vanilla HTML/CSS/JavaScript.
 The Maven Java compilation target is 24. Runtime Docker images use Java 25.
@@ -29,6 +41,12 @@ Paths below are relative to this document; links point to the implementation.
 | Response model | [Notification.java](../src/main/java/dev/rakorth/windlass/notification/Notification.java) |
 | Writable fields and validation annotations | [NotificationRequest.java](../src/main/java/dev/rakorth/windlass/notification/NotificationRequest.java) |
 | REST routes and success statuses | [NotificationController.java](../src/main/java/dev/rakorth/windlass/notification/NotificationController.java) |
+| Configurable n8n editor redirect | [AutomationController.java](../src/main/java/dev/rakorth/windlass/automation/AutomationController.java) |
+| Backup HTTP routes and request guards | [N8nBackupController.java](../src/main/java/dev/rakorth/windlass/automation/N8nBackupController.java) |
+| Authenticated backup-manager client | [N8nBackupClient.java](../src/main/java/dev/rakorth/windlass/automation/N8nBackupClient.java) |
+| Backup page and interactions | [backups.html](../src/main/resources/static/backups.html), [backups.js](../src/main/resources/static/backups.js) |
+| Full backups, validation, restore, and rollback | [manager.py](../docker/n8n-backup/manager.py) |
+| Scoped n8n process supervision | [process.mjs](../docker/n8n/process.mjs) |
 | SQL, defaults, ordering, link checks, seen operation | [NotificationService.java](../src/main/java/dev/rakorth/windlass/notification/NotificationService.java) |
 | Initial SQLite table | [schema.sql](../src/main/resources/schema.sql) |
 | Additive upgrades for existing databases | [NotificationSchemaMigration.java](../src/main/java/dev/rakorth/windlass/notification/NotificationSchemaMigration.java) |
@@ -38,7 +56,7 @@ Paths below are relative to this document; links point to the implementation.
 | Dark theme and compact responsive layout | [styles.css](../src/main/resources/static/styles.css) |
 | API and migration integration tests | [WindlassApplicationTests.java](../src/test/java/dev/rakorth/windlass/WindlassApplicationTests.java) |
 | Application container | [Dockerfile](../Dockerfile) |
-| SQLite volume and port mapping | [compose.yaml](../compose.yaml) |
+| Windlass/n8n services, volumes, and ports | [compose.yaml](../compose.yaml) |
 | GitHub image build/publish automation | [docker.yml](../.github/workflows/docker.yml) |
 | Agent REST workflow | [SKILL.md](../skills/windlass-rest/SKILL.md) |
 
@@ -62,11 +80,15 @@ node --check src/main/resources/static/app.js
 docker compose config --quiet
 ```
 
-The six current integration tests use an isolated in-memory SQLite database and
+The notification integration tests use an isolated in-memory SQLite database and
 cover CRUD, missing IDs, defaults, validation, nested metadata, external-link
 persistence and invalid URLs, legacy-schema migration, unread persistence across
-edits, repeated mark-as-seen calls, newest-first ordering, and static UI delivery.
+edits, repeated mark-as-seen calls, newest-first ordering, static UI delivery,
+and the configured n8n editor redirect.
 They do not exercise browser layout or click interactions in a real browser.
+Additional Java tests exercise the backup routes with a private mock manager.
+Python tests cover archive validation, restore round trips, rollback, and
+interrupted operations. Both suites run as part of their respective Docker builds.
 
 For container changes, `docker build -t windlass:local .` runs Maven `verify`
 inside the build stage. A runtime smoke check should verify the UI/API and a

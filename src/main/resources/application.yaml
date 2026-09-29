@@ -9,6 +9,17 @@ spring:
   sql:
     init:
       mode: always
+  servlet:
+    multipart:
+      max-file-size: 512MB
+      max-request-size: 513MB
+  mvc:
+    async:
+      request-timeout: 600000
 server:
   error:
     include-message: always
+windlass:
+  automations-url: ${N8N_EDITOR_BASE_URL:http://localhost:5678/}
+  n8n-backup-url: ${N8N_BACKUP_URL:}
+  n8n-backup-token-file: ${N8N_BACKUP_TOKEN_FILE:/n8n-control/token}

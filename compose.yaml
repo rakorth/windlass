@@ -2,16 +2,27 @@ services:
   windlass:
     build: .
     ports:
-      - "127.0.0.1:${WINDLASS_PORT:-8080}:8080"
+      - "127.0.0.1:${WINDLASS_PORT:-6080}:8080"
     environment:
       DATABASE_URL: jdbc:sqlite:/data/notifications.db
       N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:${N8N_PORT:-5678}/}
+      N8N_BACKUP_URL: http://n8n-backup:5680
+    group_add:
+      - "1000"
     volumes:
       - windlass-data:/data
+      - n8n-control:/n8n-control:ro
+    depends_on:
+      n8n-backup:
+        condition: service_healthy
     restart: unless-stopped
 
   n8n:
-    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION:-2.41.3}
+    build:
+      context: ./docker/n8n
+      args:
+        N8N_VERSION: ${N8N_VERSION:-2.41.3}
+        N8N_IMAGE_REPOSITORY: ${N8N_IMAGE_REPOSITORY:-ghcr.io/n8n-io/n8n}
     ports:
       - "127.0.0.1:${N8N_PORT:-5678}:5678"
     environment:
@@ -23,9 +34,15 @@ services:
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
       GENERIC_TIMEZONE: ${N8N_TIMEZONE:-Etc/UTC}
       TZ: ${N8N_TIMEZONE:-Etc/UTC}
+      N8N_GRACEFUL_SHUTDOWN_TIMEOUT: "60"
     volumes:
       - n8n-data:/home/node/.n8n
+      - n8n-control:/control:ro
+    depends_on:
+      n8n-backup:
+        condition: service_healthy
     restart: unless-stopped
+    stop_grace_period: 90s
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5678/healthz/readiness').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
@@ -33,6 +50,23 @@ services:
       retries: 12
       start_period: 30s
 
+  n8n-backup:
+    build: ./docker/n8n-backup
+    environment:
+      N8N_VERSION: ${N8N_VERSION:-2.41.3}
+    volumes:
+      - n8n-data:/n8n-data
+      - n8n-control:/control
+      - n8n-backups:/backups
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5680/healthz', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
 volumes:
   windlass-data:
   n8n-data:
+  n8n-control:
+  n8n-backups:

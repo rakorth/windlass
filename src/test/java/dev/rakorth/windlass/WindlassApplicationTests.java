@@ -12,7 +12,10 @@ import tools.jackson.databind.ObjectMapper;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite::memory:")
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:sqlite::memory:",
+        "N8N_EDITOR_BASE_URL=http://localhost:15678/"
+})
 @AutoConfigureMockMvc
 class WindlassApplicationTests {
     @Autowired MockMvc mvc;
@@ -132,6 +135,13 @@ class WindlassApplicationTests {
         mvc.perform(get(path)).andExpect(jsonPath("$.unread").value(false))
                 .andExpect(jsonPath("$.title").value("Edited"));
         mvc.perform(patch("/api/notifications/missing/seen")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void automationsOpensConfiguredEditor() throws Exception {
+        mvc.perform(get("/automations"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("http://localhost:15678/"));
     }
 
     @Test
