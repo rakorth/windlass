@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#101819">
+  <title>Windlass · Notifications</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">◈ Windlass</a><span>Notification workspace</span></header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">YOUR INBOX, ORGANIZED</p><h1>Notifications</h1><p class="muted">Keep updates from all your sources in one place.</p></div><button id="new">+ New notification</button></div>
+    <div class="toolbar"><label for="search">Search notifications</label><input id="search" type="search" placeholder="Search titles, descriptions, or sources…"><button id="refresh" class="secondary">Refresh</button></div>
+    <p id="status" role="status" aria-live="polite"></p>
+    <div class="list-heading"><h2>All notifications <span id="count">0</span> <span id="unread-count" class="unread-count"></span></h2><span class="muted">Most recent first</span></div>
+    <section id="notifications" aria-label="Notifications"></section>
+  </main>
+  <dialog id="editor">
+    <form id="form">
+      <div class="dialog-heading"><h2 id="editor-title">New notification</h2><button type="button" id="close" class="secondary" aria-label="Close editor">✕</button></div>
+      <label for="title">Title <span class="required">*</span></label><input id="title" name="title" required maxlength="200" placeholder="What happened?">
+      <label for="description">Description</label><textarea id="description" name="description" rows="3" maxlength="10000" placeholder="Add a little context"></textarea>
+      <label for="source">Notification source <span class="required">*</span></label><input id="source" name="source" required maxlength="200" placeholder="e.g. GitHub, monitoring, email">
+      <label for="received">Received on</label><input id="received" name="received" type="datetime-local" step="0.001"><small>Local time. Leave blank to use the current time for new notifications.</small>
+      <label for="metadata">Metadata (JSON object)</label><textarea id="metadata" name="metadata" rows="4" spellcheck="false">{}</textarea>
+      <label for="external-links">External links (JSON object)</label><textarea id="external-links" rows="3" spellcheck="false" aria-describedby="links-help">{}</textarea>
+      <small id="links-help">Map link labels to full HTTP or HTTPS URLs, e.g. {"GitHub": "https://github.com"}. Links open in a new tab.</small>
+      <p id="form-error" role="alert"></p>
+      <div class="actions"><button type="button" id="cancel" class="secondary">Cancel</button><button id="save" type="submit">Save notification</button></div>
+    </form>
+  </dialog>
+  <template id="card-template"><article class="card"><div class="card-top"><span class="source"></span><time></time></div><span class="read-state"></span><h3></h3><p class="description"></p><nav class="external-links" aria-label="External services"></nav><details><summary>Details &amp; metadata</summary><p class="identifier"></p><pre></pre></details><div class="actions"><button class="mark-seen secondary">Mark as seen</button><button class="edit secondary">Edit</button><button class="delete danger">Delete</button></div></article></template>
+</body>
+</html>

@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: windlass
+  datasource:
+    url: ${DATABASE_URL:jdbc:sqlite:./notifications.db}
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1
+  sql:
+    init:
+      mode: always
+server:
+  error:
+    include-message: always

@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS notifications (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    notification_source TEXT NOT NULL,
+    received_on TEXT NOT NULL,
+    metadata_map TEXT NOT NULL,
+    external_links TEXT NOT NULL DEFAULT '{}',
+    unread INTEGER NOT NULL DEFAULT 1 CHECK (unread IN (0, 1))
+);

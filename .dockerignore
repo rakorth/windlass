@@ -1,0 +1,9 @@
+# Allow only the files required to compile the application.
+**
+!Dockerfile
+!.mvn
+!.mvn/**
+!mvnw
+!pom.xml
+!src
+!src/**
