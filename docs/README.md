@@ -13,6 +13,7 @@ These documents describe implemented behavior, not a roadmap.
 | Understand fields, defaults, validation, and persistence | [Data model](data-model.md) |
 | Integrate through HTTP or generate API clients | [REST API](api.md) |
 | Run locally, use Docker, preserve data, or understand CI | [Deployment](deployment.md) |
+| Hand out a Docker deployment using the published image | [Portable deployment](deployment.md#portable-deployment-with-the-published-image) |
 | Download or restore a full n8n backup | [n8n backups](n8n-backups.md) |
 | Find implementation files or decide what to test | [Architecture](architecture.md) |
 | Use an agent skill to operate the service | [Windlass REST skill](../skills/windlass-rest/SKILL.md) |

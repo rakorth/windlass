@@ -44,6 +44,43 @@ mapping; setting `WINDLASS_PORT` alone intentionally keeps the internal port 808
 There is no built-in authentication. The default Compose port is bound to host
 loopback (`127.0.0.1`).
 
+## Portable deployment with the published image
+
+[compose.deploy.yaml](../compose.deploy.yaml) is a standalone deployment file
+using `ghcr.io/rakorth/windlass:latest` (Linux AMD64), with the same n8n supervisor,
+backup manager, and persistent volumes as the development stack. It does not
+build Windlass. Run it by itself:
+
+```sh
+docker compose -f compose.deploy.yaml pull windlass
+docker compose -f compose.deploy.yaml up -d --build --wait
+```
+
+To hand the setup to someone without giving them a source checkout:
+
+```sh
+sh scripts/package-deployment.sh
+```
+
+This creates `target/windlass-deployment.tar.gz` containing a `windlass-deployment`
+folder with the deployment file renamed to `compose.yaml`, optional `.env.example`,
+operator instructions, and only the files needed to build the n8n helpers.
+Local `.env`, databases, credentials, Git metadata, and application source are
+excluded. The recipient needs Docker with Compose v2 and internet access.
+See the [bundled guide](../deploy/README.md) for the startup commands.
+
+`WINDLASS_IMAGE` overrides the full published image reference; use a published
+tag or digest to pin a version. `BIND_ADDRESS` defaults to `127.0.0.1` for both
+browser ports. The [example environment](../deploy/.env.example) documents the
+remaining overrides. Windlass has no authentication, including for its backup
+endpoints; use the documented SSH tunnel for remote access or put authentication
+in front of an externally accessible deployment.
+
+The deployment uses project name `windlass-deployment`, independent of the
+folder name. Keep that name (or an explicit `COMPOSE_PROJECT_NAME` / `-p` override)
+stable to reuse its volumes. These volumes are separate from the development
+stack's data; no existing database is copied automatically.
+
 ## Docker Compose
 
 ```sh

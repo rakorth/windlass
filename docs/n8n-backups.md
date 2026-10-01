@@ -114,6 +114,8 @@ unless `N8N_BACKUP_URL` and `N8N_BACKUP_TOKEN_FILE` are configured.
 
 ## Verification
 
+These contributor checks run from a full source checkout, not the deployment bundle.
+
 ```sh
 python3 -m unittest discover -s docker/n8n-backup -v
 node --check docker/n8n/process.mjs

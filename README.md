@@ -66,6 +66,25 @@ java -jar target/windlass-0.0.1-SNAPSHOT.jar
 
 Integration tests exercise the complete CRUD lifecycle, nested metadata, validation, missing resources, defaults, ordering, and static UI delivery using an isolated in-memory SQLite database.
 
+## Deploy on another machine
+
+To use the published `ghcr.io/rakorth/windlass:latest` image with n8n and backups,
+create a small bundle to hand out:
+
+```sh
+sh scripts/package-deployment.sh
+```
+
+Share `target/windlass-deployment.tar.gz`. The recipient extracts it and runs
+`docker compose pull windlass` followed by `docker compose up -d --build --wait`
+inside the extracted directory. Docker pulls Windlass and builds only the
+included n8n helpers; no Java or application source is required. See the
+[bundled instructions](deploy/README.md) for configuration, remote access, and updates.
+
+To run the same deployment from this checkout, use
+`docker compose -f compose.deploy.yaml up -d --build --wait`.
+The existing `compose.yaml` below remains the source-build development setup.
+
 ## Docker image
 
 Run Windlass and the n8n workflow editor with persistent storage:
