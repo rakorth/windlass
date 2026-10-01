@@ -28,14 +28,14 @@ All paths below are relative to the base URL. Send `Content-Type: application/js
 
 | Method | Path | Success |
 | --- | --- | --- |
-| GET | `/api/notifications` | 200; JSON array, newest `received_on` first |
+| GET | `/api/notifications` | 200; object with `items`, `page`, `size`, `totalElements`, `totalPages`; newest `received_on` first |
 | GET | `/api/notifications/{id}` | 200; notification object |
 | POST | `/api/notifications` | 201; created object and `Location` header |
 | PUT | `/api/notifications/{id}` | 200; updated object |
 | PATCH | `/api/notifications/{id}/seen` | 200; object with `unread: false`; no request body |
 | DELETE | `/api/notifications/{id}` | 204; no response body |
 
-Use actual IDs returned by the service. The list endpoint has no pagination, search, source, or unread query parameters; filter its array locally. GET requests do not mark notifications as seen. There is no endpoint to mark a seen notification unread, and no bulk endpoint.
+Use actual IDs returned by the service. Use zero-based `page` (default 0), `size` (1–100, default 20), and optional `unread=true` or `unread=false`. Read `items` and traverse pages up to `totalPages` for complete results. Text/source filtering is local. GET requests do not mark notifications as seen. There is no endpoint to mark a seen notification unread, and no bulk endpoint.
 
 ## Notification fields
 
@@ -87,12 +87,12 @@ Do not interpolate notification text directly into shell commands. Save the retu
 
 ## Find and inspect
 
-Fetch the list and filter by the user's criteria. If `jq` is available, list unread notifications with:
+Fetch pages and filter by the user's criteria. If `jq` is available, inspect the first unread page with:
 
 ```sh
 curl --fail-with-body --silent --show-error --max-time 15 \
-  "$WINDLASS_BASE_URL/api/notifications" > notifications.json &&
-jq '[.[] | select(.unread == true)]' notifications.json
+  "$WINDLASS_BASE_URL/api/notifications?unread=true&page=0&size=100" > notifications.json &&
+jq '.items' notifications.json
 ```
 
 Use a JSON parser rather than text matching to select IDs. If multiple records match an update/delete request and the intended target cannot be inferred, clarify the target before mutating. Reading or summarizing notifications alone does not imply marking them seen.

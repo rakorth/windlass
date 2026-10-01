@@ -2,6 +2,10 @@ const $ = (id) => document.getElementById(id);
 let notifications = [];
 let editingId = null;
 let loading = false;
+let page = 0;
+let totalElements = 0;
+let totalPages = 0;
+const pageSize = 20;
 
 async function api(path = '', options = {}) {
   const response = await fetch(`/api/notifications${path}`, {
@@ -17,13 +21,16 @@ async function api(path = '', options = {}) {
 function render() {
   const query = $('search').value.toLowerCase();
   const visible = notifications.filter(n => [n.title, n.description, n.notification_source].some(v => v.toLowerCase().includes(query)));
-  $('count').textContent = visible.length;
-  $('unread-count').textContent = `${notifications.filter(n => n.unread).length} unread`;
+  $('count').textContent = totalElements;
+  $('unread-count').textContent = `${notifications.filter(n => n.unread).length} unread on this page`;
+  $('page-info').textContent = totalPages ? `Page ${page + 1} of ${totalPages}` : 'No pages';
+  $('previous').disabled = loading || page === 0;
+  $('next').disabled = loading || page + 1 >= totalPages;
   $('notifications').replaceChildren();
   if (!visible.length) {
     const empty = document.createElement('div');
     empty.className = 'empty';
-    empty.textContent = query ? 'No notifications match your search.' : 'No notifications yet. Create your first notification to get started.';
+    empty.textContent = query ? 'No notifications match your search.' : 'No notifications match this filter.';
     $('notifications').append(empty);
   }
   for (const notification of visible) {
@@ -35,9 +42,8 @@ function render() {
     seenButton.addEventListener('click', async () => {
       seenButton.disabled = true;
       try {
-        const updated = await api(`/${notification.id}/seen`, { method: 'PATCH' });
-        notifications = notifications.map(n => n.id === updated.id ? updated : n);
-        render();
+        await api(`/${notification.id}/seen`, { method: 'PATCH' });
+        await load();
         $('status').textContent = 'Notification marked as seen.';
       } catch (error) {
         $('status').textContent = error.message;
@@ -70,8 +76,7 @@ function render() {
       event.target.disabled = true;
       try {
         await api(`/${notification.id}`, { method: 'DELETE' });
-        notifications = notifications.filter(n => n.id !== notification.id);
-        render();
+        await load();
         $('status').textContent = 'Notification deleted.';
       } catch (error) { $('status').textContent = error.message; event.target.disabled = false; }
     });
@@ -83,13 +88,30 @@ async function load() {
   if (loading) return;
   loading = true;
   $('refresh').disabled = true;
+  $('unread-only').disabled = true;
+  $('previous').disabled = true;
+  $('next').disabled = true;
   $('status').textContent = 'Loading notifications…';
   try {
-    notifications = await api();
+    const suffix = $('unread-only').checked ? '&unread=true' : '';
+    let result = await api(`?page=${page}&size=${pageSize}${suffix}`);
+    if (page > 0 && page >= result.totalPages) {
+      page = Math.max(0, result.totalPages - 1);
+      result = await api(`?page=${page}&size=${pageSize}${suffix}`);
+    }
+    notifications = result.items;
+    totalElements = result.totalElements;
+    totalPages = result.totalPages;
     render();
     $('status').textContent = '';
   } catch (error) { $('status').textContent = `Could not load notifications. ${error.message}`; }
-  finally { loading = false; $('refresh').disabled = false; }
+  finally {
+    loading = false;
+    $('refresh').disabled = false;
+    $('unread-only').disabled = false;
+    $('previous').disabled = page === 0;
+    $('next').disabled = page + 1 >= totalPages;
+  }
 }
 
 function openEditor(notification = null) {
@@ -116,6 +138,9 @@ $('close').addEventListener('click', () => $('editor').close());
 $('cancel').addEventListener('click', () => $('editor').close());
 $('refresh').addEventListener('click', load);
 $('search').addEventListener('input', render);
+$('unread-only').addEventListener('change', () => { page = 0; load(); });
+$('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; load(); } });
+$('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; load(); } });
 $('form').addEventListener('submit', async (event) => {
   event.preventDefault();
   $('form-error').textContent = '';
@@ -143,9 +168,9 @@ $('form').addEventListener('submit', async (event) => {
     $('save').disabled = true;
     $('cancel').disabled = true;
     $('close').disabled = true;
-    const saved = await api(editingId ? `/${editingId}` : '', { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(body) });
-    notifications = [saved, ...notifications.filter(n => n.id !== saved.id)].sort((a, b) => new Date(b.received_on) - new Date(a.received_on));
-    render();
+    await api(editingId ? `/${editingId}` : '', { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    page = 0;
+    await load();
     $('editor').close();
     $('status').textContent = 'Notification saved.';
   } catch (error) { $('form-error').textContent = error.message; }

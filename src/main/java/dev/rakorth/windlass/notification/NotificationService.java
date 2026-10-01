@@ -9,7 +9,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.type.TypeReference;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,8 +30,21 @@ public class NotificationService {
                 json.readValue(rs.getString("external_links"), new TypeReference<Map<String, String>>() {}), rs.getBoolean("unread"));
     }
 
-    public List<Notification> list() {
-        return jdbc.query("SELECT * FROM notifications ORDER BY julianday(received_on) DESC, id", mapper);
+    public NotificationPage list(int page, int size, Boolean unread) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "page must be nonnegative and size must be between 1 and 100");
+        }
+        String where = unread == null ? "" : " WHERE unread = ?";
+        var parameters = new ArrayList<Object>();
+        if (unread != null) parameters.add(unread ? 1 : 0);
+        long total = jdbc.queryForObject("SELECT COUNT(*) FROM notifications" + where,
+                Long.class, parameters.toArray());
+        parameters.add(size);
+        parameters.add((long) page * size);
+        var items = jdbc.query("SELECT * FROM notifications" + where
+                + " ORDER BY julianday(received_on) DESC, id LIMIT ? OFFSET ?", mapper, parameters.toArray());
+        return new NotificationPage(items, page, size, total, (total + size - 1) / size);
     }
 
     public Notification get(String id) {

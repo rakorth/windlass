@@ -5,7 +5,7 @@
 | Feature | Behavior |
 | --- | --- |
 | Create notification | UI dialog or POST; generated UUID and unread state |
-| List notifications | Cards in UI; full JSON array through API; newest received time first |
+| List notifications | Cards in UI; paginated JSON object through API; newest received time first |
 | Inspect notification | Card content, expandable ID/metadata, or GET by ID |
 | Edit notification | UI dialog or PUT; preserves ID and unread state |
 | Delete notification | UI confirmation or DELETE; permanent removal |
@@ -50,12 +50,12 @@ are rendered. Labels and notification content are inserted as text, not HTML.
 Metadata and external links must be JSON objects; invalid input produces an error
 in the dialog. Failed requests show an error without claiming success.
 
-The notification count next to “All notifications” counts the current search
-results. The unread count covers all loaded notifications, even those excluded
-by the current search. Search does not include metadata, URLs, IDs, or dates.
+The notification count shows the total matching the unread filter. Previous/Next
+buttons navigate pages of 20 items. The unread-only toggle resets to the first
+page. Search and the unread count cover only the current page. Search does not include metadata, URLs, IDs, or dates.
 
 Successful create, edit, delete, and mark-as-seen operations update the browser's
-local collection. Changes from other clients require Refresh or a page reload;
+current page by fetching it again. Changes from other clients require Refresh or a page reload;
 there is no polling, WebSocket, or server-sent event connection.
 
 ## Unread lifecycle
@@ -77,8 +77,8 @@ button. The API also has no mark-unread operation.
 ## Not implemented
 
 Do not assume support for automatic email/GitHub/webhook ingestion, outbound
-notifications, authentication, authorization, user accounts, pagination,
-server-side search/filtering, bulk actions, attachments, scheduled delivery,
+notifications, authentication, authorization, user accounts,
+server-side text/source search, bulk actions, attachments, scheduled delivery,
 mark-unread, undo-delete, real-time updates, deduplication, idempotency keys,
 optimistic locking, or an OpenAPI/Swagger endpoint. The source string and external
 links describe other services; Windlass does not connect to them automatically.

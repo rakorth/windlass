@@ -36,12 +36,17 @@ Existing SQLite databases are upgraded automatically; existing notifications rec
 
 | Method | Route | Result |
 | --- | --- | --- |
-| GET | `/api/notifications` | List, newest received first |
+| GET | `/api/notifications` | Paginated list, newest received first; optional `unread` filter |
 | GET | `/api/notifications/{id}` | Get one |
 | POST | `/api/notifications` | Create; returns 201 and Location header |
 | PUT | `/api/notifications/{id}` | Replace editable fields; returns 200 |
 | PATCH | `/api/notifications/{id}/seen` | Mark as seen; returns updated notification (safe to repeat) |
 | DELETE | `/api/notifications/{id}` | Delete; returns 204 |
+
+List parameters: `page` defaults to 0, `size` defaults to 20 (maximum 100), and
+optional `unread=true`/`false` filters by seen state. The response contains
+`items`, `page`, `size`, `totalElements`, and `totalPages`; clients previously
+expecting an array must read `items`. UI search applies to the current page.
 
 Invalid requests return 400; missing IDs return 404. PUT requires title and source; omitted description/metadata/external links reset to their defaults.
 

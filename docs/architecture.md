@@ -67,7 +67,7 @@ Paths below are relative to this document; links point to the implementation.
 - Maps are serialized to JSON text and deserialized on reads.
 - Content updates exclude the unread column; marking seen changes only that column.
 - GET returns persisted values. POST generates a UUID and uses the database unread default.
-- The UI keeps one in-memory collection; search filters it without a server request.
+- The UI keeps one page in memory; search filters that page without a server request. Pagination and unread filtering use server requests.
 - The form sends the full editable payload. New fields may require changes across model, request, service SQL, schema, migration, form, and rendering.
 - A field added only to `CREATE TABLE IF NOT EXISTS` will not upgrade an existing database; add an appropriate migration too.
 

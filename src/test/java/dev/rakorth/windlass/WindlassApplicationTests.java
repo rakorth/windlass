@@ -36,7 +36,7 @@ class WindlassApplicationTests {
         String id = json.readTree(result.getResponse().getContentAsString()).get("id").asString();
         String path = "/api/notifications/" + id;
         mvc.perform(get(path)).andExpect(status().isOk()).andExpect(jsonPath("$.title").value("Build complete"));
-        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$.length()").value(1));
+        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$.items.length()").value(1));
         mvc.perform(put(path).contentType("application/json").content("""
                 {"title":"Updated","notification_source":"Email","metadata_map":{"priority":"high"}}
                 """))
@@ -50,7 +50,7 @@ class WindlassApplicationTests {
         mvc.perform(put(path).contentType("application/json").content("""
                 {"title":"Missing","notification_source":"CI"}
                 """ )).andExpect(status().isNotFound());
-        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$.items.length()").value(0));
     }
 
     @Test
@@ -80,7 +80,7 @@ class WindlassApplicationTests {
         String id = json.readTree(result.getResponse().getContentAsString()).get("id").asString();
         String path = "/api/notifications/" + id;
         mvc.perform(get(path)).andExpect(jsonPath("$.external_links.Issue").value("https://github.com/example/issues/1"));
-        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$[0].external_links.Issue").exists());
+        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$.items[0].external_links.Issue").exists());
         mvc.perform(put(path).contentType("application/json").content(body.replace("https://github.com/example/issues/1", "http://localhost:9000/ticket")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.external_links.Issue").value("http://localhost:9000/ticket"));
         for (String url : new String[]{"javascript:alert(1)", "data:text/html,hello", "/relative", "https://", "not a url"}) {
@@ -129,12 +129,51 @@ class WindlassApplicationTests {
                     .andExpect(jsonPath("$.title").value("New notification"));
         }
         mvc.perform(get(path)).andExpect(jsonPath("$.unread").value(false));
-        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$[0].unread").value(false));
+        mvc.perform(get("/api/notifications")).andExpect(jsonPath("$.items[0].unread").value(false));
         mvc.perform(put(path).contentType("application/json").content(body.replace("New notification", "Edited")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.unread").value(false));
         mvc.perform(get(path)).andExpect(jsonPath("$.unread").value(false))
                 .andExpect(jsonPath("$.title").value("Edited"));
         mvc.perform(patch("/api/notifications/missing/seen")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void paginationAndUnreadFiltering() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            jdbc.update("INSERT INTO notifications (id, title, description, notification_source, received_on, metadata_map, external_links, unread) VALUES (?, ?, '', 'CI', ?, '{}', '{}', ?)",
+                    "id-" + i, "Item " + i, "2026-01-01T00:00:00Z", i % 2);
+        }
+        mvc.perform(get("/api/notifications"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20)).andExpect(jsonPath("$.totalElements").value(5));
+        mvc.perform(get("/api/notifications?page=1&size=2"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.items[0].id").value("id-2"))
+                .andExpect(jsonPath("$.items[1].id").value("id-3"))
+                .andExpect(jsonPath("$.totalPages").value(3));
+        mvc.perform(get("/api/notifications?page=2&size=2"))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("id-4"));
+        mvc.perform(get("/api/notifications?unread=true&size=1&page=1"))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("id-3"))
+                .andExpect(jsonPath("$.items[0].unread").value(true))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(2));
+        mvc.perform(get("/api/notifications?unread=false"))
+                .andExpect(jsonPath("$.items.length()").value(3))
+                .andExpect(jsonPath("$.items[0].unread").value(false))
+                .andExpect(jsonPath("$.totalElements").value(3));
+        mvc.perform(get("/api/notifications?page=2147483647&size=100"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty());
+        for (String query : new String[]{"page=-1", "size=0", "size=101", "page=abc", "unread=invalid"}) {
+            mvc.perform(get("/api/notifications?" + query)).andExpect(status().isBadRequest());
+        }
+        jdbc.update("DELETE FROM notifications");
+        mvc.perform(get("/api/notifications?unread=true"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
     }
 
     @Test
@@ -152,7 +191,7 @@ class WindlassApplicationTests {
                     .andExpect(status().isCreated());
         }
         mvc.perform(get("/api/notifications"))
-                .andExpect(jsonPath("$[0].received_on").value("2026-01-01T00:00:00Z"));
+                .andExpect(jsonPath("$.items[0].received_on").value("2026-01-01T00:00:00Z"));
         mvc.perform(get("/index.html")).andExpect(status().isOk());
         mvc.perform(get("/app.js")).andExpect(status().isOk());
     }
