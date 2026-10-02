@@ -5,6 +5,7 @@ services:
       - "127.0.0.1:${WINDLASS_PORT:-6080}:8080"
     environment:
       DATABASE_URL: jdbc:sqlite:/data/notifications.db
+      WINDLASS_MCP_ENABLED: ${WINDLASS_MCP_ENABLED:-true}
       N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:${N8N_PORT:-5678}/}
       N8N_BACKUP_URL: http://n8n-backup:5680
     group_add:

@@ -25,6 +25,14 @@ Create the n8n owner account on the first visit. If Windlass is still starting,
 wait a few seconds and refresh. Docker restarts the services after a machine
 reboot once Docker itself starts.
 
+MCP clients supporting Streamable HTTP can connect to
+`http://localhost:6080/mcp` for notification list/get/create/update/mark-seen/delete
+tools. They share the UI and REST API's notification database. Set
+`WINDLASS_MCP_ENABLED=false` in `.env` and recreate Windlass to disable MCP.
+The endpoint has no authentication; keep the default localhost bindings or
+protect access with an authentication boundary. Updates replace editable content
+and deletion is permanent. n8n backup operations are not exposed through MCP.
+
 Optional settings are in `.env.example`. Copy it to `.env` and edit the ports,
 timezone, or image reference before starting. For example, set
 `WINDLASS_PORT=6081` if port 6080 is already in use. A specific published tag or

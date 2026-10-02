@@ -26,6 +26,7 @@ No separate database server or frontend package manager is needed.
 | --- | --- | --- |
 | `DATABASE_URL` | `jdbc:sqlite:./notifications.db` | Application datasource; Docker overrides to `jdbc:sqlite:/data/notifications.db` |
 | `SERVER_PORT` | `8080` | Spring Boot HTTP listener; no explicit port currently in application YAML |
+| `WINDLASS_MCP_ENABLED` | `true` | Enable notification MCP tools at `/mcp`; see [MCP server](mcp.md) |
 | `WINDLASS_PORT` | `6080` | Compose host-side port only; does not change the container's listener |
 | `N8N_PORT` | `5678` | Compose host-side n8n port; the n8n container always listens on 5678 |
 | `N8N_EDITOR_BASE_URL` | `http://localhost:5678/` | Browser URL for the Automations link and n8n editor; Compose derives the default from `N8N_PORT` |

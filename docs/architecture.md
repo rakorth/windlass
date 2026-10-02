@@ -13,6 +13,11 @@ Spring Boot also serves static files from `src/main/resources/static` at the
 same origin. The browser calls `/api/notifications` with `fetch`. There is no
 frontend build step or separate frontend server.
 
+MCP clients connect to `/mcp` using Spring AI 2.0.1's WebMVC Streamable HTTP
+transport. `NotificationTools` validates writable requests and calls the same
+`NotificationService` directly. Tools use synchronous execution and share REST
+persistence and normalization. See [MCP server](mcp.md) for the interface.
+
 The header's Automations link opens `/automations` in a new tab.
 `AutomationController` redirects to the configured n8n editor URL. Compose runs
 n8n as a separate service with its own volume; n8n workflows call Windlass's REST
@@ -41,6 +46,7 @@ Paths below are relative to this document; links point to the implementation.
 | Response model | [Notification.java](../src/main/java/dev/rakorth/windlass/notification/Notification.java) |
 | Writable fields and validation annotations | [NotificationRequest.java](../src/main/java/dev/rakorth/windlass/notification/NotificationRequest.java) |
 | REST routes and success statuses | [NotificationController.java](../src/main/java/dev/rakorth/windlass/notification/NotificationController.java) |
+| MCP notification tools and validation | [NotificationTools.java](../src/main/java/dev/rakorth/windlass/mcp/NotificationTools.java) |
 | Configurable n8n editor redirect | [AutomationController.java](../src/main/java/dev/rakorth/windlass/automation/AutomationController.java) |
 | Backup HTTP routes and request guards | [N8nBackupController.java](../src/main/java/dev/rakorth/windlass/automation/N8nBackupController.java) |
 | Authenticated backup-manager client | [N8nBackupClient.java](../src/main/java/dev/rakorth/windlass/automation/N8nBackupClient.java) |
@@ -87,6 +93,9 @@ edits, repeated mark-as-seen calls, newest-first ordering, static UI delivery,
 and the configured n8n editor redirect.
 They do not exercise browser layout or click interactions in a real browser.
 Additional Java tests exercise the backup routes with a private mock manager.
+MCP tests exercise the real Streamable HTTP endpoint with the Java MCP client,
+including discovery, schemas, CRUD, validation, pagination, shared REST data,
+and disabling MCP while keeping REST available.
 Python tests cover archive validation, restore round trips, rollback, and
 interrupted operations. Both suites run as part of their respective Docker builds.
 

@@ -12,6 +12,7 @@ These documents describe implemented behavior, not a roadmap.
 | Understand available features and UI behavior | [Features](features.md) |
 | Understand fields, defaults, validation, and persistence | [Data model](data-model.md) |
 | Integrate through HTTP or generate API clients | [REST API](api.md) |
+| Connect an MCP client to notification tools | [MCP server](mcp.md) |
 | Run locally, use Docker, preserve data, or understand CI | [Deployment](deployment.md) |
 | Hand out a Docker deployment using the published image | [Portable deployment](deployment.md#portable-deployment-with-the-published-image) |
 | Download or restore a full n8n backup | [n8n backups](n8n-backups.md) |
@@ -21,6 +22,7 @@ These documents describe implemented behavior, not a roadmap.
 ## Essential facts for agents
 
 - Default UI URL: `http://localhost:6080/` in Docker Compose, `http://localhost:8080/` for standalone runs. API prefix: `/api/notifications`.
+- MCP URL: `/mcp` on the same server, using Streamable HTTP. Notification CRUD tools share REST persistence; disable them with `WINDLASS_MCP_ENABLED=false`.
 - Default n8n editor URL: `http://localhost:5678/`. In Compose, n8n calls the Windlass API at `http://windlass:8080/api/notifications`.
 - n8n backup UI: `/backups.html`. Backups pause n8n; restores replace its data after validation and an automatic recovery snapshot.
 - Use the deployment's actual base URL; `localhost` refers to the caller's machine/container.
