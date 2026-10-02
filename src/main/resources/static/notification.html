@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Windlass · Notification details</title>
+  <link rel="icon" type="image/png" href="/favicon-32.png?v=3">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/notification.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">◈ Windlass</a><nav aria-label="Workspace"><a class="automations-link" href="/">All notifications</a></nav></header>
+  <main class="notification-detail-page">
+    <div class="heading"><div><p class="eyebrow">NOTIFICATION DETAILS</p><h1>View a notification</h1><p class="muted">Find a notification by its ID, or open one from your inbox.</p></div></div>
+    <form id="lookup">
+      <label for="notification-id">Notification ID</label>
+      <div class="toolbar"><input id="notification-id" name="id" required placeholder="Enter notification ID" autocomplete="off"><button id="view" type="submit">View notification</button></div>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+    <article id="notification-detail" class="card" aria-labelledby="notification-title" hidden>
+      <div class="card-top"><span id="read-state" class="read-state"></span><button id="refresh" class="secondary" type="button">Refresh</button></div>
+      <h2 id="notification-title"></h2>
+      <dl class="notification-facts">
+        <div><dt>ID</dt><dd id="identifier"></dd></div>
+        <div><dt>Source</dt><dd id="source"></dd></div>
+        <div><dt>Received</dt><dd><time id="received"></time></dd></div>
+      </dl>
+      <h3>Description</h3><p id="description" class="description"></p>
+      <h3>External links</h3><nav id="external-links" class="external-links" aria-label="External services"></nav><p id="no-links" class="muted">No external links.</p>
+      <h3>Metadata</h3><pre id="metadata"></pre>
+    </article>
+  </main>
+</body>
+</html>

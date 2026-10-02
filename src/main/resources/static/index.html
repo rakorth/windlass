@@ -16,7 +16,7 @@
   <main>
     <div class="heading"><div><p class="eyebrow">YOUR INBOX, ORGANIZED</p><h1>Notifications</h1><p class="muted">Keep updates from all your sources in one place.</p></div><button id="new">+ New notification</button></div>
     <div class="toolbar"><label for="search">Search this page</label><input id="search" type="search" placeholder="Search titles, descriptions, or sources…"><button id="refresh" class="secondary">Refresh</button></div>
-    <label class="unread-filter"><input id="unread-only" type="checkbox"> Unread only</label>
+    <div class="inbox-options"><label class="unread-filter"><input id="unread-only" type="checkbox"> Unread only</label><a class="automations-link" href="/notification.html">Find notification by ID</a></div>
     <p id="status" role="status" aria-live="polite"></p>
     <div class="list-heading"><h2>Notifications <span id="count">0</span> <span id="unread-count" class="unread-count"></span></h2><span class="muted">Most recent first</span></div>
     <div class="notification-table-scroll" role="region" aria-label="Notifications table" tabindex="0">
@@ -41,6 +41,6 @@
       <div class="actions"><button type="button" id="cancel" class="secondary">Cancel</button><button id="save" type="submit">Save notification</button></div>
     </form>
   </dialog>
-  <template id="row-template"><tr class="notification-row"><td><span class="read-state"></span></td><th scope="row" class="notification-content"><h3></h3><p class="description"></p><nav class="external-links" aria-label="External services"></nav><details><summary>Details &amp; metadata</summary><p class="identifier"></p><pre></pre></details></th><td><span class="source"></span></td><td><time></time></td><td><div class="actions"><button class="mark-seen secondary">Mark as seen</button><button class="edit secondary">Edit</button><button class="delete danger">Delete</button></div></td></tr></template>
+  <template id="row-template"><tr class="notification-row"><td><span class="read-state"></span></td><th scope="row" class="notification-content"><h3></h3><p class="description"></p><a class="view-details" href="/notification.html">View details →</a></th><td><span class="source"></span></td><td><time></time></td><td><div class="actions"><button class="mark-seen secondary">Mark as seen</button><button class="edit secondary">Edit</button><button class="delete danger">Delete</button></div></td></tr></template>
 </body>
 </html>

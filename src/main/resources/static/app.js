@@ -54,25 +54,20 @@ function render() {
       }
     });
     row.querySelector('.source').textContent = notification.notification_source;
-    row.querySelector('h3').textContent = notification.title;
-    row.querySelector('.description').textContent = notification.description;
+    const detailLink = document.createElement('a');
+    detailLink.textContent = notification.title;
+    detailLink.href = `/notification.html?id=${encodeURIComponent(notification.id)}`;
+    row.querySelector('h3').append(detailLink);
+    const description = Array.from((notification.description ?? '').replace(/\s+/g, ' ').trim());
+    row.querySelector('.description').textContent = description.length > 160
+      ? `${description.slice(0, 160).join('').trimEnd()}…`
+      : description.join('');
+    const viewDetails = row.querySelector('.view-details');
+    viewDetails.href = detailLink.href;
+    viewDetails.setAttribute('aria-label', `View details for ${notification.title}`);
     const time = row.querySelector('time');
     time.dateTime = notification.received_on;
     time.textContent = new Date(notification.received_on).toLocaleString();
-    row.querySelector('.identifier').textContent = `ID: ${notification.id}`;
-    row.querySelector('pre').textContent = JSON.stringify(notification.metadata_map, null, 2);
-    for (const [label, url] of Object.entries(notification.external_links ?? {})) {
-      try {
-        if (typeof url !== 'string' || !['http:', 'https:'].includes(new URL(url).protocol)) continue;
-      } catch { continue; }
-      const link = document.createElement('a');
-      link.textContent = `${label} ↗`;
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.setAttribute('aria-label', `${label} (opens in a new tab)`);
-      row.querySelector('.external-links').append(link);
-    }
     row.querySelector('.edit').addEventListener('click', () => openEditor(notification));
     row.querySelector('.delete').addEventListener('click', async (event) => {
       if (!confirm(`Delete “${notification.title}”? This cannot be undone.`)) return;

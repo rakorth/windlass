@@ -6,7 +6,7 @@
 | --- | --- |
 | Create notification | UI dialog or POST; generated UUID and unread state |
 | List notifications | Cards in UI; paginated JSON object through API; newest received time first |
-| Inspect notification | Card content, expandable ID/metadata, or GET by ID |
+| Inspect notification | Click an inbox title or look up an ID on `/notification.html`; API GET by ID |
 | Edit notification | UI dialog or PUT; preserves ID and unread state |
 | Delete notification | UI confirmation or DELETE; permanent removal |
 | Metadata | Editable JSON object with nested objects, arrays, and primitive values |
@@ -23,10 +23,19 @@
 
 ## Browser UI
 
-The interface uses a dark theme with mint accents, compact spacing, and full-width
-content. The card grid adapts its column count to the browser width and becomes
-one column on small screens. Cards show source, received time, read state, title,
-description, links, metadata details, and actions.
+The interface uses a dark theme with mint accents, compact spacing, and a
+horizontally scrollable notification table. Each row shows source, received time,
+read state, title, a description preview of up to 160 characters, and actions.
+Whitespace in previews is collapsed. **View details →** opens the full description,
+external links, ID, and metadata on the single-notification page. Search still
+matches the full description.
+
+Click a notification title to open its detail page at `/notification.html?id=<id>`.
+The **Find notification by ID** link opens an ID lookup form. The page shows one
+notification’s title, ID, source, received time, read state, description, external
+links, and metadata. Its URL can be bookmarked or shared. Refresh fetches that
+notification again; viewing it does not mark it seen. Missing IDs and failed
+requests show an error.
 
 The **Automations ↗** header link opens the n8n workflow editor in a new tab.
 The editor address is configurable with `N8N_EDITOR_BASE_URL`. Compose runs n8n
