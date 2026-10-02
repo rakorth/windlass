@@ -1,6 +1,6 @@
 ---
 name: windlass-rest
-description: Manage Windlass notifications through its REST API. Use to create, list, find, update, delete, or mark Windlass notifications as seen, including metadata and external service links.
+description: Operate Windlass through its REST API to manage notifications and download or restore n8n backups. Use for notification searches, unread state, metadata, external links, and Windlass-managed n8n backup operations.
 ---
 
 # Windlass REST
@@ -9,7 +9,7 @@ Use HTTP requests to interact with Windlass. Work within the user's requested sc
 
 ## Connection
 
-Use the base URL supplied by the user or environment. Otherwise default to `http://localhost:8080`. Examples use a client-side `WINDLASS_BASE_URL` variable; the server does not read this variable.
+Use the base URL supplied by the user or environment. Docker Compose publishes Windlass at `http://localhost:6080`; standalone runs default to `http://localhost:8080`. Choose the address from deployment context, falling back to the standalone default. Examples use a client-side `WINDLASS_BASE_URL` variable; the server does not read this variable.
 
 ```sh
 WINDLASS_BASE_URL="${WINDLASS_BASE_URL:-http://localhost:8080}"
@@ -22,7 +22,7 @@ There is no built-in authentication. Do not invent an API key or Authorization h
 
 `localhost` refers to the agent's own machine/container. When Windlass runs elsewhere, use its reachable hostname or forwarded port. A connection failure does not authorize restarting services or changing port mappings. Report the failure and resolve the address using available deployment context.
 
-## Endpoints
+## Notification endpoints
 
 All paths below are relative to the base URL. Send `Content-Type: application/json` for POST and PUT.
 
@@ -36,6 +36,14 @@ All paths below are relative to the base URL. Send `Content-Type: application/js
 | DELETE | `/api/notifications/{id}` | 204; no response body |
 
 Use actual IDs returned by the service. Use zero-based `page` (default 0), `size` (1–100, default 20), and optional `unread=true` or `unread=false`. Read `items` and traverse pages up to `totalPages` for complete results. Text/source filtering is local. GET requests do not mark notifications as seen. There is no endpoint to mark a seen notification unread, and no bulk endpoint.
+
+The list response is an object, not a bare array:
+
+```json
+{"items": [], "page": 0, "size": 20, "totalElements": 0, "totalPages": 0}
+```
+
+Filtering happens before pagination and totals. Sorting is by newest `received_on`, then ID for ties. Out-of-range pages return empty `items` and current totals, not 404. Offset-based pages can shift under concurrent changes. For a requested bulk mark-seen or deletion, collect matching IDs across all pages before mutating; changing unread state or deleting while advancing pages can skip records. Deduplicate IDs and report any concurrent disappearance separately.
 
 ## Notification fields
 
@@ -140,7 +148,13 @@ curl --fail-with-body --silent --show-error --max-time 15 \
 
 Deletion is permanent. A successful DELETE returns 204 with no JSON to parse. Do not delete records merely to remove them from the unread list; mark them seen instead.
 
-## Failures and reporting
+## n8n backups and automations
+
+For status, ZIP downloads, or restore requests, read [references/n8n-backups.md](references/n8n-backups.md). These operations use different headers, bodies, timeouts, and failure handling from notifications. Creating a backup temporarily stops n8n; restoring replaces its data. A notification request does not authorize either operation.
+
+`GET /automations` returns a 302 redirect to the configured n8n editor. It is a navigation route, not a workflow-management API. Windlass exposes no API for creating or editing n8n workflows.
+
+## Notification failures and reporting
 
 - **400:** Correct the payload using the field rules and returned error details. Do not repeat an unchanged invalid request.
 - **404:** The ID does not exist. Refresh the list if needed; do not silently create a replacement.
@@ -148,3 +162,5 @@ Deletion is permanent. A successful DELETE returns 204 with no JSON to parse. Do
 - **Connection errors, timeouts, 5xx:** Report the failure. For a mutation with an uncertain outcome, inspect current state before retrying. In particular, do not blindly repeat POST: it could create duplicates. Stop if the outcome remains uncertain.
 
 Report only confirmed outcomes, including IDs for created or modified notifications. For multiple operations, distinguish completed items from failures. Never claim a change succeeded solely because a command was issued.
+
+Error bodies use Spring Boot error handling rather than a stable custom schema. Inspect HTTP status first and use available `message` or `detail` for context.
