@@ -28,16 +28,19 @@ function render() {
   $('next').disabled = loading || page + 1 >= totalPages;
   $('notifications').replaceChildren();
   if (!visible.length) {
-    const empty = document.createElement('div');
+    const emptyRow = document.createElement('tr');
+    const empty = document.createElement('td');
+    empty.colSpan = 5;
     empty.className = 'empty';
     empty.textContent = query ? 'No notifications match your search.' : 'No notifications match this filter.';
-    $('notifications').append(empty);
+    emptyRow.append(empty);
+    $('notifications').append(emptyRow);
   }
   for (const notification of visible) {
-    const card = $('card-template').content.cloneNode(true);
-    card.querySelector('.card').classList.toggle('unread', notification.unread);
-    card.querySelector('.read-state').textContent = notification.unread ? '● Unread' : 'Seen';
-    const seenButton = card.querySelector('.mark-seen');
+    const row = $('row-template').content.cloneNode(true);
+    row.querySelector('.notification-row').classList.toggle('unread', notification.unread);
+    row.querySelector('.read-state').textContent = notification.unread ? '● Unread' : 'Seen';
+    const seenButton = row.querySelector('.mark-seen');
     seenButton.hidden = !notification.unread;
     seenButton.addEventListener('click', async () => {
       seenButton.disabled = true;
@@ -50,14 +53,14 @@ function render() {
         seenButton.disabled = false;
       }
     });
-    card.querySelector('.source').textContent = notification.notification_source;
-    card.querySelector('h3').textContent = notification.title;
-    card.querySelector('.description').textContent = notification.description;
-    const time = card.querySelector('time');
+    row.querySelector('.source').textContent = notification.notification_source;
+    row.querySelector('h3').textContent = notification.title;
+    row.querySelector('.description').textContent = notification.description;
+    const time = row.querySelector('time');
     time.dateTime = notification.received_on;
     time.textContent = new Date(notification.received_on).toLocaleString();
-    card.querySelector('.identifier').textContent = `ID: ${notification.id}`;
-    card.querySelector('pre').textContent = JSON.stringify(notification.metadata_map, null, 2);
+    row.querySelector('.identifier').textContent = `ID: ${notification.id}`;
+    row.querySelector('pre').textContent = JSON.stringify(notification.metadata_map, null, 2);
     for (const [label, url] of Object.entries(notification.external_links ?? {})) {
       try {
         if (typeof url !== 'string' || !['http:', 'https:'].includes(new URL(url).protocol)) continue;
@@ -68,10 +71,10 @@ function render() {
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       link.setAttribute('aria-label', `${label} (opens in a new tab)`);
-      card.querySelector('.external-links').append(link);
+      row.querySelector('.external-links').append(link);
     }
-    card.querySelector('.edit').addEventListener('click', () => openEditor(notification));
-    card.querySelector('.delete').addEventListener('click', async (event) => {
+    row.querySelector('.edit').addEventListener('click', () => openEditor(notification));
+    row.querySelector('.delete').addEventListener('click', async (event) => {
       if (!confirm(`Delete “${notification.title}”? This cannot be undone.`)) return;
       event.target.disabled = true;
       try {
@@ -80,7 +83,7 @@ function render() {
         $('status').textContent = 'Notification deleted.';
       } catch (error) { $('status').textContent = error.message; event.target.disabled = false; }
     });
-    $('notifications').append(card);
+    $('notifications').append(row);
   }
 }
 
