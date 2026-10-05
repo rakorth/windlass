@@ -12,6 +12,7 @@ with the following fields:
 | `description` | string | Optional, max 10,000 characters; missing/null becomes `""` |
 | `links` | object with string values | Nonblank labels mapped to absolute HTTP/HTTPS URLs with a host; missing/null becomes `{}` |
 | `metadata` | object | Arbitrary metadata, including nested JSON values; missing/null becomes `{}` |
+| `steps` | array of step objects | Ordered steps; missing/null becomes `[]` |
 
 Tasks are persisted using `JdbcTemplate` in the SQLite `tasks` table. All columns
 are NOT NULL TEXT; `id` is the primary key and both maps are serialized JSON.
@@ -19,6 +20,13 @@ Startup creates the table if absent, including for existing notification databas
 The [REST API](api.md#tasks) supports creation, retrieval, replacement, deletion,
 and listing ordered by name then ID. PUT resets omitted optional fields to their
 empty defaults.
+
+Each step has a required nonblank `name` (max 200 characters, stored trimmed),
+a required `status` enum, and optional `metadata` and `links` maps (missing/null
+becomes `{}`). Status accepts exactly `DONE`, `PENDING`, or `SkIPPED` (case-sensitive). Step links follow task link validation. Null steps
+are invalid. Steps are stored as JSON in a NOT NULL TEXT column with default `[]`;
+an additive startup migration gives existing tasks an empty list and preserves
+steps on subsequent starts. PUT replaces the complete ordered list.
 
 ## Notification
 

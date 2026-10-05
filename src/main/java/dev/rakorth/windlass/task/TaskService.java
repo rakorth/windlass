@@ -9,9 +9,11 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.type.TypeReference;
 
 import java.util.Map;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
 
+@org.springframework.context.annotation.DependsOn("taskSchemaMigration")
 @Service
 public class TaskService {
     private final JdbcTemplate jdbc;
@@ -24,7 +26,8 @@ public class TaskService {
         this.mapper = (rs, row) -> new Task(rs.getString("id"), rs.getString("name"),
                 rs.getString("description"),
                 json.readValue(rs.getString("links"), new TypeReference<Map<String, String>>() {}),
-                json.readValue(rs.getString("metadata"), new TypeReference<Map<String, Object>>() {}));
+                json.readValue(rs.getString("metadata"), new TypeReference<Map<String, Object>>() {}),
+                json.readValue(rs.getString("steps"), new TypeReference<List<Step>>() {}));
     }
 
     public TaskPage list(int page, int size, String search) {
@@ -61,18 +64,18 @@ public class TaskService {
 
     public Task create(TaskRequest request) {
         var value = normalize(UUID.randomUUID().toString(), request);
-        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES (?, ?, ?, ?, ?)",
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, steps) VALUES (?, ?, ?, ?, ?, ?)",
                 value.id(), value.name(), value.description(),
-                json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()));
+                json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()));
         return value;
     }
 
     public Task update(String id, TaskRequest request) {
         get(id);
         var value = normalize(id, request);
-        int changed = jdbc.update("UPDATE tasks SET name = ?, description = ?, links = ?, metadata = ? WHERE id = ?",
+        int changed = jdbc.update("UPDATE tasks SET name = ?, description = ?, links = ?, metadata = ?, steps = ? WHERE id = ?",
                 value.name(), value.description(), json.writeValueAsString(value.links()),
-                json.writeValueAsString(value.metadata()), id);
+                json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), id);
         if (changed == 0) throw notFound();
         return get(id);
     }
@@ -83,6 +86,18 @@ public class TaskService {
 
     private Task normalize(String id, TaskRequest request) {
         var links = request.links() == null ? Map.<String, String>of() : request.links();
+        validateLinks(links);
+        var steps = request.steps() == null ? List.<Step>of() : request.steps().stream().map(step -> {
+            var stepLinks = step.links() == null ? Map.<String, String>of() : step.links();
+            validateLinks(stepLinks);
+            return new Step(step.name().strip(), step.status(),
+                    step.metadata() == null ? Map.of() : step.metadata(), stepLinks);
+        }).toList();
+        return new Task(id, request.name().strip(), request.description() == null ? "" : request.description(),
+                links, request.metadata() == null ? Map.of() : request.metadata(), steps);
+    }
+
+    private void validateLinks(Map<String, String> links) {
         links.forEach((label, url) -> {
             try {
                 var uri = java.net.URI.create(url);
@@ -95,8 +110,6 @@ public class TaskService {
                         "Links require a nonblank label and an absolute HTTP or HTTPS URL");
             }
         });
-        return new Task(id, request.name().strip(), request.description() == null ? "" : request.description(),
-                links, request.metadata() == null ? Map.of() : request.metadata());
     }
 
     private ResponseStatusException notFound() {

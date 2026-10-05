@@ -71,12 +71,52 @@ class TaskTests {
     }
 
     @Test
+    void stepsPersistInOrderAndAreReplacedWithTask() throws Exception {
+        var result = mvc.perform(post("/api/tasks").contentType("application/json").content("""
+                {"name":"Release","steps":[
+                  {"name":" Build ","status":"PENDING","metadata":{"nested":{"attempt":2}},
+                   "links":{"Build":"https://ci.example.com/42"}},
+                  {"name":"Deploy","status":"SkIPPED"}]}
+                """))
+                .andExpect(status().isCreated()).andReturn();
+        String id = json.readTree(result.getResponse().getContentAsString()).get("id").asString();
+        String path = "/api/tasks/" + id;
+        mvc.perform(get(path)).andExpect(jsonPath("$.steps.length()").value(2))
+                .andExpect(jsonPath("$.steps[0].name").value("Build"))
+                .andExpect(jsonPath("$.steps[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.steps[0].metadata.nested.attempt").value(2))
+                .andExpect(jsonPath("$.steps[0].links.Build").value("https://ci.example.com/42"))
+                .andExpect(jsonPath("$.steps[1].status").value("SkIPPED"))
+                .andExpect(jsonPath("$.steps[1].metadata").isEmpty())
+                .andExpect(jsonPath("$.steps[1].links").isEmpty());
+        mvc.perform(get("/api/tasks")).andExpect(jsonPath("$.items[0].steps[1].name").value("Deploy"));
+        for (String steps : new String[]{"[null]", "[{}]",
+                "[{\"name\":\"x\",\"status\":null}]",
+                "[{\"name\":\"x\",\"status\":\"pending\"}]",
+                "[{\"name\":\"x\",\"status\":\"SKIPPED\"}]", "[{\"name\":\"x\",\"status\":\" \"}]",
+                "[{\"name\":\"x\",\"status\":\"PENDING\",\"links\":{\"Issue\":\"/relative\"}}]"}) {
+            mvc.perform(put(path).contentType("application/json").content("{\"name\":\"Release\",\"steps\":" + steps + "}"))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(get(path)).andExpect(jsonPath("$.steps.length()").value(2));
+        mvc.perform(put(path).contentType("application/json").content("""
+                {"name":"Release","steps":[{"name":"Done","status":"DONE"}]}
+                """))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.steps.length()").value(1));
+        mvc.perform(get(path)).andExpect(jsonPath("$.steps[0].status").value("DONE"));
+        for (String body : new String[]{"{\"name\":\"Release\"}", "{\"name\":\"Release\",\"steps\":null}"}) {
+            mvc.perform(put(path).contentType("application/json").content(body))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.steps").isEmpty());
+        }
+    }
+
+    @Test
     void searchesContentAndNestedMetadataBeforePagination() throws Exception {
-        jdbc.update("INSERT INTO tasks VALUES ('a', 'Release plan', '', '{}', '{}')");
-        jdbc.update("INSERT INTO tasks VALUES ('b', 'Review', 'RELEASE notes', '{}', '{}')");
-        jdbc.update("INSERT INTO tasks VALUES ('c', 'Ship', '', '{}', ?)",
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES ('a', 'Release plan', '', '{}', '{}')");
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES ('b', 'Review', 'RELEASE notes', '{}', '{}')");
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES ('c', 'Ship', '', '{}', ?)",
                 "{\"nested\":{\"tags\":[\"release\"],\"ticket_id\":42},\"release_flag\":true}");
-        jdbc.update("INSERT INTO tasks VALUES ('d', 'Other', '', ?, '{}')",
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES ('d', 'Other', '', ?, '{}')",
                 "{\"release\":\"https://example.com/release\"}");
         mvc.perform(get("/api/tasks").param("search", " RELEASE ").param("size", "2").param("page", "1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
@@ -92,7 +132,7 @@ class TaskTests {
                     .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
                     .andExpect(jsonPath("$.totalElements").value(0));
         }
-        jdbc.update("INSERT INTO tasks VALUES ('e', '100%_done', '', '{}', '{}')");
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES ('e', '100%_done', '', '{}', '{}')");
         mvc.perform(get("/api/tasks").param("search", "%_"))
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.items[0].id").value("e"));

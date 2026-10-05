@@ -122,7 +122,7 @@ including safe payload construction and handling ambiguous matches.
 | PUT | `/api/tasks/{id}` | Task writable fields | 200; task |
 | DELETE | `/api/tasks/{id}` | None | 204; empty body |
 
-Writable fields are `name`, `description`, `links`, and `metadata`; only `name`
+Writable fields are `name`, `description`, `links`, `metadata`, and `steps`; only `name`
 is required. The server generates the immutable UUID `id`. See the
 [task model](data-model.md#task) for validation and defaults. For example:
 
@@ -145,3 +145,14 @@ keys and scalar values, including nested objects and arrays. For example,
 the task once. Search ignores ASCII letter case, trims surrounding whitespace,
 and treats missing/blank input as no filter. `%` and `_` are literal characters.
 Filtering happens before pagination and totals. Links are not searched.
+
+Tasks include an ordered `steps` array. For example:
+
+```json
+{"name":"Release","steps":[{"name":"Build","status":"PENDING","metadata":{"attempt":1},"links":{"Build":"https://ci.example.com/42"}}]}
+```
+
+Step names are required nonblank strings. Status is a required enum accepting
+exactly `DONE`, `PENDING`, or `SkIPPED` (case-sensitive); other values return 400.
+Step maps default to `{}`; missing/null `steps` defaults to `[]`. PUT replaces
+the complete steps list. Search continues to match task fields and task metadata.
