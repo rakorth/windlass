@@ -9,6 +9,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.type.TypeReference;
 
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @Service
@@ -26,14 +27,30 @@ public class TaskService {
                 json.readValue(rs.getString("metadata"), new TypeReference<Map<String, Object>>() {}));
     }
 
-    public TaskPage list(int page, int size) {
+    public TaskPage list(int page, int size, String search) {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "page must be nonnegative and size must be between 1 and 100");
         }
-        long total = jdbc.queryForObject("SELECT COUNT(*) FROM tasks", Long.class);
-        var items = jdbc.query("SELECT * FROM tasks ORDER BY name, id LIMIT ? OFFSET ?",
-                mapper, size, (long) page * size);
+        String where = "";
+        var parameters = new ArrayList<Object>();
+        if (search != null && !search.isBlank()) {
+            where = """
+                     WHERE instr(lower(name), lower(?)) > 0
+                        OR instr(lower(description), lower(?)) > 0
+                        OR EXISTS (SELECT 1 FROM json_tree(tasks.metadata) AS entry
+                                   WHERE instr(lower(CAST(entry.key AS TEXT)), lower(?)) > 0
+                                      OR instr(lower(CASE WHEN entry.type IN ('true', 'false', 'null')
+                                                          THEN entry.type ELSE CAST(entry.atom AS TEXT) END), lower(?)) > 0)
+                    """;
+            for (int i = 0; i < 4; i++) parameters.add(search.strip());
+        }
+        long total = jdbc.queryForObject("SELECT COUNT(*) FROM tasks" + where,
+                Long.class, parameters.toArray());
+        parameters.add(size);
+        parameters.add((long) page * size);
+        var items = jdbc.query("SELECT * FROM tasks" + where + " ORDER BY name, id LIMIT ? OFFSET ?",
+                mapper, parameters.toArray());
         return new TaskPage(items, page, size, total, (total + size - 1) / size);
     }
 

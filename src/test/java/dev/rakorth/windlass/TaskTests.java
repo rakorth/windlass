@@ -71,6 +71,36 @@ class TaskTests {
     }
 
     @Test
+    void searchesContentAndNestedMetadataBeforePagination() throws Exception {
+        jdbc.update("INSERT INTO tasks VALUES ('a', 'Release plan', '', '{}', '{}')");
+        jdbc.update("INSERT INTO tasks VALUES ('b', 'Review', 'RELEASE notes', '{}', '{}')");
+        jdbc.update("INSERT INTO tasks VALUES ('c', 'Ship', '', '{}', ?)",
+                "{\"nested\":{\"tags\":[\"release\"],\"ticket_id\":42},\"release_flag\":true}");
+        jdbc.update("INSERT INTO tasks VALUES ('d', 'Other', '', ?, '{}')",
+                "{\"release\":\"https://example.com/release\"}");
+        mvc.perform(get("/api/tasks").param("search", " RELEASE ").param("size", "2").param("page", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("c"))
+                .andExpect(jsonPath("$.totalElements").value(3)).andExpect(jsonPath("$.totalPages").value(2));
+        for (String term : new String[]{"ticket_id", "42", "true"}) {
+            mvc.perform(get("/api/tasks").param("search", term))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.items[0].id").value("c"));
+        }
+        for (String term : new String[]{"missing", "%", "%_", "' OR 1=1 --"}) {
+            mvc.perform(get("/api/tasks").param("search", term))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
+                    .andExpect(jsonPath("$.totalElements").value(0));
+        }
+        jdbc.update("INSERT INTO tasks VALUES ('e', '100%_done', '', '{}', '{}')");
+        mvc.perform(get("/api/tasks").param("search", "%_"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("e"));
+        mvc.perform(get("/api/tasks").param("search", "  "))
+                .andExpect(jsonPath("$.totalElements").value(5));
+    }
+
+    @Test
     void paginatesWithStableOrderingAndValidatesBounds() throws Exception {
         for (int i = 4; i >= 0; i--) {
             jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES (?, 'Same', '', '{}', '{}')", "id-" + i);

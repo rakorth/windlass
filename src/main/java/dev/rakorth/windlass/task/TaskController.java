@@ -14,8 +14,9 @@ public class TaskController {
 
     @GetMapping
     public TaskPage list(@RequestParam(defaultValue = "0") int page,
-                         @RequestParam(defaultValue = "20") int size) {
-        return service.list(page, size);
+                         @RequestParam(defaultValue = "20") int size,
+                         @RequestParam(required = false) String search) {
+        return service.list(page, size, search);
     }
 
     @GetMapping("/{id}")

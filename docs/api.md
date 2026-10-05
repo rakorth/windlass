@@ -138,3 +138,10 @@ zero-based `page` (default 0) and `size` (1–100, default 20). Its response use
 `items`, `page`, `size`, `totalElements`, and `totalPages`, just like notifications.
 Empty collections have zero totals; pages beyond the last return empty items.
 Invalid pagination returns 400. Concurrent edits may shift offset-based pages.
+
+Add `search` to match a literal substring in `name`, `description`, or metadata
+keys and scalar values, including nested objects and arrays. For example,
+`GET /api/tasks?search=release&page=0&size=20`. A match in any field includes
+the task once. Search ignores ASCII letter case, trims surrounding whitespace,
+and treats missing/blank input as no filter. `%` and `_` are literal characters.
+Filtering happens before pagination and totals. Links are not searched.
