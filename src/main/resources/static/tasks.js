@@ -2,6 +2,7 @@ const $ = id => document.getElementById(id);
 let page = 0;
 let totalPages = 0;
 let search = '';
+let statusFilter = '';
 let editingId = null;
 let loading = false;
 let saving = false;
@@ -47,7 +48,7 @@ function render(items, total) {
   $('count').textContent = total;
   $('page-info').textContent = totalPages ? `Page ${page + 1} of ${totalPages}` : 'No pages';
   $('tasks').replaceChildren();
-  if (!items.length) $('tasks').append(element('p', search ? 'No tasks match your search.' : 'No tasks yet. Create a task to get started.', 'empty'));
+  if (!items.length) $('tasks').append(element('p', search || statusFilter ? 'No tasks match your filters.' : 'No tasks yet. Create a task to get started.', 'empty'));
   for (const task of items) {
     const card = element('article', undefined, 'card task-card');
     card.append(element('h2', task.name), element('p', task.description || 'No description.', 'description'));
@@ -90,11 +91,11 @@ function render(items, total) {
 async function load(message = '') {
   if (loading) return;
   loading = true;
-  $('search-form').querySelectorAll('input, button').forEach(node => { node.disabled = true; });
+  $('search-form').querySelectorAll('input, select, button').forEach(node => { node.disabled = true; });
   $('previous').disabled = $('next').disabled = true;
   $('status').textContent = 'Loading tasks…';
   try {
-    const query = () => `?page=${page}&size=20&search=${encodeURIComponent(search)}`;
+    const query = () => `?page=${page}&size=20&search=${encodeURIComponent(search)}${statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : ''}`;
     let result = await api(query());
     if (page > 0 && page >= result.totalPages) {
       page = Math.max(0, result.totalPages - 1);
@@ -106,7 +107,7 @@ async function load(message = '') {
   } catch (error) { $('status').textContent = `${message ? `${message} ` : ''}Could not load tasks. ${error.message}`; }
   finally {
     loading = false;
-    $('search-form').querySelectorAll('input, button').forEach(node => { node.disabled = false; });
+    $('search-form').querySelectorAll('input, select, button').forEach(node => { node.disabled = false; });
     $('previous').disabled = page === 0;
     $('next').disabled = page + 1 >= totalPages;
   }
@@ -197,7 +198,8 @@ $('new').addEventListener('click', () => openEditor());
 $('add-step').addEventListener('click', () => { addStep(); $('step-editors').lastElementChild.querySelector('input').focus(); });
 for (const id of ['close', 'cancel']) $(id).addEventListener('click', () => $('editor').close());
 $('editor').addEventListener('cancel', event => { if (saving) event.preventDefault(); });
-$('search-form').addEventListener('submit', event => { event.preventDefault(); search = $('search').value.trim(); page = 0; load(); });
+$('search-form').addEventListener('submit', event => { event.preventDefault(); search = $('search').value.trim(); statusFilter = $('status-filter').value; page = 0; load(); });
+$('status-filter').addEventListener('change', () => { search = $('search').value.trim(); statusFilter = $('status-filter').value; page = 0; load(); });
 $('refresh').addEventListener('click', () => load());
 $('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; load(); } });
 $('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; load(); } });

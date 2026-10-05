@@ -146,6 +146,11 @@ the task once. Search ignores ASCII letter case, trims surrounding whitespace,
 and treats missing/blank input as no filter. `%` and `_` are literal characters.
 Filtering happens before pagination and totals. Links are not searched.
 
+Add `status=PENDING`, `WAITING`, `DONE`, or `SKIPPED` to filter by task status.
+This combines with `search` and applies before pagination and totals. Omit
+`status` to include all tasks; invalid status values return 400. The task UI
+provides a status selector that resets pagination when changed.
+
 Tasks include an ordered `steps` array. For example:
 
 ```json

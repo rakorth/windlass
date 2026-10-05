@@ -13,7 +13,7 @@
   <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/tasks.html" aria-current="page">Tasks</a><a class="automations-link" href="/backups.html">n8n backups</a></nav></header>
   <main>
     <div class="heading"><div><p class="eyebrow">ONE STEP AT A TIME</p><h1>Tasks</h1><p class="muted">Organize work and track its steps.</p></div><button id="new">+ New task</button></div>
-    <form id="search-form" class="toolbar"><label for="search">Search tasks</label><input id="search" type="search" placeholder="Search names, descriptions, or metadata…"><button type="submit" class="secondary">Search</button><button id="refresh" type="button" class="secondary">Refresh</button></form>
+    <form id="search-form" class="toolbar task-toolbar"><label for="search">Search tasks</label><input id="search" type="search" placeholder="Search names, descriptions, or metadata…"><label for="status-filter">Status</label><select id="status-filter"><option value="">All statuses</option><option value="PENDING">Pending</option><option value="WAITING">Waiting</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option></select><button type="submit" class="secondary">Search</button><button id="refresh" type="button" class="secondary">Refresh</button></form>
     <p id="status" role="status" aria-live="polite"></p>
     <div class="list-heading"><h2>Tasks <span id="count">0</span></h2><span class="muted">Sorted by name</span></div>
     <div id="tasks" class="task-grid"></div>

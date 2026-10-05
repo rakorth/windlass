@@ -209,6 +209,33 @@ class TaskTests {
     }
 
     @Test
+    void filtersTaskStatusBeforePaginationAndCombinesWithSearch() throws Exception {
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('a', 'Release', '', '{}', '{}', 'PENDING')");
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('b', 'Release', '', '{}', '{}', 'WAITING')");
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('c', 'Other', 'Release', '{}', '{}', 'WAITING')");
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('d', 'Other', '', '{}', '{\"tag\":\"release\"}', 'DONE')");
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('e', 'Other', '', '{}', '{\"tag\":\"release\"}', 'WAITING')");
+        for (String filter : new String[]{"PENDING", "WAITING", "DONE", "SKIPPED"}) {
+            var response = mvc.perform(get("/api/tasks").param("status", filter)).andExpect(status().isOk()).andReturn();
+            var items = json.readTree(response.getResponse().getContentAsString()).get("items");
+            for (var item : items) org.junit.jupiter.api.Assertions.assertEquals(filter, item.get("status").asString());
+        }
+        mvc.perform(get("/api/tasks").param("status", "WAITING").param("size", "1").param("page", "2"))
+                .andExpect(jsonPath("$.items[0].id").value("b"))
+                .andExpect(jsonPath("$.totalElements").value(3)).andExpect(jsonPath("$.totalPages").value(3));
+        mvc.perform(get("/api/tasks").param("status", "WAITING").param("search", "RELEASE"))
+                .andExpect(jsonPath("$.items.length()").value(3)).andExpect(jsonPath("$.totalElements").value(3));
+        mvc.perform(get("/api/tasks").param("status", "WAITING").param("search", "tag"))
+                .andExpect(jsonPath("$.items[0].id").value("e")).andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get("/api/tasks").param("status", "SKIPPED"))
+                .andExpect(jsonPath("$.items").isEmpty()).andExpect(jsonPath("$.totalPages").value(0));
+        mvc.perform(get("/api/tasks")).andExpect(jsonPath("$.totalElements").value(5));
+        for (String invalid : new String[]{"waiting", "UNKNOWN", "' OR 1=1 --"}) {
+            mvc.perform(get("/api/tasks").param("status", invalid)).andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
     void paginatesWithStableOrderingAndValidatesBounds() throws Exception {
         for (int i = 4; i >= 0; i--) {
             jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES (?, 'Same', '', '{}', '{}')", "id-" + i);

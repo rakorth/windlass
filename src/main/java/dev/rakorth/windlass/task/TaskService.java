@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
 
-@org.springframework.context.annotation.DependsOn("taskSchemaMigration")
 @Service
 public class TaskService {
     private final JdbcTemplate jdbc;
@@ -35,7 +34,7 @@ public class TaskService {
         };
     }
 
-    public TaskPage list(int page, int size, String search) {
+    public TaskPage list(int page, int size, String search, TaskStatus status) {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "page must be nonnegative and size must be between 1 and 100");
@@ -44,14 +43,18 @@ public class TaskService {
         var parameters = new ArrayList<Object>();
         if (search != null && !search.isBlank()) {
             where = """
-                     WHERE instr(lower(name), lower(?)) > 0
+                     WHERE (instr(lower(name), lower(?)) > 0
                         OR instr(lower(description), lower(?)) > 0
                         OR EXISTS (SELECT 1 FROM json_tree(tasks.metadata) AS entry
                                    WHERE instr(lower(CAST(entry.key AS TEXT)), lower(?)) > 0
                                       OR instr(lower(CASE WHEN entry.type IN ('true', 'false', 'null')
-                                                          THEN entry.type ELSE CAST(entry.atom AS TEXT) END), lower(?)) > 0)
+                                                          THEN entry.type ELSE CAST(entry.atom AS TEXT) END), lower(?)) > 0))
                     """;
             for (int i = 0; i < 4; i++) parameters.add(search.strip());
+        }
+        if (status != null) {
+            where += where.isEmpty() ? " WHERE status = ?" : " AND status = ?";
+            parameters.add(status.name());
         }
         long total = jdbc.queryForObject("SELECT COUNT(*) FROM tasks" + where,
                 Long.class, parameters.toArray());
