@@ -13,4 +13,5 @@ public record TaskRequest(
         @JsonProperty(required = false) @Size(max = 10000) String description,
         @JsonProperty(required = false) Map<@NotBlank String, @NotBlank String> links,
         @JsonProperty(required = false) Map<String, Object> metadata,
-        @JsonProperty(required = false) List<@NotNull @Valid Step> steps) {}
+        @JsonProperty(required = false) List<@NotNull @Valid Step> steps,
+        @JsonProperty(required = false) TaskStatus status) {}

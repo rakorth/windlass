@@ -49,6 +49,40 @@ class TaskTests {
     }
 
     @Test
+    void taskStatusDefaultsPersistsAndRejectsInvalidValues() throws Exception {
+        var result = mvc.perform(post("/api/tasks").contentType("application/json")
+                .content("{\"name\":\"Review\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("PENDING"))
+                .andReturn();
+        String id = json.readTree(result.getResponse().getContentAsString()).get("id").asString();
+        String path = "/api/tasks/" + id;
+        for (String value : new String[]{"DONE", "SKIPPED", "WAITING", "PENDING"}) {
+            mvc.perform(put(path).contentType("application/json")
+                    .content("{\"name\":\"Review\",\"status\":\"" + value + "\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.status").value(value));
+            mvc.perform(get(path)).andExpect(jsonPath("$.status").value(value));
+            mvc.perform(get("/api/tasks")).andExpect(jsonPath("$.items[0].status").value(value));
+        }
+        for (String value : new String[]{"pending", "UNKNOWN", ""}) {
+            String body = "{\"name\":\"Review\",\"status\":\"" + value + "\"}";
+            mvc.perform(post("/api/tasks").contentType("application/json").content(body))
+                    .andExpect(status().isBadRequest());
+            mvc.perform(put(path).contentType("application/json").content(body))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(get(path)).andExpect(jsonPath("$.status").value("PENDING"));
+        mvc.perform(post("/api/tasks").contentType("application/json")
+                .content("{\"name\":\"Done\",\"status\":\"DONE\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("DONE"));
+        mvc.perform(put(path).contentType("application/json")
+                .content("{\"name\":\"Review\",\"status\":null}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("PENDING"));
+        mvc.perform(put(path).contentType("application/json")
+                .content("{\"name\":\"Review\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("PENDING"));
+    }
+
+    @Test
     void rejectsInvalidContentWithoutChangingStoredTask() throws Exception {
         var result = mvc.perform(post("/api/tasks").contentType("application/json").content("{\"name\":\"Keep\"}"))
                 .andExpect(status().isCreated()).andReturn();

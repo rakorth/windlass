@@ -17,7 +17,10 @@ class TaskSchemaMigrationTests {
             jdbc.update("INSERT INTO tasks (id, name) VALUES ('old', 'Existing task')");
             var migration = new TaskSchemaMigration(jdbc);
             migration.migrate();
+            assertEquals("PENDING", jdbc.queryForObject("SELECT status FROM tasks WHERE id = 'old'", String.class));
+            jdbc.update("UPDATE tasks SET status = 'DONE' WHERE id = 'old'");
             migration.migrate();
+            assertEquals("DONE", jdbc.queryForObject("SELECT status FROM tasks WHERE id = 'old'", String.class));
             assertEquals("[]", jdbc.queryForObject("SELECT steps FROM tasks WHERE id = 'old'", String.class));
             assertEquals("Existing task", jdbc.queryForObject("SELECT name FROM tasks WHERE id = 'old'", String.class));
         } finally {

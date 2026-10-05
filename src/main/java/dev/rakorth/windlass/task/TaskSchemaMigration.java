@@ -5,7 +5,7 @@ import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitializat
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-/** Add steps to databases created before task steps were introduced. */
+/** Add missing task fields to existing databases. */
 @Component
 @DependsOnDatabaseInitialization
 public class TaskSchemaMigration {
@@ -16,6 +16,9 @@ public class TaskSchemaMigration {
     @PostConstruct
     public void migrate() {
         var columns = jdbc.query("PRAGMA table_info(tasks)", (rs, row) -> rs.getString("name"));
+        if (!columns.contains("status")) {
+            jdbc.execute("ALTER TABLE tasks ADD COLUMN status TEXT NOT NULL DEFAULT 'PENDING'");
+        }
         if (!columns.contains("steps")) {
             jdbc.execute("ALTER TABLE tasks ADD COLUMN steps TEXT NOT NULL DEFAULT '[]'");
         }

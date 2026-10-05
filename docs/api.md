@@ -122,7 +122,7 @@ including safe payload construction and handling ambiguous matches.
 | PUT | `/api/tasks/{id}` | Task writable fields | 200; task |
 | DELETE | `/api/tasks/{id}` | None | 204; empty body |
 
-Writable fields are `name`, `description`, `links`, `metadata`, and `steps`; only `name`
+Writable fields are `name`, `description`, `links`, `metadata`, `steps`, and `status`; only `name`
 is required. The server generates the immutable UUID `id`. See the
 [task model](data-model.md#task) for validation and defaults. For example:
 

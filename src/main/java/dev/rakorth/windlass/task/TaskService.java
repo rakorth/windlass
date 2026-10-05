@@ -24,7 +24,7 @@ public class TaskService {
         this.jdbc = jdbc;
         this.json = json;
         this.mapper = (rs, row) -> new Task(rs.getString("id"), rs.getString("name"),
-                rs.getString("description"),
+                rs.getString("description"), TaskStatus.valueOf(rs.getString("status")),
                 json.readValue(rs.getString("links"), new TypeReference<Map<String, String>>() {}),
                 json.readValue(rs.getString("metadata"), new TypeReference<Map<String, Object>>() {}),
                 json.readValue(rs.getString("steps"), new TypeReference<List<Step>>() {}));
@@ -64,18 +64,18 @@ public class TaskService {
 
     public Task create(TaskRequest request) {
         var value = normalize(UUID.randomUUID().toString(), request);
-        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, steps) VALUES (?, ?, ?, ?, ?, ?)",
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, steps, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 value.id(), value.name(), value.description(),
-                json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()));
+                json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name());
         return value;
     }
 
     public Task update(String id, TaskRequest request) {
         get(id);
         var value = normalize(id, request);
-        int changed = jdbc.update("UPDATE tasks SET name = ?, description = ?, links = ?, metadata = ?, steps = ? WHERE id = ?",
+        int changed = jdbc.update("UPDATE tasks SET name = ?, description = ?, links = ?, metadata = ?, steps = ?, status = ? WHERE id = ?",
                 value.name(), value.description(), json.writeValueAsString(value.links()),
-                json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), id);
+                json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(), id);
         if (changed == 0) throw notFound();
         return get(id);
     }
@@ -94,6 +94,7 @@ public class TaskService {
                     step.metadata() == null ? Map.of() : step.metadata(), stepLinks);
         }).toList();
         return new Task(id, request.name().strip(), request.description() == null ? "" : request.description(),
+                request.status() == null ? TaskStatus.PENDING : request.status(),
                 links, request.metadata() == null ? Map.of() : request.metadata(), steps);
     }
 
