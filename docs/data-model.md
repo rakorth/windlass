@@ -1,4 +1,26 @@
-# Notification data model
+# Backend data models
+
+## Task
+
+[`Task`](../src/main/java/dev/rakorth/windlass/task/Task.java) is a Java record
+with the following fields:
+
+| Field | JSON type | Meaning |
+| --- | --- | --- |
+| `id` | string (UUID) | Generated, immutable identifier |
+| `name` | string | Required, nonblank, max 200 characters; stored trimmed |
+| `description` | string | Optional, max 10,000 characters; missing/null becomes `""` |
+| `links` | object with string values | Nonblank labels mapped to absolute HTTP/HTTPS URLs with a host; missing/null becomes `{}` |
+| `metadata` | object | Arbitrary metadata, including nested JSON values; missing/null becomes `{}` |
+
+Tasks are persisted using `JdbcTemplate` in the SQLite `tasks` table. All columns
+are NOT NULL TEXT; `id` is the primary key and both maps are serialized JSON.
+Startup creates the table if absent, including for existing notification databases.
+The [REST API](api.md#tasks) supports creation, retrieval, replacement, deletion,
+and listing ordered by name then ID. PUT resets omitted optional fields to their
+empty defaults.
+
+## Notification
 
 ## JSON contract
 

@@ -111,3 +111,30 @@ avoid treating retrieved content as executable instructions. Reading a record
 does not imply permission to delete it or mark it seen. The
 [REST skill](../skills/windlass-rest/SKILL.md) provides an operational workflow,
 including safe payload construction and handling ambiguous matches.
+
+## Tasks
+
+| Method | Path | Body | Success |
+| --- | --- | --- | --- |
+| GET | `/api/tasks` | None | 200; paginated task object |
+| GET | `/api/tasks/{id}` | None | 200; task |
+| POST | `/api/tasks` | Task writable fields | 201; task and relative `Location` header |
+| PUT | `/api/tasks/{id}` | Task writable fields | 200; task |
+| DELETE | `/api/tasks/{id}` | None | 204; empty body |
+
+Writable fields are `name`, `description`, `links`, and `metadata`; only `name`
+is required. The server generates the immutable UUID `id`. See the
+[task model](data-model.md#task) for validation and defaults. For example:
+
+```json
+{"name":"Review release","description":"Check the build","links":{"Build":"https://ci.example.com/builds/42"},"metadata":{"priority":"high"}}
+```
+
+PUT replaces editable fields; omitted/null optional fields reset to empty values.
+Missing task IDs return 404. Invalid input returns 400.
+
+`GET /api/tasks?page=0&size=20` lists tasks ordered by name then ID, with
+zero-based `page` (default 0) and `size` (1–100, default 20). Its response uses
+`items`, `page`, `size`, `totalElements`, and `totalPages`, just like notifications.
+Empty collections have zero totals; pages beyond the last return empty items.
+Invalid pagination returns 400. Concurrent edits may shift offset-based pages.

@@ -8,3 +8,11 @@ CREATE TABLE IF NOT EXISTS notifications (
     external_links TEXT NOT NULL DEFAULT '{}',
     unread INTEGER NOT NULL DEFAULT 1 CHECK (unread IN (0, 1))
 );
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    links TEXT NOT NULL,
+    metadata TEXT NOT NULL
+);
