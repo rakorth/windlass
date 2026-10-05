@@ -52,6 +52,7 @@ function render(items, total) {
     const card = element('article', undefined, 'card task-card');
     card.append(element('h2', task.name), element('p', task.description || 'No description.', 'description'));
     card.append(element('span', statuses[task.status], `step-badge ${task.status.toLowerCase()}`));
+    if (task.notifyMeOn) card.append(element('p', `Notify me on: ${new Date(task.notifyMeOn).toLocaleString()}`, 'muted'));
     const done = task.steps.filter(step => step.status === 'DONE').length;
     card.append(element('p', `${done} of ${task.steps.length} steps done`, 'muted'));
     const details = element('details');
@@ -139,6 +140,9 @@ function openEditor(task = null) {
   $('name').value = task?.name ?? '';
   $('description').value = task?.description ?? '';
   $('task-status').value = task?.status ?? 'PENDING';
+  const notifyDate = task?.notifyMeOn ? new Date(task.notifyMeOn) : null;
+  $('notify-me-on').value = notifyDate
+    ? new Date(notifyDate.getTime() - notifyDate.getTimezoneOffset() * 60000).toISOString().slice(0, -1) : '';
   $('metadata').value = JSON.stringify(task?.metadata ?? {}, null, 2);
   $('links').value = JSON.stringify(task?.links ?? {}, null, 2);
   $('step-editors').replaceChildren();
@@ -175,7 +179,7 @@ $('form').addEventListener('submit', async event => {
         metadata: parseObject(row.querySelector('.step-metadata'), `Step ${index + 1} metadata`),
         links: parseObject(row.querySelector('.step-links'), `Step ${index + 1} links`, true) };
     });
-    const body = { status: $('task-status').value, name: $('name').value.trim(), description: $('description').value,
+    const body = { notifyMeOn: $('notify-me-on').value ? new Date($('notify-me-on').value).toISOString() : null, status: $('task-status').value, name: $('name').value.trim(), description: $('description').value,
       metadata: parseObject($('metadata'), 'Task metadata'), links: parseObject($('links'), 'Task links', true), steps };
     saving = true;
     $('editor-fields').disabled = $('save').disabled = $('close').disabled = $('cancel').disabled = true;

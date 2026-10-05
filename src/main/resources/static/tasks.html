@@ -25,6 +25,7 @@
       <fieldset id="editor-fields">
         <label for="name">Name <span class="required">*</span></label><input id="name" required maxlength="200">
         <label for="task-status">Status</label><select id="task-status"><option value="PENDING">Pending</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option><option value="WAITING">Waiting</option></select>
+        <label for="notify-me-on">Notify me on</label><input id="notify-me-on" type="datetime-local" step="any">
         <label for="description">Description</label><textarea id="description" rows="3" maxlength="10000"></textarea>
         <label for="metadata">Metadata (JSON object)</label><textarea id="metadata" rows="3" spellcheck="false">{}</textarea>
         <label for="links">Links (JSON object)</label><textarea id="links" rows="3" spellcheck="false" aria-describedby="links-help">{}</textarea><small id="links-help">Map labels to full HTTP or HTTPS URLs, e.g. {"Issue": "https://github.com"}.</small>

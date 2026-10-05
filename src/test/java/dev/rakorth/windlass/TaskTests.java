@@ -49,6 +49,40 @@ class TaskTests {
     }
 
     @Test
+    void nullableNotifyMeOnPersistsAndValidatesDatetime() throws Exception {
+        var result = mvc.perform(post("/api/tasks").contentType("application/json")
+                .content("{\"name\":\"Reminder\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.notifyMeOn").value(org.hamcrest.Matchers.nullValue()))
+                .andReturn();
+        String id = json.readTree(result.getResponse().getContentAsString()).get("id").asString();
+        String path = "/api/tasks/" + id;
+        String body = "{\"name\":\"Reminder\",\"notifyMeOn\":\"2026-10-06T12:30:00+02:00\"}";
+        mvc.perform(post("/api/tasks").contentType("application/json").content(body))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.notifyMeOn").value("2026-10-06T10:30:00Z"));
+        mvc.perform(put(path).contentType("application/json").content(body))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.notifyMeOn").value("2026-10-06T10:30:00Z"));
+        mvc.perform(get(path)).andExpect(jsonPath("$.notifyMeOn").value("2026-10-06T10:30:00Z"));
+        mvc.perform(get("/api/tasks")).andExpect(jsonPath("$.items[0].notifyMeOn").value("2026-10-06T10:30:00Z"));
+        org.junit.jupiter.api.Assertions.assertEquals("2026-10-06T10:30:00Z",
+                jdbc.queryForObject("SELECT notify_me_on FROM tasks WHERE id = ?", String.class, id));
+        for (String value : new String[]{"not-a-date", "2026-10-06T12:30:00"}) {
+            String invalid = "{\"name\":\"Reminder\",\"notifyMeOn\":\"" + value + "\"}";
+            mvc.perform(post("/api/tasks").contentType("application/json").content(invalid))
+                    .andExpect(status().isBadRequest());
+            mvc.perform(put(path).contentType("application/json").content(invalid))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(get(path)).andExpect(jsonPath("$.notifyMeOn").value("2026-10-06T10:30:00Z"));
+        for (String clear : new String[]{"{\"name\":\"Reminder\",\"notifyMeOn\":null}", "{\"name\":\"Reminder\"}"}) {
+            mvc.perform(put(path).contentType("application/json").content(body)).andExpect(status().isOk());
+            mvc.perform(put(path).contentType("application/json").content(clear))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.notifyMeOn").value(org.hamcrest.Matchers.nullValue()));
+            org.junit.jupiter.api.Assertions.assertNull(
+                    jdbc.queryForObject("SELECT notify_me_on FROM tasks WHERE id = ?", String.class, id));
+        }
+    }
+
+    @Test
     void taskStatusDefaultsPersistsAndRejectsInvalidValues() throws Exception {
         var result = mvc.perform(post("/api/tasks").contentType("application/json")
                 .content("{\"name\":\"Review\"}"))

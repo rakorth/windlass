@@ -16,6 +16,9 @@ public class TaskSchemaMigration {
     @PostConstruct
     public void migrate() {
         var columns = jdbc.query("PRAGMA table_info(tasks)", (rs, row) -> rs.getString("name"));
+        if (!columns.contains("notify_me_on")) {
+            jdbc.execute("ALTER TABLE tasks ADD COLUMN notify_me_on TEXT");
+        }
         if (!columns.contains("status")) {
             jdbc.execute("ALTER TABLE tasks ADD COLUMN status TEXT NOT NULL DEFAULT 'PENDING'");
         }

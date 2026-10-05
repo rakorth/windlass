@@ -16,5 +16,6 @@ CREATE TABLE IF NOT EXISTS tasks (
     links TEXT NOT NULL,
     metadata TEXT NOT NULL,
     steps TEXT NOT NULL DEFAULT '[]',
-    status TEXT NOT NULL DEFAULT 'PENDING'
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    notify_me_on TEXT
 );

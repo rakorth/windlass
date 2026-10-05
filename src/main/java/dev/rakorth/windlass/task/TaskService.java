@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.type.TypeReference;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
@@ -23,11 +24,15 @@ public class TaskService {
     public TaskService(JdbcTemplate jdbc, ObjectMapper json) {
         this.jdbc = jdbc;
         this.json = json;
-        this.mapper = (rs, row) -> new Task(rs.getString("id"), rs.getString("name"),
-                rs.getString("description"), TaskStatus.valueOf(rs.getString("status")),
-                json.readValue(rs.getString("links"), new TypeReference<Map<String, String>>() {}),
-                json.readValue(rs.getString("metadata"), new TypeReference<Map<String, Object>>() {}),
-                json.readValue(rs.getString("steps"), new TypeReference<List<Step>>() {}));
+        this.mapper = (rs, row) -> {
+            String notifyMeOn = rs.getString("notify_me_on");
+            return new Task(rs.getString("id"), rs.getString("name"),
+                    rs.getString("description"), TaskStatus.valueOf(rs.getString("status")),
+                    json.readValue(rs.getString("links"), new TypeReference<Map<String, String>>() {}),
+                    json.readValue(rs.getString("metadata"), new TypeReference<Map<String, Object>>() {}),
+                    json.readValue(rs.getString("steps"), new TypeReference<List<Step>>() {}),
+                    notifyMeOn == null ? null : Instant.parse(notifyMeOn));
+        };
     }
 
     public TaskPage list(int page, int size, String search) {
@@ -64,18 +69,20 @@ public class TaskService {
 
     public Task create(TaskRequest request) {
         var value = normalize(UUID.randomUUID().toString(), request);
-        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, steps, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, steps, status, notify_me_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 value.id(), value.name(), value.description(),
-                json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name());
+                json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(),
+                value.notifyMeOn() == null ? null : value.notifyMeOn().toString());
         return value;
     }
 
     public Task update(String id, TaskRequest request) {
         get(id);
         var value = normalize(id, request);
-        int changed = jdbc.update("UPDATE tasks SET name = ?, description = ?, links = ?, metadata = ?, steps = ?, status = ? WHERE id = ?",
+        int changed = jdbc.update("UPDATE tasks SET name = ?, description = ?, links = ?, metadata = ?, steps = ?, status = ?, notify_me_on = ? WHERE id = ?",
                 value.name(), value.description(), json.writeValueAsString(value.links()),
-                json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(), id);
+                json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(),
+                value.notifyMeOn() == null ? null : value.notifyMeOn().toString(), id);
         if (changed == 0) throw notFound();
         return get(id);
     }
@@ -95,7 +102,7 @@ public class TaskService {
         }).toList();
         return new Task(id, request.name().strip(), request.description() == null ? "" : request.description(),
                 request.status() == null ? TaskStatus.PENDING : request.status(),
-                links, request.metadata() == null ? Map.of() : request.metadata(), steps);
+                links, request.metadata() == null ? Map.of() : request.metadata(), steps, request.notifyMeOn());
     }
 
     private void validateLinks(Map<String, String> links) {

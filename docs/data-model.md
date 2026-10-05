@@ -13,10 +13,14 @@ with the following fields:
 | `links` | object with string values | Nonblank labels mapped to absolute HTTP/HTTPS URLs with a host; missing/null becomes `{}` |
 | `metadata` | object | Arbitrary metadata, including nested JSON values; missing/null becomes `{}` |
 | `status` | string | `PENDING`, `DONE`, `SKIPPED`, or `WAITING` (case-sensitive); missing/null becomes `PENDING` |
+| `notifyMeOn` | ISO 8601 datetime string or null | Optional datetime with a timezone; missing/null becomes null |
 | `steps` | array of step objects | Ordered steps; missing/null becomes `[]` |
 
-Tasks are persisted using `JdbcTemplate` in the SQLite `tasks` table. All columns
-are NOT NULL TEXT; `id` is the primary key and both maps are serialized JSON.
+Tasks are persisted using `JdbcTemplate` in the SQLite `tasks` table.
+Columns are TEXT; all are NOT NULL except `notify_me_on`, which stores
+the nullable `notifyMeOn` instant in UTC. Missing/null on PUT clears this field;
+existing tasks receive null through the startup migration.
+`id` is the primary key and both maps are serialized JSON.
 Startup creates the table if absent, including for existing notification databases.
 The [REST API](api.md#tasks) supports creation, retrieval, replacement, deletion,
 and listing ordered by name then ID. PUT resets omitted optional fields to their

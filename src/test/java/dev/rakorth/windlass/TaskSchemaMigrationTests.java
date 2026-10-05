@@ -18,8 +18,11 @@ class TaskSchemaMigrationTests {
             var migration = new TaskSchemaMigration(jdbc);
             migration.migrate();
             assertEquals("PENDING", jdbc.queryForObject("SELECT status FROM tasks WHERE id = 'old'", String.class));
+            org.junit.jupiter.api.Assertions.assertNull(jdbc.queryForObject("SELECT notify_me_on FROM tasks WHERE id = 'old'", String.class));
+            jdbc.update("UPDATE tasks SET notify_me_on = '2026-10-06T10:30:00Z' WHERE id = 'old'");
             jdbc.update("UPDATE tasks SET status = 'DONE' WHERE id = 'old'");
             migration.migrate();
+            assertEquals("2026-10-06T10:30:00Z", jdbc.queryForObject("SELECT notify_me_on FROM tasks WHERE id = 'old'", String.class));
             assertEquals("DONE", jdbc.queryForObject("SELECT status FROM tasks WHERE id = 'old'", String.class));
             assertEquals("[]", jdbc.queryForObject("SELECT steps FROM tasks WHERE id = 'old'", String.class));
             assertEquals("Existing task", jdbc.queryForObject("SELECT name FROM tasks WHERE id = 'old'", String.class));
