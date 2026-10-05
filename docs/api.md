@@ -130,7 +130,7 @@ is required. The server generates the immutable UUID `id`. See the
 {"name":"Review release","description":"Check the build","links":{"Build":"https://ci.example.com/builds/42"},"metadata":{"priority":"high"}}
 ```
 
-PUT replaces editable fields; omitted/null optional fields reset to empty values.
+PUT replaces editable fields; omitted/null optional fields reset to defaults: empty strings/maps/steps, `PENDING` status, and null `notifyMeOn`.
 Missing task IDs return 404. Invalid input returns 400.
 
 `GET /api/tasks?page=0&size=20` lists tasks ordered by name then ID, with
@@ -158,7 +158,7 @@ Tasks include an ordered `steps` array. For example:
 ```
 
 Step names are required nonblank strings. Status is a required enum accepting
-exactly `DONE`, `PENDING`, or `SkIPPED` (case-sensitive); other values return 400.
+exactly `DONE`, `PENDING`, or `SKIPPED` (case-sensitive); other values return 400.
 Step maps default to `{}`; missing/null `steps` defaults to `[]`. PUT replaces
 the complete steps list. Search continues to match task fields and task metadata.
 
@@ -183,3 +183,6 @@ unchanged. Repeated calls create separate tasks. To customize before creation,
 GET the template, copy its seven writable fields (omit `id`), adjust them, and
 POST to `/api/tasks`. Missing template IDs return 404; invalid input returns 400.
 Deleting a template never deletes tasks previously created from it.
+
+The copy endpoint takes no request body and applies no overrides. For a working
+example and the UI workflow, see [Task templates](task-templates.md).

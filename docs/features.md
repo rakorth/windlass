@@ -120,3 +120,5 @@ in. Adjust the name, status, reminder date, or other fields, then **Save task**.
 Cancel creates nothing. Each saved copy has a new ID; editing or deleting a
 copy or its template does not change the other. Statuses and reminder timestamps
 are copied exactly, so review them when reusing a template.
+
+See [Task templates](task-templates.md) for the complete UI and REST workflow.
