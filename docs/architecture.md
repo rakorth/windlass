@@ -104,3 +104,8 @@ inside the build stage. A runtime smoke check should verify the UI/API and a
 write/read in an isolated database volume as the non-root user. Do not use real
 notifications as disposable test data. GitHub workflow behavior can be checked
 with `actionlint` when available; a local build does not verify registry access.
+
+Task templates use `TaskTemplateController` and `TaskTemplateService` in the
+`task` package. They reuse task persistence and validation against the separate
+`task_templates` table. `TaskTemplateTests` covers the library, validation, and
+independent copies; `tasks.html` and `tasks.js` provide both library views.

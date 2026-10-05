@@ -19,3 +19,14 @@ CREATE TABLE IF NOT EXISTS tasks (
     status TEXT NOT NULL DEFAULT 'PENDING',
     notify_me_on TEXT
 );
+
+CREATE TABLE IF NOT EXISTS task_templates (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    links TEXT NOT NULL,
+    metadata TEXT NOT NULL,
+    steps TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    notify_me_on TEXT
+);

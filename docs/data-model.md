@@ -103,3 +103,12 @@ This is a small additive migration, not a general versioned migration framework.
 Local runs default to `./notifications.db`; containers use
 `/data/notifications.db`. See [deployment and persistence](deployment.md) before
 changing storage location or removing volumes.
+
+## Task template
+
+Task templates share the [task](#task) model, including all seven writable fields
+and ordered steps. The SQLite `task_templates` table is created automatically at
+startup, separately from `tasks`. Both libraries use the same normalization,
+validation, and persistence logic. A template's ID identifies the template;
+creating a task from it assigns a fresh task ID and persists an independent copy.
+There is no ongoing link between a template and its copies.

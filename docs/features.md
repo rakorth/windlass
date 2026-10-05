@@ -106,3 +106,17 @@ replaces the complete task, including its steps. Links require full HTTP/HTTPS
 URLs and open in a new tab. Delete requires confirmation and removes the task
 and its steps. Failed requests and invalid input show errors. Changes from other
 clients require Refresh; concurrent edits are not merged.
+
+## Task templates
+
+In `/tasks.html`, select **Task templates**, then **+ New template**. Templates
+have the same fields and ordered steps as tasks, with the same validation.
+They are saved in a separate library and do not appear in the task list.
+Use **Edit** or **Delete** to maintain a template, or **Save as template** on an
+existing task to open a copy in the template editor.
+
+Select **Use template** to open a new task with all the template's fields filled
+in. Adjust the name, status, reminder date, or other fields, then **Save task**.
+Cancel creates nothing. Each saved copy has a new ID; editing or deleting a
+copy or its template does not change the other. Statuses and reminder timestamps
+are copied exactly, so review them when reusing a template.

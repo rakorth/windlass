@@ -19,8 +19,15 @@ public class TaskService {
     private final JdbcTemplate jdbc;
     private final ObjectMapper json;
     private final RowMapper<Task> mapper;
+    private final String table;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public TaskService(JdbcTemplate jdbc, ObjectMapper json) {
+        this(jdbc, json, "tasks");
+    }
+
+    TaskService(JdbcTemplate jdbc, ObjectMapper json, String table) {
+        this.table = table;
         this.jdbc = jdbc;
         this.json = json;
         this.mapper = (rs, row) -> {
@@ -45,34 +52,34 @@ public class TaskService {
             where = """
                      WHERE (instr(lower(name), lower(?)) > 0
                         OR instr(lower(description), lower(?)) > 0
-                        OR EXISTS (SELECT 1 FROM json_tree(tasks.metadata) AS entry
+                        OR EXISTS (SELECT 1 FROM json_tree(%s.metadata) AS entry
                                    WHERE instr(lower(CAST(entry.key AS TEXT)), lower(?)) > 0
                                       OR instr(lower(CASE WHEN entry.type IN ('true', 'false', 'null')
                                                           THEN entry.type ELSE CAST(entry.atom AS TEXT) END), lower(?)) > 0))
-                    """;
+                    """.formatted(table);
             for (int i = 0; i < 4; i++) parameters.add(search.strip());
         }
         if (status != null) {
             where += where.isEmpty() ? " WHERE status = ?" : " AND status = ?";
             parameters.add(status.name());
         }
-        long total = jdbc.queryForObject("SELECT COUNT(*) FROM tasks" + where,
+        long total = jdbc.queryForObject("SELECT COUNT(*) FROM " + table + where,
                 Long.class, parameters.toArray());
         parameters.add(size);
         parameters.add((long) page * size);
-        var items = jdbc.query("SELECT * FROM tasks" + where + " ORDER BY name, id LIMIT ? OFFSET ?",
+        var items = jdbc.query("SELECT * FROM " + table + where + " ORDER BY name, id LIMIT ? OFFSET ?",
                 mapper, parameters.toArray());
         return new TaskPage(items, page, size, total, (total + size - 1) / size);
     }
 
     public Task get(String id) {
-        return jdbc.query("SELECT * FROM tasks WHERE id = ?", mapper, id).stream()
+        return jdbc.query("SELECT * FROM " + table + " WHERE id = ?", mapper, id).stream()
                 .findFirst().orElseThrow(this::notFound);
     }
 
     public Task create(TaskRequest request) {
         var value = normalize(UUID.randomUUID().toString(), request);
-        jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, steps, status, notify_me_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        jdbc.update("INSERT INTO " + table + " (id, name, description, links, metadata, steps, status, notify_me_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 value.id(), value.name(), value.description(),
                 json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(),
                 value.notifyMeOn() == null ? null : value.notifyMeOn().toString());
@@ -82,7 +89,7 @@ public class TaskService {
     public Task update(String id, TaskRequest request) {
         get(id);
         var value = normalize(id, request);
-        int changed = jdbc.update("UPDATE tasks SET name = ?, description = ?, links = ?, metadata = ?, steps = ?, status = ?, notify_me_on = ? WHERE id = ?",
+        int changed = jdbc.update("UPDATE " + table + " SET name = ?, description = ?, links = ?, metadata = ?, steps = ?, status = ?, notify_me_on = ? WHERE id = ?",
                 value.name(), value.description(), json.writeValueAsString(value.links()),
                 json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(),
                 value.notifyMeOn() == null ? null : value.notifyMeOn().toString(), id);
@@ -91,7 +98,7 @@ public class TaskService {
     }
 
     public void delete(String id) {
-        if (jdbc.update("DELETE FROM tasks WHERE id = ?", id) == 0) throw notFound();
+        if (jdbc.update("DELETE FROM " + table + " WHERE id = ?", id) == 0) throw notFound();
     }
 
     private Task normalize(String id, TaskRequest request) {
@@ -124,6 +131,6 @@ public class TaskService {
     }
 
     private ResponseStatusException notFound() {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found");
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, table.equals("tasks") ? "Task not found" : "Task template not found");
     }
 }

@@ -161,3 +161,25 @@ Step names are required nonblank strings. Status is a required enum accepting
 exactly `DONE`, `PENDING`, or `SkIPPED` (case-sensitive); other values return 400.
 Step maps default to `{}`; missing/null `steps` defaults to `[]`. PUT replaces
 the complete steps list. Search continues to match task fields and task metadata.
+
+## Task templates
+
+Templates use the same writable fields, response model, validation, defaults,
+replacement rules, and pagination/search/status filters as [tasks](#tasks).
+They are stored separately and are never returned by `/api/tasks`.
+
+| Method | Path | Body | Success response |
+| --- | --- | --- | --- |
+| GET | `/api/task-templates` | None | 200; paginated object |
+| GET | `/api/task-templates/{id}` | None | 200; template |
+| POST | `/api/task-templates` | Task writable fields | 201; template and relative `Location` |
+| PUT | `/api/task-templates/{id}` | Task writable fields | 200; template |
+| DELETE | `/api/task-templates/{id}` | None | 204 |
+| POST | `/api/task-templates/{id}/tasks` | None | 201; new task and `/api/tasks/{newId}` `Location` |
+
+The copy endpoint preserves every editable field, including statuses and the
+absolute `notifyMeOn` timestamp, and assigns a new task ID. It leaves the template
+unchanged. Repeated calls create separate tasks. To customize before creation,
+GET the template, copy its seven writable fields (omit `id`), adjust them, and
+POST to `/api/tasks`. Missing template IDs return 404; invalid input returns 400.
+Deleting a template never deletes tasks previously created from it.

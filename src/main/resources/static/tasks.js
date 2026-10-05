@@ -1,4 +1,6 @@
 const $ = id => document.getElementById(id);
+let templates = false;
+let editingTemplate = false;
 let page = 0;
 let totalPages = 0;
 let search = '';
@@ -8,8 +10,8 @@ let loading = false;
 let saving = false;
 const statuses = { PENDING: 'Pending', DONE: 'Done', SKIPPED: 'Skipped', WAITING: 'Waiting' };
 
-async function api(path = '', options = {}) {
-  const response = await fetch(`/api/tasks${path}`, {
+async function api(path = '', options = {}, templateLibrary = templates) {
+  const response = await fetch(`/api/${templateLibrary ? 'task-templates' : 'tasks'}${path}`, {
     ...options, headers: { 'Content-Type': 'application/json' }
   });
   if (!response.ok) {
@@ -48,7 +50,7 @@ function render(items, total) {
   $('count').textContent = total;
   $('page-info').textContent = totalPages ? `Page ${page + 1} of ${totalPages}` : 'No pages';
   $('tasks').replaceChildren();
-  if (!items.length) $('tasks').append(element('p', search || statusFilter ? 'No tasks match your filters.' : 'No tasks yet. Create a task to get started.', 'empty'));
+  if (!items.length) $('tasks').append(element('p', search || statusFilter ? `No ${templates ? 'templates' : 'tasks'} match your filters.` : templates ? 'No templates yet. Create a template to reuse its fields and steps.' : 'No tasks yet. Create a task to get started.', 'empty'));
   for (const task of items) {
     const card = element('article', undefined, 'card task-card');
     card.append(element('h2', task.name), element('p', task.description || 'No description.', 'description'));
@@ -75,14 +77,16 @@ function render(items, total) {
     edit.addEventListener('click', () => openEditor(task));
     const remove = element('button', 'Delete', 'danger');
     remove.addEventListener('click', async () => {
-      if (!confirm(`Delete “${task.name}” and all its steps? This cannot be undone.`)) return;
+      if (!confirm(`Delete ${templates ? 'template' : 'task'} “${task.name}” and all its steps? This cannot be undone.`)) return;
       remove.disabled = true;
       try {
         await api(`/${encodeURIComponent(task.id)}`, { method: 'DELETE' });
-        await load('Task deleted.');
+        await load(`${templates ? 'Template' : 'Task'} deleted.`);
       } catch (error) { $('status').textContent = error.message; remove.disabled = false; }
     });
-    actions.append(edit, remove);
+    const copy = element('button', templates ? 'Use template' : 'Save as template', 'secondary');
+    copy.addEventListener('click', () => openEditor(task, !templates, true));
+    actions.append(copy, edit, remove);
     card.append(actions);
     $('tasks').append(card);
   }
@@ -91,9 +95,11 @@ function render(items, total) {
 async function load(message = '') {
   if (loading) return;
   loading = true;
+  $('tasks').querySelectorAll('button').forEach(node => { node.disabled = true; });
+  for (const id of ['show-tasks', 'show-templates', 'new']) $(id).disabled = true;
   $('search-form').querySelectorAll('input, select, button').forEach(node => { node.disabled = true; });
   $('previous').disabled = $('next').disabled = true;
-  $('status').textContent = 'Loading tasks…';
+  $('status').textContent = templates ? 'Loading templates…' : 'Loading tasks…';
   try {
     const query = () => `?page=${page}&size=20&search=${encodeURIComponent(search)}${statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : ''}`;
     let result = await api(query());
@@ -104,9 +110,11 @@ async function load(message = '') {
     totalPages = result.totalPages;
     render(result.items, result.totalElements);
     $('status').textContent = message;
-  } catch (error) { $('status').textContent = `${message ? `${message} ` : ''}Could not load tasks. ${error.message}`; }
+  } catch (error) { $('status').textContent = `${message ? `${message} ` : ''}Could not load ${templates ? 'templates' : 'tasks'}. ${error.message}`; }
   finally {
     loading = false;
+    $('tasks').querySelectorAll('button').forEach(node => { node.disabled = false; });
+    for (const id of ['show-tasks', 'show-templates', 'new']) $(id).disabled = false;
     $('search-form').querySelectorAll('input, select, button').forEach(node => { node.disabled = false; });
     $('previous').disabled = page === 0;
     $('next').disabled = page + 1 >= totalPages;
@@ -135,9 +143,12 @@ function addStep(step = {}) {
   numberSteps();
 }
 
-function openEditor(task = null) {
-  editingId = task?.id ?? null;
-  $('editor-title').textContent = task ? 'Edit task' : 'New task';
+function openEditor(task = null, templateLibrary = templates, copy = false) {
+  editingTemplate = templateLibrary;
+  editingId = copy ? null : task?.id ?? null;
+  const kind = editingTemplate ? 'template' : 'task';
+  $('editor-title').textContent = `${editingId ? 'Edit' : 'New'} ${kind}`;
+  $('save').textContent = `Save ${kind}`;
   $('name').value = task?.name ?? '';
   $('description').value = task?.description ?? '';
   $('task-status').value = task?.status ?? 'PENDING';
@@ -184,16 +195,29 @@ $('form').addEventListener('submit', async event => {
       metadata: parseObject($('metadata'), 'Task metadata'), links: parseObject($('links'), 'Task links', true), steps };
     saving = true;
     $('editor-fields').disabled = $('save').disabled = $('close').disabled = $('cancel').disabled = true;
-    await api(editingId ? `/${encodeURIComponent(editingId)}` : '', { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    await api(editingId ? `/${encodeURIComponent(editingId)}` : '', { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(body) }, editingTemplate);
     $('editor').close();
     page = 0;
-    await load('Task saved.');
+    setLibrary(editingTemplate);
+    await load(`${editingTemplate ? 'Template' : 'Task'} saved.`);
   } catch (error) { $('form-error').textContent = error.message; }
   finally {
     saving = false;
     $('editor-fields').disabled = $('save').disabled = $('close').disabled = $('cancel').disabled = false;
   }
 });
+function setLibrary(value) {
+  templates = value;
+  page = 0;
+  $('library-title').textContent = $('list-title').textContent = templates ? 'Task templates' : 'Tasks';
+  $('new').textContent = templates ? '+ New template' : '+ New task';
+  $('search-form').querySelector('label').textContent = templates ? 'Search templates' : 'Search tasks';
+  $('show-tasks').setAttribute('aria-pressed', String(!templates));
+  $('show-templates').setAttribute('aria-pressed', String(templates));
+}
+for (const [id, value] of [['show-tasks', false], ['show-templates', true]]) {
+  $(id).addEventListener('click', () => { if (!loading && !saving) { setLibrary(value); load(); } });
+}
 $('new').addEventListener('click', () => openEditor());
 $('add-step').addEventListener('click', () => { addStep(); $('step-editors').lastElementChild.querySelector('input').focus(); });
 for (const id of ['close', 'cancel']) $(id).addEventListener('click', () => $('editor').close());

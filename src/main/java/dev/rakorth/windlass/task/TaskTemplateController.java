@@ -6,11 +6,24 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/tasks")
-public class TaskController {
-    private final TaskService service;
+@RequestMapping("/api/task-templates")
+public class TaskTemplateController {
+    private final TaskTemplateService service;
+    private final TaskService tasks;
 
-    public TaskController(@org.springframework.beans.factory.annotation.Qualifier("taskService") TaskService service) { this.service = service; }
+    public TaskTemplateController(TaskTemplateService service,
+            @org.springframework.beans.factory.annotation.Qualifier("taskService") TaskService tasks) {
+        this.service = service;
+        this.tasks = tasks;
+    }
+
+    @PostMapping("/{id}/tasks")
+    public ResponseEntity<Task> createTask(@PathVariable String id) {
+        var template = service.get(id);
+        var task = tasks.create(new TaskRequest(template.name(), template.description(), template.links(),
+                template.metadata(), template.steps(), template.status(), template.notifyMeOn()));
+        return ResponseEntity.created(URI.create("/api/tasks/" + task.id())).body(task);
+    }
 
     @GetMapping
     public TaskPage list(@RequestParam(defaultValue = "0") int page,
@@ -26,7 +39,7 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<Task> create(@Valid @RequestBody TaskRequest request) {
         var task = service.create(request);
-        return ResponseEntity.created(URI.create("/api/tasks/" + task.id())).body(task);
+        return ResponseEntity.created(URI.create("/api/task-templates/" + task.id())).body(task);
     }
 
     @PutMapping("/{id}")
