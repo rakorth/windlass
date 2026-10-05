@@ -76,7 +76,7 @@ class TaskTests {
                 {"name":"Release","steps":[
                   {"name":" Build ","status":"PENDING","metadata":{"nested":{"attempt":2}},
                    "links":{"Build":"https://ci.example.com/42"}},
-                  {"name":"Deploy","status":"SkIPPED"}]}
+                  {"name":"Deploy","status":"SKIPPED"}]}
                 """))
                 .andExpect(status().isCreated()).andReturn();
         String id = json.readTree(result.getResponse().getContentAsString()).get("id").asString();
@@ -86,14 +86,14 @@ class TaskTests {
                 .andExpect(jsonPath("$.steps[0].status").value("PENDING"))
                 .andExpect(jsonPath("$.steps[0].metadata.nested.attempt").value(2))
                 .andExpect(jsonPath("$.steps[0].links.Build").value("https://ci.example.com/42"))
-                .andExpect(jsonPath("$.steps[1].status").value("SkIPPED"))
+                .andExpect(jsonPath("$.steps[1].status").value("SKIPPED"))
                 .andExpect(jsonPath("$.steps[1].metadata").isEmpty())
                 .andExpect(jsonPath("$.steps[1].links").isEmpty());
         mvc.perform(get("/api/tasks")).andExpect(jsonPath("$.items[0].steps[1].name").value("Deploy"));
         for (String steps : new String[]{"[null]", "[{}]",
                 "[{\"name\":\"x\",\"status\":null}]",
                 "[{\"name\":\"x\",\"status\":\"pending\"}]",
-                "[{\"name\":\"x\",\"status\":\"SKIPPED\"}]", "[{\"name\":\"x\",\"status\":\" \"}]",
+                "[{\"name\":\"x\",\"status\":\"SkIPPED\"}]", "[{\"name\":\"x\",\"status\":\" \"}]",
                 "[{\"name\":\"x\",\"status\":\"PENDING\",\"links\":{\"Issue\":\"/relative\"}}]"}) {
             mvc.perform(put(path).contentType("application/json").content("{\"name\":\"Release\",\"steps\":" + steps + "}"))
                     .andExpect(status().isBadRequest());

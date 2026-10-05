@@ -91,3 +91,18 @@ server-side text/source search, bulk actions, attachments, scheduled delivery,
 mark-unread, undo-delete, real-time updates, deduplication, idempotency keys,
 optimistic locking, or an OpenAPI/Swagger endpoint. The source string and external
 links describe other services; Windlass does not connect to them automatically.
+
+## Tasks and steps UI
+
+The **Tasks** header link opens `/tasks.html`. The page lists tasks sorted by
+name, with server-side search across task names, descriptions, and metadata,
+and pages of 20 tasks. Refresh fetches current data. Expand **View task details**
+to see the full description, ID, links, metadata, and ordered steps with Pending,
+Done, or Skipped status.
+
+Create and edit tasks in a dialog. Add, remove, and reorder steps, set their
+statuses, and edit task and step metadata and links as JSON objects. Saving
+replaces the complete task, including its steps. Links require full HTTP/HTTPS
+URLs and open in a new tab. Delete requires confirmation and removes the task
+and its steps. Failed requests and invalid input show errors. Changes from other
+clients require Refresh; concurrent edits are not merged.
