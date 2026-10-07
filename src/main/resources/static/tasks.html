@@ -17,7 +17,7 @@
     <form id="search-form" class="toolbar task-toolbar"><label for="search">Search tasks</label><input id="search" type="search" placeholder="Search names, descriptions, or metadata…"><label for="status-filter">Status</label><select id="status-filter"><option value="">All statuses</option><option value="PENDING">Pending</option><option value="WAITING">Waiting</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option></select><button type="submit" class="secondary">Search</button><button id="refresh" type="button" class="secondary">Refresh</button></form>
     <p id="status" role="status" aria-live="polite"></p>
     <div class="list-heading"><h2><span id="list-title">Tasks</span> <span id="count">0</span></h2><span class="muted">Sorted by name</span></div>
-    <div id="tasks" class="task-grid"></div>
+    <div id="tasks" class="task-list" role="list" aria-label="Tasks and templates"></div>
     <nav class="actions pagination" aria-label="Task pages"><button id="previous" class="secondary" disabled>Previous</button><span id="page-info" aria-live="polite"></span><button id="next" class="secondary" disabled>Next</button></nav>
   </main>
   <dialog id="editor" class="task-editor">

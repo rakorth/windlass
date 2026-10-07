@@ -96,9 +96,12 @@ links describe other services; Windlass does not connect to them automatically.
 
 The **Tasks** header link opens `/tasks.html`. The page lists tasks sorted by
 name, with server-side search across task names, descriptions, and metadata,
-and pages of 20 tasks. Refresh fetches current data. Expand **View task details**
-to see the full description, ID, links, metadata, and ordered steps with Pending,
-Done, or Skipped status.
+and pages of 20 tasks. Tasks and templates appear in full-width list rows with
+their descriptions, task status, step completion count, and ordered steps always
+visible. Each step shows its Pending, Waiting, Done, or Skipped status. On smaller
+screens, steps appear below the task summary. Refresh fetches current data.
+Expand **View task details** to see the ID, links, and metadata; **Step details**
+reveals any step links and metadata.
 
 Create and edit tasks in a dialog. Add, remove, and reorder steps, set their
 statuses, and edit task and step metadata and links as JSON objects. Saving

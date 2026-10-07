@@ -52,12 +52,16 @@ function render(items, total) {
   $('tasks').replaceChildren();
   if (!items.length) $('tasks').append(element('p', search || statusFilter ? `No ${templates ? 'templates' : 'tasks'} match your filters.` : templates ? 'No templates yet. Create a template to reuse its fields and steps.' : 'No tasks yet. Create a task to get started.', 'empty'));
   for (const task of items) {
-    const card = element('article', undefined, 'card task-card');
-    card.append(element('h2', task.name), element('p', task.description || 'No description.', 'description'));
-    card.append(element('span', statuses[task.status], `step-badge ${task.status.toLowerCase()}`));
-    if (task.notifyMeOn) card.append(element('p', `Notify me on: ${new Date(task.notifyMeOn).toLocaleString()}`, 'muted'));
+    const row = element('article', undefined, 'task-row');
+    row.setAttribute('role', 'listitem');
+    const content = element('div', undefined, 'task-content');
+    content.append(element('h2', task.name), element('p', task.description || 'No description.', 'description'));
+    const state = element('div', undefined, 'task-state');
+    state.append(element('span', 'Status', 'task-label'), element('span', statuses[task.status], `step-badge ${task.status.toLowerCase()}`));
+    if (task.notifyMeOn) content.append(element('p', `Notify me on: ${new Date(task.notifyMeOn).toLocaleString()}`, 'muted'));
     const done = task.steps.filter(step => step.status === 'DONE').length;
-    card.append(element('p', `${done} of ${task.steps.length} steps done`, 'muted'));
+    const stepSection = element('section', undefined, 'task-step-section');
+    stepSection.append(element('h3', 'Steps', 'task-label'), element('p', `${done} of ${task.steps.length} steps done`, 'task-progress'));
     const details = element('details');
     details.append(element('summary', 'View task details'));
     details.append(element('p', `ID: ${task.id}`, 'identifier'));
@@ -65,14 +69,21 @@ function render(items, total) {
     const steps = element('ol', undefined, 'task-steps');
     for (const step of task.steps) {
       const item = element('li');
-      item.append(element('h3', step.name), element('span', statuses[step.status], `step-badge ${step.status.toLowerCase()}`));
-      appendExtras(item, step);
+      const heading = element('div', undefined, 'task-step-heading');
+      heading.append(element('span', step.name, 'task-step-name'), element('span', statuses[step.status], `step-badge ${step.status.toLowerCase()}`));
+      item.append(heading);
+      if (Object.keys(step.links ?? {}).length || Object.keys(step.metadata ?? {}).length) {
+        const extras = element('details');
+        extras.append(element('summary', 'Step details'));
+        appendExtras(extras, step);
+        item.append(extras);
+      }
       steps.append(item);
     }
-    details.append(steps);
-    if (!task.steps.length) details.append(element('p', 'No steps.', 'muted'));
-    card.append(details);
-    const actions = element('div', undefined, 'actions');
+    stepSection.append(steps);
+    if (!task.steps.length) stepSection.append(element('p', 'No steps.', 'muted'));
+    content.append(details);
+    const actions = element('div', undefined, 'actions task-actions');
     const edit = element('button', 'Edit', 'secondary');
     edit.addEventListener('click', () => openEditor(task));
     const remove = element('button', 'Delete', 'danger');
@@ -87,8 +98,8 @@ function render(items, total) {
     const copy = element('button', templates ? 'Use template' : 'Save as template', 'secondary');
     copy.addEventListener('click', () => openEditor(task, !templates, true));
     actions.append(copy, edit, remove);
-    card.append(actions);
-    $('tasks').append(card);
+    row.append(content, state, stepSection, actions);
+    $('tasks').append(row);
   }
 }
 
