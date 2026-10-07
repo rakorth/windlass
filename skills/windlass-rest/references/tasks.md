@@ -3,6 +3,25 @@
 Use the connection and failure handling in `../SKILL.md`. These are REST
 operations; Windlass MCP tools currently support notifications only.
 
+## Inspect and link to a task
+
+GET `/api/tasks/{id}` for the complete current task. To share the browser view,
+use `<browser-base-url>/task.html?id=<URL-encoded-id>` with the actual returned ID.
+For example, a standalone deployment can use
+`http://localhost:8080/task.html?id=<id>` when that address is reachable by the user.
+Use the browser-accessible deployment address, not an internal container hostname.
+
+The details page loads directly from the query parameter and also supports ID
+lookup and manual refresh. It shows task status, description, reminder, completion
+count, ordered steps and their statuses, external links, metadata, and webhooks.
+Step metadata and webhooks are expandable. Missing or deleted tasks show an error;
+opening the page does not recreate them or change their status.
+
+The `/tasks.html` list shows task and step statuses and completion counts without
+expanding details. Task names link to their details pages. The template library
+shares the list UI but has no dedicated details page; do not build task details
+URLs from template IDs.
+
 ## Collections and endpoints
 
 Choose `/api/tasks` for actual work and `/api/task-templates` for reusable

@@ -1,6 +1,6 @@
 ---
 name: windlass-rest
-description: Operate Windlass through its REST API to manage notifications, tasks, reusable task templates, and n8n backups. Use for searching or updating Windlass records, creating tasks from templates, task and step status webhooks, webhook failure notifications, unread state, and backup downloads or restores.
+description: Operate Windlass through its REST API to manage notifications, tasks, reusable task templates, and n8n backups. Use for searching or updating Windlass records, sharing direct record links, creating tasks from templates, status webhooks, unread state, and backup downloads or restores.
 ---
 
 # Windlass REST
@@ -159,6 +159,27 @@ unrelated edits. Status changes send outbound POSTs and failed deliveries create
 unread notifications with source `task-webhooks`. Read the reference for delivery
 timeouts and failure inspection. Notification field names and unread operations
 do not apply to task or template records.
+
+## Share record links
+
+Use the deployment's browser-accessible base URL and an actual returned record
+ID, URL-encoded as a query parameter:
+
+| Record | UI path |
+| --- | --- |
+| Task | `/task.html?id=<encoded-id>` |
+| Notification | `/notification.html?id=<encoded-id>` |
+
+Include a direct UI link when reporting a created task or notification, or when
+asked to share or inspect a record. API `Location` headers point to JSON resources;
+construct the UI URL using the returned ID. A hostname reachable only inside a
+container network may need the deployment's public or forwarded address for a
+user-facing link. Do not substitute a guessed host.
+
+The Tasks list at `/tasks.html` links task names to their details pages. Templates
+are accessed through **Task templates** on that list; they have no dedicated
+details URL. Opening a record page reads it without changing its status or
+marking a notification seen.
 
 ## n8n backups and automations
 

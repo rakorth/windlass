@@ -6,6 +6,14 @@ Windlass is a Java 24 Spring Boot notification manager with SQLite persistence a
 
 `docker/` contains n8n helpers and the Python backup manager. `deploy/` and `scripts/` support portable deployment bundles. Start with `docs/README.md` for architecture, API, and deployment documentation.
 
+## Agent Skills
+
+- [Windlass REST](skills/windlass-rest/SKILL.md): Use when operating a running Windlass instance through its API, including notifications, tasks, reusable templates, direct record links, status webhooks, and n8n backups.
+- For task and template operations, follow the skill's [task reference](skills/windlass-rest/references/tasks.md). Task browser links use `/task.html?id=<URL-encoded-id>`; templates have no dedicated details page.
+- For backup downloads and restores, follow the skill's [n8n backup reference](skills/windlass-rest/references/n8n-backups.md).
+
+Repository development uses the guidelines below. Keep the REST skill and its relevant references aligned with changes to API behavior and user-facing record links.
+
 ## Build, Test, and Development Commands
 
 Use JDK 24 or newer and the Maven wrapper:
