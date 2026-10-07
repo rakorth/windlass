@@ -46,7 +46,8 @@ skip records.
 nonblank `name` (max 200 characters, trimmed) and an exact `status`: `PENDING`,
 `DONE`, or `SKIPPED`. `WAITING` is a task status only. Step `metadata` and `links`
 follow the task map rules and default to `{}`. Null steps are invalid. Task
-status is independent of step statuses.
+status is independent of step statuses. Each step also accepts a `webhooks`
+array of absolute HTTP(S) URLs with a host; missing/null becomes `[]`.
 
 PUT replaces all eight editable fields and the whole ordered steps list. Fetch
 the current record, retain those fields, apply the requested edits, and send the
@@ -76,7 +77,8 @@ curl --fail-with-body --silent --show-error --max-time 15 \
 
 Expect 201, a new task object, and `/api/tasks/{newId}` in `Location`. Every
 editable field is copied exactly, including task/step statuses and the absolute
-reminder instant. The endpoint has no override mechanism; do not send a body
+reminder instant and task/step webhook lists. Creation sends no webhook events.
+The endpoint has no override mechanism; do not send a body
 expecting it to customize the copy.
 
 When customization is requested, select only the eight writable fields from
@@ -92,7 +94,7 @@ curl --fail-with-body --silent --show-error --max-time 15 \
 For fresh work, consider whether copied statuses and reminder dates fit the
 request. Set task/step statuses to `PENDING` or replace/clear the reminder when
 appropriate to the user's instructions; do not silently change an exact copy.
-Preserve other metadata and links unless asked to change them. Never PUT the
+Preserve metadata, links, and webhook lists unless asked to change them. Never PUT the
 customized task back to the template ID.
 
 Copies have independent IDs and stored content. Updating or deleting a template
@@ -104,10 +106,91 @@ All creation POSTs, including the copy endpoint, are non-idempotent. After an
 uncertain response, inspect the destination library before retrying and stop if
 the outcome remains uncertain. Report confirmed record types and returned IDs.
 
-Task and step `webhooks` lists are replaced by PUT and copied from templates.
-Preserve them when editing unrelated fields. Existing task/step status changes
-POST JSON to their updated lists. Steps match by unchanged name and position.
-Creation and template edits do not send events. Failed deliveries create unread
-`task-webhooks` notifications; status updates remain saved. Delivery is synchronous
-with a 10-second request timeout per URL, so allow enough client time for all
-configured destinations. See [API webhook contract](../../../docs/api.md#task-status-webhooks).
+## Configure status-change webhooks
+
+Set `webhooks` on a task or an individual step to a list of nonblank absolute
+HTTP or HTTPS URL strings with hosts. Use the supplied destinations. An empty
+list disables delivery for that task or step. There is no separate webhook
+resource, custom-header configuration, or task/step PATCH endpoint.
+
+For an existing task, GET `/api/tasks/{id}`, retain all eight writable fields and
+every step's fields, then change the requested webhook lists and PUT the complete
+payload. Omitted/null `webhooks` clears the list. A configuration-only edit sends
+no event if statuses remain unchanged.
+
+Example writable payload (use the actual task's other fields when updating):
+
+```json
+{
+  "name": "Release",
+  "description": "",
+  "status": "PENDING",
+  "notifyMeOn": null,
+  "links": {},
+  "metadata": {},
+  "webhooks": ["https://example.com/task-events"],
+  "steps": [{
+    "name": "Build",
+    "status": "PENDING",
+    "metadata": {},
+    "links": {},
+    "webhooks": ["https://example.com/step-events"]
+  }]
+}
+```
+
+## Status changes and delivery
+
+After saving a changed task status, Windlass POSTs JSON to the updated task
+webhook list. A changed step sends to its own updated list, independently of the
+task status. Step comparisons use zero-based position and unchanged name;
+steps have no IDs. Adding, removing, renaming, or reordering steps is not itself
+a status event. Preserve names and ordering when changing step statuses.
+Unchanged statuses, task creation, template creation/edits, and template copying
+send no events. Templates store webhook settings for future task copies.
+
+Each POST uses `Content-Type: application/json`. Payload fields are:
+
+| Field | Value |
+| --- | --- |
+| `event` | `task.status_changed` or `task_step.status_changed` |
+| `occurredOn` | UTC event timestamp |
+| `taskId` | Updated task ID |
+| `previousStatus` | Previous task or step status |
+| `status` | Updated task or step status |
+| `task` | Complete updated task |
+| `stepIndex` | Zero-based position; step events only |
+| `step` | Updated step; step events only |
+
+Delivery is synchronous and follows list order, with task destinations attempted
+before changed-step destinations. Each URL has a 5-second connection timeout and
+a 10-second request timeout. All 2xx responses succeed; redirects are not followed.
+There are no automatic retries or durable delivery queue. For a status-changing
+PUT, increase the client timeout beyond 10 seconds times the number of triggered
+destinations, plus time for persistence and network overhead. The skill's
+15-second notification examples may be too short for these task updates.
+
+A saved status is not rolled back when delivery fails, and other destinations
+are still attempted. A successful task PUT confirms the saved task; it does not
+prove every webhook succeeded. If the client times out, GET the task to inspect
+the saved state before retrying. Repeating the same saved status does not resend
+webhooks. Do not toggle status to force a retry unless the user requests it.
+
+## Inspect webhook failures
+
+Every non-2xx response, connection error, or timeout creates an unread notification
+with title `Task webhook delivery failed` and `notification_source: task-webhooks`.
+Its description includes the destination and error. `metadata_map` contains the
+same event fields plus `webhookUrl`, `error`, and `httpStatus` when an HTTP response
+was received; `external_links.Webhook` points to the destination.
+
+To investigate a task, fetch `/api/notifications` pages and filter with a JSON
+parser by `notification_source == "task-webhooks"` and
+`metadata_map.taskId == <task ID>`. Use `metadata_map.stepIndex`, `occurredOn`,
+`webhookUrl`, and `error` to identify the affected event and destination.
+Source/task filtering is client-side; the notification API only offers an unread
+filter. Traverse all pages, including seen notifications unless the user asks
+for unread failures only. GET does not mark failures seen.
+
+Report the saved status and any observed delivery failures separately. Inspecting
+failure notifications does not authorize directly calling their webhook URLs.

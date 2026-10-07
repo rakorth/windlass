@@ -1,6 +1,6 @@
 ---
 name: windlass-rest
-description: Operate Windlass through its REST API to manage notifications, tasks, reusable task templates, and n8n backups. Use for searching or updating Windlass records, creating tasks from templates, unread state, and backup downloads or restores.
+description: Operate Windlass through its REST API to manage notifications, tasks, reusable task templates, and n8n backups. Use for searching or updating Windlass records, creating tasks from templates, task and step status webhooks, webhook failure notifications, unread state, and backup downloads or restores.
 ---
 
 # Windlass REST
@@ -152,9 +152,13 @@ Deletion is permanent. A successful DELETE returns 204 with no JSON to parse. Do
 
 For task or template requests, read [references/tasks.md](references/tasks.md).
 It covers both libraries, their shared fields and validation, complete-field
-updates, and exact or customized copies. Templates live at `/api/task-templates`,
+updates, exact or customized copies, and status-change webhooks. Templates live at `/api/task-templates`,
 separately from `/api/tasks`; use the template library when asked to save a
-reusable template. Notification field names and unread operations do not apply.
+reusable template. Tasks and steps use `webhooks` URL lists; preserve them during
+unrelated edits. Status changes send outbound POSTs and failed deliveries create
+unread notifications with source `task-webhooks`. Read the reference for delivery
+timeouts and failure inspection. Notification field names and unread operations
+do not apply to task or template records.
 
 ## n8n backups and automations
 
