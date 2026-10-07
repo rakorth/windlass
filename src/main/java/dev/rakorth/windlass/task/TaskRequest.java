@@ -16,4 +16,5 @@ public record TaskRequest(
         @JsonProperty(required = false) Map<String, Object> metadata,
         @JsonProperty(required = false) List<@NotNull @Valid Step> steps,
         @JsonProperty(required = false) TaskStatus status,
-        @JsonProperty(required = false) Instant notifyMeOn) {}
+        @JsonProperty(required = false) Instant notifyMeOn,
+        @JsonProperty(required = false) List<@NotBlank String> webhooks) {}

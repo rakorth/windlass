@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     metadata TEXT NOT NULL,
     steps TEXT NOT NULL DEFAULT '[]',
     status TEXT NOT NULL DEFAULT 'PENDING',
+    webhooks TEXT NOT NULL DEFAULT '[]',
     notify_me_on TEXT
 );
 
@@ -28,5 +29,6 @@ CREATE TABLE IF NOT EXISTS task_templates (
     metadata TEXT NOT NULL,
     steps TEXT NOT NULL DEFAULT '[]',
     status TEXT NOT NULL DEFAULT 'PENDING',
+    webhooks TEXT NOT NULL DEFAULT '[]',
     notify_me_on TEXT
 );

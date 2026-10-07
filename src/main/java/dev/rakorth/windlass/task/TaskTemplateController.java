@@ -21,7 +21,7 @@ public class TaskTemplateController {
     public ResponseEntity<Task> createTask(@PathVariable String id) {
         var template = service.get(id);
         var task = tasks.create(new TaskRequest(template.name(), template.description(), template.links(),
-                template.metadata(), template.steps(), template.status(), template.notifyMeOn()));
+                template.metadata(), template.steps(), template.status(), template.notifyMeOn(), template.webhooks()));
         return ResponseEntity.created(URI.create("/api/tasks/" + task.id())).body(task);
     }
 

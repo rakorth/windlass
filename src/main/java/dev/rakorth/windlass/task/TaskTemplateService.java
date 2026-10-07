@@ -6,7 +6,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class TaskTemplateService extends TaskService {
-    public TaskTemplateService(JdbcTemplate jdbc, ObjectMapper json) {
-        super(jdbc, json, "task_templates");
+    public TaskTemplateService(JdbcTemplate jdbc, ObjectMapper json, TaskWebhookService webhooks) {
+        super(jdbc, json, "task_templates", webhooks);
     }
 }

@@ -109,3 +109,9 @@ Task templates use `TaskTemplateController` and `TaskTemplateService` in the
 `task` package. They reuse task persistence and validation against the separate
 `task_templates` table. `TaskTemplateTests` covers the library, validation, and
 independent copies; `tasks.html` and `tasks.js` provide both library views.
+
+Task status updates call `task/TaskWebhookService.java` after persistence. It sends
+bounded HTTP POSTs and creates failure notifications through `NotificationService`.
+`TaskWebhookSchemaMigration` adds webhook lists to existing task/template tables;
+step webhook lists live in the existing JSON steps column. `TaskWebhookTests`
+covers delivery, failure reporting, URL validation, template copying, and migration.

@@ -135,6 +135,7 @@ function addStep(step = {}) {
   row.querySelector('.step-name').value = step.name ?? '';
   row.querySelector('.step-status').value = step.status ?? 'PENDING';
   row.querySelector('.step-metadata').value = JSON.stringify(step.metadata ?? {}, null, 2);
+  row.querySelector('.step-webhooks').value = (step.webhooks ?? []).join('\n');
   row.querySelector('.step-links').value = JSON.stringify(step.links ?? {}, null, 2);
   row.querySelector('.remove').addEventListener('click', () => { row.remove(); numberSteps(); });
   row.querySelector('.up').addEventListener('click', () => { if (row.previousElementSibling) row.before(row.previousElementSibling); numberSteps(); });
@@ -156,12 +157,24 @@ function openEditor(task = null, templateLibrary = templates, copy = false) {
   $('notify-me-on').value = notifyDate
     ? new Date(notifyDate.getTime() - notifyDate.getTimezoneOffset() * 60000).toISOString().slice(0, -1) : '';
   $('metadata').value = JSON.stringify(task?.metadata ?? {}, null, 2);
+  $('webhooks').value = (task?.webhooks ?? []).join('\n');
   $('links').value = JSON.stringify(task?.links ?? {}, null, 2);
   $('step-editors').replaceChildren();
   (task?.steps ?? []).forEach(addStep);
   $('form-error').textContent = '';
   $('editor').showModal();
   $('name').focus();
+}
+
+function parseWebhooks(input) {
+  const urls = input.value.split('\n').map(url => url.trim()).filter(Boolean);
+  for (const url of urls) {
+    let valid = false;
+    try { valid = /^https?:\/\//i.test(url) && !!new URL(url).hostname; }
+    catch { /* Report validation below. */ }
+    if (!valid) throw new Error('Webhooks require full HTTP or HTTPS URLs.');
+  }
+  return urls;
 }
 
 function parseObject(input, label, links = false) {
@@ -187,11 +200,11 @@ $('form').addEventListener('submit', async event => {
     const steps = [...$('step-editors').children].map((row, index) => {
       const name = row.querySelector('.step-name').value.trim();
       if (!name) throw new Error(`Step ${index + 1} needs a name.`);
-      return { name, status: row.querySelector('.step-status').value,
+      return { name, webhooks: parseWebhooks(row.querySelector('.step-webhooks')), status: row.querySelector('.step-status').value,
         metadata: parseObject(row.querySelector('.step-metadata'), `Step ${index + 1} metadata`),
         links: parseObject(row.querySelector('.step-links'), `Step ${index + 1} links`, true) };
     });
-    const body = { notifyMeOn: $('notify-me-on').value ? new Date($('notify-me-on').value).toISOString() : null, status: $('task-status').value, name: $('name').value.trim(), description: $('description').value,
+    const body = { webhooks: parseWebhooks($('webhooks')), notifyMeOn: $('notify-me-on').value ? new Date($('notify-me-on').value).toISOString() : null, status: $('task-status').value, name: $('name').value.trim(), description: $('description').value,
       metadata: parseObject($('metadata'), 'Task metadata'), links: parseObject($('links'), 'Task links', true), steps };
     saving = true;
     $('editor-fields').disabled = $('save').disabled = $('close').disabled = $('cancel').disabled = true;

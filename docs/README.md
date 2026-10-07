@@ -32,9 +32,9 @@ These documents describe implemented behavior, not a roadmap.
 - Notification PUT replaces editable content. Omitted description and maps are cleared; an omitted `received_on` timestamp is preserved.
 - Notifications start unread. Only explicit PATCH `/api/notifications/{id}/seen` marks them seen. Reading does not.
 - Notification text search filters the current page in the browser; its REST collection supports an optional unread filter.
-- Tasks and templates share `name`, `description`, `status`, `notifyMeOn`, `links`, `metadata`, and ordered `steps`. PUT replaces all seven fields; omitted optional fields reset to defaults, including status to `PENDING` and reminder to null.
+- Tasks and templates share `name`, `description`, `status`, `notifyMeOn`, `links`, `metadata`, `webhooks`, and ordered `steps`. PUT replaces all eight fields; omitted optional fields reset to defaults, including status to `PENDING`, reminder to null, and webhooks to `[]`.
 - Task and template collections support server-side `search` and `status` filters before pagination. All REST collections return a paginated object.
-- Templates are stored separately. POST `/api/task-templates/{id}/tasks` copies all seven fields into an independent task with a new ID, preserving statuses and the absolute reminder timestamp. It does not accept customization fields; customize by copying writable fields into POST `/api/tasks`.
+- Templates are stored separately. POST `/api/task-templates/{id}/tasks` copies all eight fields into an independent task with a new ID, preserving statuses and the absolute reminder timestamp. It does not accept customization fields; customize by copying writable fields into POST `/api/tasks`.
 - The Tasks UI at `/tasks.html` includes the template library. MCP tools currently manage notifications only.
 - There is no authentication, per-user state, external-service ingestion, or automatic refresh.
 - SQLite is local to the configured file/volume. The Compose database is separate from a database created by running Maven locally.

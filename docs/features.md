@@ -122,3 +122,9 @@ copy or its template does not change the other. Statuses and reminder timestamps
 are copied exactly, so review them when reusing a template.
 
 See [Task templates](task-templates.md) for the complete UI and REST workflow.
+
+Task and step editors include status-change webhooks (one HTTP(S) URL per line).
+Saving a changed status sends a JSON POST to each destination; delivery failures
+appear as unread notifications with the task, step, destination, and error details.
+Templates preserve webhook settings when copied into tasks. See the
+[webhook contract](api.md#task-status-webhooks) for matching rules and delivery limits.

@@ -30,6 +30,7 @@
         <label for="description">Description</label><textarea id="description" rows="3" maxlength="10000"></textarea>
         <label for="metadata">Metadata (JSON object)</label><textarea id="metadata" rows="3" spellcheck="false">{}</textarea>
         <label for="links">Links (JSON object)</label><textarea id="links" rows="3" spellcheck="false" aria-describedby="links-help">{}</textarea><small id="links-help">Map labels to full HTTP or HTTPS URLs, e.g. {"Issue": "https://github.com"}.</small>
+        <label for="webhooks">Webhooks (one URL per line)</label><textarea id="webhooks" rows="3" spellcheck="false"></textarea><small>Send a JSON POST when the status changes. Failed deliveries appear in Notifications.</small>
         <div class="list-heading"><h3>Steps</h3><button id="add-step" type="button" class="secondary">+ Add step</button></div>
         <p class="muted">Steps run in the order shown. Use the arrows to reorder them.</p>
         <div id="step-editors"></div>
@@ -43,7 +44,7 @@
       <legend></legend>
       <label>Step name <span class="required">*</span><input class="step-name" required maxlength="200"></label>
       <label>Status<select class="step-status"><option value="PENDING">Pending</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option></select></label>
-      <details><summary>Step metadata and links</summary><label>Metadata (JSON object)<textarea class="step-metadata" rows="3" spellcheck="false">{}</textarea></label><label>Links (JSON object)<textarea class="step-links" rows="3" spellcheck="false">{}</textarea></label></details>
+      <details><summary>Step metadata, links, and webhooks</summary><label>Metadata (JSON object)<textarea class="step-metadata" rows="3" spellcheck="false">{}</textarea></label><label>Links (JSON object)<textarea class="step-links" rows="3" spellcheck="false">{}</textarea></label><label>Webhooks (one URL per line)<textarea class="step-webhooks" rows="3" spellcheck="false"></textarea></label></details>
       <div class="actions"><button type="button" class="up secondary" aria-label="Move step up">↑</button><button type="button" class="down secondary" aria-label="Move step down">↓</button><button type="button" class="remove danger">Remove step</button></div>
     </fieldset>
   </template>

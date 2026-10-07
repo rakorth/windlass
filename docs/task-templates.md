@@ -1,7 +1,7 @@
 # Reusable task templates
 
-Templates hold all seven editable task fields: `name`, `description`, `status`,
-`notifyMeOn`, `links`, `metadata`, and ordered `steps`. They live in a separate
+Templates hold all eight editable task fields: `name`, `description`, `status`,
+`notifyMeOn`, `links`, `metadata`, `webhooks`, and ordered `steps`. They live in a separate
 library and do not appear as actual tasks. See the [data model](data-model.md#task)
 for defaults and validation and the [API reference](api.md#task-templates)
 for all endpoints.
@@ -69,7 +69,7 @@ and its new `/api/tasks/{id}` location. It copies all fields, including statuses
 and the reminder instant, without modifying the template. Each call creates a
 new task; it cannot customize fields through an override body.
 
-To customize before creation, GET `/api/task-templates/{id}`, select its seven
+To customize before creation, GET `/api/task-templates/{id}`, select its eight
 writable fields with a JSON parser, omit `id`, and apply your changes. Serialize
 the result as `task.json`, then submit:
 
@@ -81,7 +81,7 @@ curl --fail-with-body --silent --show-error --max-time 15 \
 
 To update a template, GET it first and PUT the complete edited payload to
 `/api/task-templates/{id}`. Omitted optional fields reset to defaults, including
-an empty steps list, `PENDING` status, and null reminder. The template library
+empty steps and webhook lists, `PENDING` status, and null reminder. The template library
 supports the same pagination, search, and status filters as tasks. Search matches
 names, descriptions, and metadata; it does not search links or steps.
 

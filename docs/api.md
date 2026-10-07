@@ -122,7 +122,7 @@ including safe payload construction and handling ambiguous matches.
 | PUT | `/api/tasks/{id}` | Task writable fields | 200; task |
 | DELETE | `/api/tasks/{id}` | None | 204; empty body |
 
-Writable fields are `name`, `description`, `links`, `metadata`, `steps`, `status`, and `notifyMeOn`; only `name`
+Writable fields are `name`, `description`, `links`, `metadata`, `steps`, `status`, `notifyMeOn`, and `webhooks`; only `name`
 is required. The server generates the immutable UUID `id`. See the
 [task model](data-model.md#task) for validation and defaults. For example:
 
@@ -180,9 +180,40 @@ They are stored separately and are never returned by `/api/tasks`.
 The copy endpoint preserves every editable field, including statuses and the
 absolute `notifyMeOn` timestamp, and assigns a new task ID. It leaves the template
 unchanged. Repeated calls create separate tasks. To customize before creation,
-GET the template, copy its seven writable fields (omit `id`), adjust them, and
+GET the template, copy its eight writable fields (omit `id`), adjust them, and
 POST to `/api/tasks`. Missing template IDs return 404; invalid input returns 400.
 Deleting a template never deletes tasks previously created from it.
 
 The copy endpoint takes no request body and applies no overrides. For a working
 example and the UI workflow, see [Task templates](task-templates.md).
+
+## Task status webhooks
+
+Tasks and steps accept a `webhooks` array of absolute HTTP or HTTPS URLs, defaulting
+to `[]` when omitted or null. PUT replaces this list along with other editable fields.
+The Tasks editor accepts one webhook URL per line for the task and each step.
+Templates store and copy these settings; template edits and task creation send no events.
+
+```json
+{"name":"Release","status":"DONE","webhooks":["https://example.com/task-events"],"steps":[{"name":"Build","status":"DONE","webhooks":["https://example.com/step-events"]}]}
+```
+
+After an existing task is saved with a different status, Windlass POSTs JSON to
+its updated webhook list. Each changed step sends to its own updated list.
+Step changes are matched by zero-based position and unchanged name, since steps
+have no IDs. Added, removed, renamed, or reordered steps do not themselves trigger
+status events. Updating an unchanged status sends nothing.
+
+Payload fields: `event` (`task.status_changed` or `task_step.status_changed`),
+`occurredOn` (UTC timestamp), `taskId`, `previousStatus`, `status`, and the complete
+updated `task`. Step events also include `stepIndex` and the updated `step`.
+Requests use `Content-Type: application/json`; all 2xx responses count as success.
+Redirects are not followed. Delivery is synchronous, in list order, with a
+5-second connection timeout and a 10-second request timeout per destination.
+There are no automatic retries or durable delivery queue.
+
+Each HTTP non-2xx response, connection error, or timeout creates an unread
+notification with source `task-webhooks`, a description of the error, and
+`metadata_map` containing the event, `webhookUrl`, `error`, and `httpStatus` when
+available. Its external links include the webhook URL. Failed destinations do
+not prevent attempts to other destinations and do not undo the saved status.

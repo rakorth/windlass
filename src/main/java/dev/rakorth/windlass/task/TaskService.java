@@ -14,20 +14,23 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
 
+@org.springframework.context.annotation.DependsOn("taskWebhookSchemaMigration")
 @Service
 public class TaskService {
     private final JdbcTemplate jdbc;
     private final ObjectMapper json;
     private final RowMapper<Task> mapper;
     private final String table;
+    private final TaskWebhookService webhooks;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public TaskService(JdbcTemplate jdbc, ObjectMapper json) {
-        this(jdbc, json, "tasks");
+    public TaskService(JdbcTemplate jdbc, ObjectMapper json, TaskWebhookService webhooks) {
+        this(jdbc, json, "tasks", webhooks);
     }
 
-    TaskService(JdbcTemplate jdbc, ObjectMapper json, String table) {
+    TaskService(JdbcTemplate jdbc, ObjectMapper json, String table, TaskWebhookService webhooks) {
         this.table = table;
+        this.webhooks = webhooks;
         this.jdbc = jdbc;
         this.json = json;
         this.mapper = (rs, row) -> {
@@ -37,7 +40,8 @@ public class TaskService {
                     json.readValue(rs.getString("links"), new TypeReference<Map<String, String>>() {}),
                     json.readValue(rs.getString("metadata"), new TypeReference<Map<String, Object>>() {}),
                     json.readValue(rs.getString("steps"), new TypeReference<List<Step>>() {}),
-                    notifyMeOn == null ? null : Instant.parse(notifyMeOn));
+                    notifyMeOn == null ? null : Instant.parse(notifyMeOn),
+                    json.readValue(rs.getString("webhooks"), new TypeReference<List<String>>() {}));
         };
     }
 
@@ -79,22 +83,23 @@ public class TaskService {
 
     public Task create(TaskRequest request) {
         var value = normalize(UUID.randomUUID().toString(), request);
-        jdbc.update("INSERT INTO " + table + " (id, name, description, links, metadata, steps, status, notify_me_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        jdbc.update("INSERT INTO " + table + " (id, name, description, links, metadata, steps, status, notify_me_on, webhooks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 value.id(), value.name(), value.description(),
                 json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(),
-                value.notifyMeOn() == null ? null : value.notifyMeOn().toString());
+                value.notifyMeOn() == null ? null : value.notifyMeOn().toString(), json.writeValueAsString(value.webhooks()));
         return value;
     }
 
     public Task update(String id, TaskRequest request) {
-        get(id);
+        var previous = get(id);
         var value = normalize(id, request);
-        int changed = jdbc.update("UPDATE " + table + " SET name = ?, description = ?, links = ?, metadata = ?, steps = ?, status = ?, notify_me_on = ? WHERE id = ?",
+        int changed = jdbc.update("UPDATE " + table + " SET name = ?, description = ?, links = ?, metadata = ?, steps = ?, status = ?, notify_me_on = ?, webhooks = ? WHERE id = ?",
                 value.name(), value.description(), json.writeValueAsString(value.links()),
                 json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(),
-                value.notifyMeOn() == null ? null : value.notifyMeOn().toString(), id);
+                value.notifyMeOn() == null ? null : value.notifyMeOn().toString(), json.writeValueAsString(value.webhooks()), id);
         if (changed == 0) throw notFound();
-        return get(id);
+        if (table.equals("tasks")) webhooks.statusChanged(previous, value);
+        return value;
     }
 
     public void delete(String id) {
@@ -108,11 +113,17 @@ public class TaskService {
             var stepLinks = step.links() == null ? Map.<String, String>of() : step.links();
             validateLinks(stepLinks);
             return new Step(step.name().strip(), step.status(),
-                    step.metadata() == null ? Map.of() : step.metadata(), stepLinks);
+                    step.metadata() == null ? Map.of() : step.metadata(), stepLinks, normalizeWebhooks(step.webhooks()));
         }).toList();
         return new Task(id, request.name().strip(), request.description() == null ? "" : request.description(),
                 request.status() == null ? TaskStatus.PENDING : request.status(),
-                links, request.metadata() == null ? Map.of() : request.metadata(), steps, request.notifyMeOn());
+                links, request.metadata() == null ? Map.of() : request.metadata(), steps, request.notifyMeOn(), normalizeWebhooks(request.webhooks()));
+    }
+
+    private List<String> normalizeWebhooks(List<String> urls) {
+        if (urls == null) return List.of();
+        for (String url : urls) validateLinks(Map.of("Webhook", url == null ? "" : url));
+        return List.copyOf(urls);
     }
 
     private void validateLinks(Map<String, String> links) {

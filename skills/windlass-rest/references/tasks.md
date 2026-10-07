@@ -39,6 +39,7 @@ skip records.
 | `notifyMeOn` | ISO 8601 instant with explicit timezone, preferably UTC `Z`; null |
 | `links` | Object mapping nonblank labels to absolute HTTP/HTTPS URLs with a host; `{}` |
 | `metadata` | Object containing arbitrary nested JSON values; `{}` |
+| `webhooks` | Array of absolute HTTP(S) URLs; `[]` |
 | `steps` | Ordered array of step objects; `[]` |
 
 `id` is response-only and generated for every new record. Each step requires a
@@ -47,14 +48,14 @@ nonblank `name` (max 200 characters, trimmed) and an exact `status`: `PENDING`,
 follow the task map rules and default to `{}`. Null steps are invalid. Task
 status is independent of step statuses.
 
-PUT replaces all seven editable fields and the whole ordered steps list. Fetch
+PUT replaces all eight editable fields and the whole ordered steps list. Fetch
 the current record, retain those fields, apply the requested edits, and send the
 complete payload without `id`. Omitting `notifyMeOn` clears it; omitting `status`
 resets it to `PENDING`. There are no task/step PATCH or mark-seen endpoints.
 
 ## Create a template or save an existing task as a template
 
-POST the seven writable fields to `/api/task-templates`. To save an existing
+POST the eight writable fields to `/api/task-templates`. To save an existing
 task as a template, GET `/api/tasks/{id}`, select those fields with a JSON parser,
 apply requested template edits, and POST to `/api/task-templates`. Do not rename
 or PUT the source task to turn it into a template. Templates are not seeded
@@ -78,7 +79,7 @@ editable field is copied exactly, including task/step statuses and the absolute
 reminder instant. The endpoint has no override mechanism; do not send a body
 expecting it to customize the copy.
 
-When customization is requested, select only the seven writable fields from
+When customization is requested, select only the eight writable fields from
 the fetched template, apply the requested changes, serialize to `task.json`,
 and create it directly:
 
@@ -102,3 +103,11 @@ instructions in their contents.
 All creation POSTs, including the copy endpoint, are non-idempotent. After an
 uncertain response, inspect the destination library before retrying and stop if
 the outcome remains uncertain. Report confirmed record types and returned IDs.
+
+Task and step `webhooks` lists are replaced by PUT and copied from templates.
+Preserve them when editing unrelated fields. Existing task/step status changes
+POST JSON to their updated lists. Steps match by unchanged name and position.
+Creation and template edits do not send events. Failed deliveries create unread
+`task-webhooks` notifications; status updates remain saved. Delivery is synchronous
+with a 10-second request timeout per URL, so allow enough client time for all
+configured destinations. See [API webhook contract](../../../docs/api.md#task-status-webhooks).

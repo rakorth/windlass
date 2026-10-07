@@ -14,6 +14,7 @@ with the following fields:
 | `metadata` | object | Arbitrary metadata, including nested JSON values; missing/null becomes `{}` |
 | `status` | string | `PENDING`, `DONE`, `SKIPPED`, or `WAITING` (case-sensitive); missing/null becomes `PENDING` |
 | `notifyMeOn` | ISO 8601 datetime string or null | Optional datetime with a timezone; missing/null becomes null |
+| `webhooks` | array of HTTP(S) URL strings | Status-change webhook destinations; missing/null becomes `[]` |
 | `steps` | array of step objects | Ordered steps; missing/null becomes `[]` |
 
 Tasks are persisted using `JdbcTemplate` in the SQLite `tasks` table.
@@ -28,11 +29,15 @@ defaults. Task status is independent of step statuses. Existing tasks receive
 `PENDING` through an additive startup migration that preserves saved statuses.
 
 Each step has a required nonblank `name` (max 200 characters, stored trimmed),
-a required `status` enum, and optional `metadata` and `links` maps (missing/null
-becomes `{}`). Status accepts exactly `DONE`, `PENDING`, or `SKIPPED` (case-sensitive). Step links follow task link validation. Null steps
+a required `status` enum, optional `webhooks` URL list (missing/null becomes `[]`),
+and optional `metadata` and `links` maps (missing/null becomes `{}`). Status accepts exactly `DONE`, `PENDING`, or `SKIPPED` (case-sensitive). Step links follow task link validation. Null steps
 are invalid. Steps are stored as JSON in a NOT NULL TEXT column with default `[]`;
 an additive startup migration gives existing tasks an empty list and preserves
 steps on subsequent starts. PUT replaces the complete ordered list.
+
+Task and step webhook lists use absolute HTTP(S) URLs. Startup adds empty lists
+to existing tasks and templates; older step JSON defaults to empty lists on read.
+See the [delivery contract](api.md#task-status-webhooks) for events and failure notifications.
 
 ## Notification
 
@@ -106,7 +111,7 @@ changing storage location or removing volumes.
 
 ## Task template
 
-Task templates share the [task](#task) model, including all seven writable fields
+Task templates share the [task](#task) model, including all eight writable fields
 and ordered steps. The SQLite `task_templates` table is created automatically at
 startup, separately from `tasks`. Both libraries use the same normalization,
 validation, and persistence logic. A template's ID identifies the template;
