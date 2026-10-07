@@ -103,6 +103,12 @@ screens, steps appear below the task summary. Refresh fetches current data.
 Expand **View task details** to see the ID, links, and metadata; **Step details**
 reveals any step links and metadata.
 
+Click a task name to open its details page at `/task.html?id=<id>`. Share or
+bookmark that URL to open the task directly. `/task.html` also lets you look up
+a task by ID. The page shows the task status, description, reminder, ordered
+steps and their statuses, external links, metadata, and webhooks. **Refresh**
+reloads the task; missing or deleted tasks show an error with an option to retry.
+
 Create and edit tasks in a dialog. Add, remove, and reorder steps, set their
 statuses, and edit task and step metadata and links as JSON objects. Saving
 replaces the complete task, including its steps. Links require full HTTP/HTTPS

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Windlass · Task details</title>
+  <link rel="icon" type="image/png" href="/favicon-32.png?v=3">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/task.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/tasks.html">All tasks</a><a class="automations-link" href="/backups.html">n8n backups</a></nav></header>
+  <main class="task-detail-page">
+    <div class="heading"><div><p class="eyebrow">ONE STEP AT A TIME</p><h1>Task details</h1><p class="muted">Open a task by ID. Share this page’s URL to link directly to it.</p></div></div>
+    <form id="lookup">
+      <label for="task-id">Task ID</label>
+      <div class="toolbar"><input id="task-id" name="id" required placeholder="Enter task ID" autocomplete="off"><button id="view" type="submit">View task</button></div>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+    <article id="task-detail" class="card" aria-labelledby="task-title" hidden>
+      <div class="card-top"><div><span class="task-label">Status</span><span id="task-state" class="step-badge"></span></div><button id="refresh" class="secondary" type="button">Refresh</button></div>
+      <h2 id="task-title"></h2>
+      <dl class="notification-facts">
+        <div><dt>ID</dt><dd id="identifier"></dd></div>
+        <div><dt>Notify me on</dt><dd id="reminder"></dd></div>
+      </dl>
+      <h3>Description</h3><p id="description" class="description"></p>
+      <section aria-labelledby="steps-title"><h3 id="steps-title">Steps</h3><p id="progress" class="task-progress"></p><ol id="steps" class="task-steps"></ol><p id="no-steps" class="muted">No steps.</p></section>
+      <h3>External links</h3><nav id="external-links" class="external-links" aria-label="Task external links"></nav><p id="no-links" class="muted">No external links.</p>
+      <h3>Metadata</h3><pre id="metadata"></pre>
+      <h3>Webhooks</h3><pre id="webhooks"></pre>
+    </article>
+  </main>
+</body>
+</html>

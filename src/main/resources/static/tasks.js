@@ -55,7 +55,14 @@ function render(items, total) {
     const row = element('article', undefined, 'task-row');
     row.setAttribute('role', 'listitem');
     const content = element('div', undefined, 'task-content');
-    content.append(element('h2', task.name), element('p', task.description || 'No description.', 'description'));
+    const title = element('h2');
+    if (templates) title.textContent = task.name;
+    else {
+      const link = element('a', task.name);
+      link.href = `/task.html?id=${encodeURIComponent(task.id)}`;
+      title.append(link);
+    }
+    content.append(title, element('p', task.description || 'No description.', 'description'));
     const state = element('div', undefined, 'task-state');
     state.append(element('span', 'Status', 'task-label'), element('span', statuses[task.status], `step-badge ${task.status.toLowerCase()}`));
     if (task.notifyMeOn) content.append(element('p', `Notify me on: ${new Date(task.notifyMeOn).toLocaleString()}`, 'muted'));
