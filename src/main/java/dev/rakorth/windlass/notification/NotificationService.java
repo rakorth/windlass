@@ -75,6 +75,11 @@ public class NotificationService {
         return get(id);
     }
 
+    public Notification markUnread(String id) {
+        if (jdbc.update("UPDATE notifications SET unread = 1 WHERE id = ?", id) == 0) throw notFound();
+        return get(id);
+    }
+
     public void delete(String id) {
         if (jdbc.update("DELETE FROM notifications WHERE id = ?", id) == 0) throw notFound();
     }

@@ -33,9 +33,10 @@ All paths below are relative to the base URL. Send `Content-Type: application/js
 | POST | `/api/notifications` | 201; created object and `Location` header |
 | PUT | `/api/notifications/{id}` | 200; updated object |
 | PATCH | `/api/notifications/{id}/seen` | 200; object with `unread: false`; no request body |
+| PATCH | `/api/notifications/{id}/unread` | 200; object with `unread: true`; no request body |
 | DELETE | `/api/notifications/{id}` | 204; no response body |
 
-Use actual IDs returned by the service. Use zero-based `page` (default 0), `size` (1–100, default 20), and optional `unread=true` or `unread=false`. Read `items` and traverse pages up to `totalPages` for complete results. Text/source filtering is local. GET requests do not mark notifications as seen. There is no endpoint to mark a seen notification unread, and no bulk endpoint.
+Use actual IDs returned by the service. Use zero-based `page` (default 0), `size` (1–100, default 20), and optional `unread=true` or `unread=false`. Read `items` and traverse pages up to `totalPages` for complete results. Text/source filtering is local. GET requests do not mark notifications as seen. PATCH `/api/notifications/{id}/unread` marks a notification unread again. There is no bulk endpoint.
 
 The list response is an object, not a bare array:
 
@@ -56,7 +57,7 @@ Filtering happens before pagination and totals. Sorting is by newest `received_o
 | `received_on` | ISO 8601 timestamp | Use an explicit offset, preferably UTC `Z`; absent/null defaults to now on POST and preserves the stored value on PUT |
 | `metadata_map` | JSON object | Optional; arbitrary nested JSON values; absent/null becomes `{}` |
 | `external_links` | JSON object of string values | Maps nonblank labels to absolute HTTP/HTTPS URLs with a host; absent/null becomes `{}` |
-| `unread` | boolean | Response-only; starts `true`, changed to `false` by PATCH `/seen`; preserved by PUT |
+| `unread` | boolean | Response-only; starts `true`, changed by PATCH `/seen` or `/unread`; preserved by PUT |
 
 External links are displayed as clickable labels in the UI and open in new tabs. Do not use relative URLs or `javascript:`, `data:`, or other schemes.
 
@@ -136,7 +137,9 @@ curl --fail-with-body --silent --show-error --max-time 15 \
   -X PATCH "$WINDLASS_BASE_URL/api/notifications/$notification_id/seen"
 ```
 
-This is safe to repeat while the notification exists and leaves its content unchanged. Check that the returned object has `unread: false`.
+This is safe to repeat while the notification exists and leaves its content unchanged. Check that the returned object has `unread: false`. For a requested mark-as-unread
+operation, use PATCH `/api/notifications/{id}/unread` with no body and check
+`unread: true`; this also preserves content and is safe to repeat.
 
 For a requested deletion:
 

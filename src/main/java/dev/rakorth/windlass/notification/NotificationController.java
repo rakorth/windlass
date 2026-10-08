@@ -38,6 +38,11 @@ public class NotificationController {
         return service.markSeen(id);
     }
 
+    @PatchMapping("/{id}/unread")
+    public Notification markUnread(@PathVariable String id) {
+        return service.markUnread(id);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         service.delete(id);

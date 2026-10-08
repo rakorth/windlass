@@ -17,6 +17,7 @@ uploads, with an explicit request header and restore confirmation.
 | POST | `/api/notifications` | Writable fields | 201; notification and relative `Location` header |
 | PUT | `/api/notifications/{id}` | Writable fields | 200; notification |
 | PATCH | `/api/notifications/{id}/seen` | None | 200; notification with `unread: false` |
+| PATCH | `/api/notifications/{id}/unread` | None | 200; notification with `unread: true` |
 | DELETE | `/api/notifications/{id}` | None | 204; empty body |
 
 The list is ordered newest received time first, then by ID for ties.
@@ -80,7 +81,9 @@ curl --fail-with-body --silent --show-error --max-time 15 \
 
 No request body is required. The response is the updated notification. Repeating
 this on an existing record succeeds and leaves `unread` false. GET does not
-mark seen. No generic PATCH or reverse mark-unread endpoint exists.
+mark seen. PATCH `/api/notifications/{id}/unread` marks the notification unread
+again and returns the updated object. Both operations preserve content and are
+safe to repeat; missing IDs return 404. No generic PATCH endpoint exists.
 
 ## Delete
 

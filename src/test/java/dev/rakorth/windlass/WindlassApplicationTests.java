@@ -134,6 +134,17 @@ class WindlassApplicationTests {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.unread").value(false));
         mvc.perform(get(path)).andExpect(jsonPath("$.unread").value(false))
                 .andExpect(jsonPath("$.title").value("Edited"));
+        for (int attempt = 0; attempt < 2; attempt++) {
+            mvc.perform(patch(path + "/unread")).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.unread").value(true))
+                    .andExpect(jsonPath("$.title").value("Edited"));
+        }
+        mvc.perform(get(path)).andExpect(jsonPath("$.unread").value(true));
+        mvc.perform(get("/api/notifications?unread=true")).andExpect(jsonPath("$.items[0].id").value(id));
+        mvc.perform(put(path).contentType("application/json").content(body))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.unread").value(true));
+        mvc.perform(patch(path + "/seen")).andExpect(jsonPath("$.unread").value(false));
+        mvc.perform(patch("/api/notifications/missing/unread")).andExpect(status().isNotFound());
         mvc.perform(patch("/api/notifications/missing/seen")).andExpect(status().isNotFound());
     }
 

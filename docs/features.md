@@ -34,7 +34,8 @@ Click a notification title to open its detail page at `/notification.html?id=<id
 The **Find notification by ID** link opens an ID lookup form. The page shows one
 notification’s title, ID, source, received time, read state, description, external
 links, and metadata. Its URL can be bookmarked or shared. Refresh fetches that
-notification again; viewing it does not mark it seen. Missing IDs and failed
+notification again; viewing it does not mark it seen. **Mark as read** / **Mark as unread**
+toggles the persisted read state and updates the button and status indicator. Missing IDs and failed
 requests show an error.
 
 The **Automations ↗** header link opens the n8n workflow editor in a new tab.
@@ -77,18 +78,19 @@ there is no polling, WebSocket, or server-sent event connection.
 | Edit content | No change |
 | Mark as seen | `false` |
 | Mark an already-seen notification as seen | Remains `false` |
+| Mark as unread | `true` |
 | Restart the service | Stored value retained |
 
 Seen state is shared by all clients. There are no user accounts or per-user read
-receipts. The UI displays “Seen” after marking a notification, with no reverse
-button. The API also has no mark-unread operation.
+receipts. The UI displays “Seen” after marking a notification as read. The details
+page allows marking it unread again.
 
 ## Not implemented
 
 Do not assume support for automatic email/GitHub/webhook ingestion, outbound
 notifications, authentication, authorization, user accounts,
 server-side text/source search, bulk actions, attachments, scheduled delivery,
-mark-unread, undo-delete, real-time updates, deduplication, idempotency keys,
+undo-delete, real-time updates, deduplication, idempotency keys,
 optimistic locking, or an OpenAPI/Swagger endpoint. The source string and external
 links describe other services; Windlass does not connect to them automatically.
 
