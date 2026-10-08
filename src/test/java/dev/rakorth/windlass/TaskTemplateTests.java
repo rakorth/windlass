@@ -73,6 +73,57 @@ class TaskTemplateTests {
     }
 
     @Test
+    void taskAndStepStatusesPersistFilterAndCopyAcrossBothCollections() throws Exception {
+        for (String collection : new String[]{"/api/tasks", "/api/task-templates"}) {
+            for (String value : new String[]{"PENDING", "DONE", "SKIPPED", "EXECUTING", "WAITING"}) {
+                String body = json.writeValueAsString(java.util.Map.of("name", "Status test", "status", value,
+                        "steps", java.util.List.of(java.util.Map.of("name", "Build", "status", value))));
+                var created = mvc.perform(post(collection).contentType("application/json").content(body))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value(value))
+                        .andExpect(jsonPath("$.steps[0].status").value(value)).andReturn();
+                String id = json.readTree(created.getResponse().getContentAsString()).get("id").asString();
+                String path = collection + "/" + id;
+                mvc.perform(get(path)).andExpect(jsonPath("$.status").value(value))
+                        .andExpect(jsonPath("$.steps[0].status").value(value));
+                mvc.perform(get(collection).param("status", value).param("search", "Status test"))
+                        .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                        .andExpect(jsonPath("$.items[0].id").value(id))
+                        .andExpect(jsonPath("$.items[0].steps[0].status").value(value));
+                String reset = "{\"name\":\"Status test\",\"status\":\"PENDING\",\"steps\":[{\"name\":\"Build\",\"status\":\"PENDING\"}]}";
+                mvc.perform(put(path).contentType("application/json").content(reset)).andExpect(status().isOk());
+                mvc.perform(put(path).contentType("application/json").content(body))
+                        .andExpect(status().isOk()).andExpect(jsonPath("$.status").value(value))
+                        .andExpect(jsonPath("$.steps[0].status").value(value));
+                mvc.perform(get(path)).andExpect(jsonPath("$.status").value(value))
+                        .andExpect(jsonPath("$.steps[0].status").value(value));
+                for (String invalid : new String[]{"executing", "waiting", "UNKNOWN"}) {
+                    String invalidBody = body.replace("\"status\":\"" + value + "\"", "\"status\":\"" + invalid + "\"");
+                    mvc.perform(post(collection).contentType("application/json").content(invalidBody))
+                            .andExpect(status().isBadRequest());
+                    mvc.perform(put(path).contentType("application/json").content(invalidBody))
+                            .andExpect(status().isBadRequest());
+                    String invalidStep = json.writeValueAsString(java.util.Map.of("name", "Status test", "status", value,
+                            "steps", java.util.List.of(java.util.Map.of("name", "Build", "status", invalid))));
+                    mvc.perform(post(collection).contentType("application/json").content(invalidStep))
+                            .andExpect(status().isBadRequest());
+                    mvc.perform(put(path).contentType("application/json").content(invalidStep))
+                            .andExpect(status().isBadRequest());
+                }
+                if (collection.equals("/api/task-templates")) {
+                    var copied = mvc.perform(post(path + "/tasks")).andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.status").value(value))
+                            .andExpect(jsonPath("$.steps[0].status").value(value)).andReturn();
+                    String taskId = json.readTree(copied.getResponse().getContentAsString()).get("id").asString();
+                    mvc.perform(get("/api/tasks/" + taskId)).andExpect(jsonPath("$.status").value(value))
+                            .andExpect(jsonPath("$.steps[0].status").value(value));
+                    mvc.perform(delete("/api/tasks/" + taskId)).andExpect(status().isNoContent());
+                }
+                mvc.perform(delete(path)).andExpect(status().isNoContent());
+            }
+        }
+    }
+
+    @Test
     void sharesTaskValidationDefaultsAndPagination() throws Exception {
         var result = mvc.perform(post("/api/task-templates").contentType("application/json").content("{\"name\":\"Keep\"}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.status").value("PENDING"))
@@ -85,7 +136,7 @@ class TaskTemplateTests {
                 "{\"name\":\"Bad\",\"notifyMeOn\":\"tomorrow\"}",
                 "{\"name\":\"Bad\",\"links\":{\"X\":\"/relative\"}}",
                 "{\"name\":\"Bad\",\"steps\":[null]}",
-                "{\"name\":\"Bad\",\"steps\":[{\"name\":\"Step\",\"status\":\"WAITING\"}]}"}) {
+                "{\"name\":\"Bad\",\"steps\":[{\"name\":\"Step\",\"status\":\"UNKNOWN\"}]}"}) {
             mvc.perform(post("/api/task-templates").contentType("application/json").content(body)).andExpect(status().isBadRequest());
             mvc.perform(put(path).contentType("application/json").content(body)).andExpect(status().isBadRequest());
         }

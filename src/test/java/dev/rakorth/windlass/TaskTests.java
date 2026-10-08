@@ -90,7 +90,7 @@ class TaskTests {
                 .andReturn();
         String id = json.readTree(result.getResponse().getContentAsString()).get("id").asString();
         String path = "/api/tasks/" + id;
-        for (String value : new String[]{"DONE", "SKIPPED", "WAITING", "PENDING"}) {
+        for (String value : new String[]{"DONE", "SKIPPED", "WAITING", "EXECUTING", "PENDING"}) {
             mvc.perform(put(path).contentType("application/json")
                     .content("{\"name\":\"Review\",\"status\":\"" + value + "\"}"))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.status").value(value));
@@ -260,7 +260,7 @@ class TaskTests {
         jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('c', 'Other', 'Release', '{}', '{}', 'WAITING')");
         jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('d', 'Other', '', '{}', '{\"tag\":\"release\"}', 'DONE')");
         jdbc.update("INSERT INTO tasks (id, name, description, links, metadata, status) VALUES ('e', 'Other', '', '{}', '{\"tag\":\"release\"}', 'WAITING')");
-        for (String filter : new String[]{"PENDING", "WAITING", "DONE", "SKIPPED"}) {
+        for (String filter : new String[]{"PENDING", "WAITING", "EXECUTING", "DONE", "SKIPPED"}) {
             var response = mvc.perform(get("/api/tasks").param("status", filter)).andExpect(status().isOk()).andReturn();
             var items = json.readTree(response.getResponse().getContentAsString()).get("items");
             for (var item : items) org.junit.jupiter.api.Assertions.assertEquals(filter, item.get("status").asString());
