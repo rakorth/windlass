@@ -100,7 +100,8 @@ The **Tasks** header link opens `/tasks.html`. The page lists tasks sorted by
 name, with server-side search across task names, descriptions, and metadata,
 and pages of 20 tasks. Tasks and templates appear in full-width list rows with
 their descriptions, task status, step completion count, and ordered steps always
-visible. Each step shows its Pending, Waiting, Done, or Skipped status. On smaller
+visible. Each step shows its Pending, Done, or Skipped status.
+Step descriptions appear below their names, preserving line breaks. On smaller
 screens, steps appear below the task summary. Refresh fetches current data.
 Expand **View task details** to see the ID, links, and metadata; **Step details**
 reveals any step links and metadata.
@@ -114,7 +115,7 @@ reloads the task; missing or deleted tasks show an error with an option to retry
 steps. Saving refreshes the details; Cancel leaves the task unchanged.
 
 Create and edit tasks in a dialog. Add, remove, and reorder steps, set their
-statuses, and edit task and step metadata and links as JSON objects. Saving
+statuses and descriptions, and edit task and step metadata and links as JSON objects. Saving
 replaces the complete task, including its steps. Links require full HTTP/HTTPS
 URLs and open in a new tab. Delete requires confirmation and removes the task
 and its steps. Failed requests and invalid input show errors. Changes from other

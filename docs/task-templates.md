@@ -1,5 +1,8 @@
 # Reusable task templates
 
+Step descriptions are copied with the rest of each step. They are optional,
+limited to 10,000 characters, and default to an empty string when omitted or null.
+
 Templates hold all eight editable task fields: `name`, `description`, `status`,
 `notifyMeOn`, `links`, `metadata`, `webhooks`, and ordered `steps`. They live in a separate
 library and do not appear as actual tasks. See the [data model](data-model.md#task)

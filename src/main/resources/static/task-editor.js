@@ -24,6 +24,7 @@ export function createTaskEditor(onSaved) {
     <fieldset class="step-editor">
       <legend></legend>
       <label>Step name <span class="required">*</span><input class="step-name" required maxlength="200"></label>
+      <label>Description<textarea class="step-description" rows="3" maxlength="10000"></textarea></label>
       <label>Status<select class="step-status"><option value="PENDING">Pending</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option></select></label>
       <details><summary>Step metadata, links, and webhooks</summary><label>Metadata (JSON object)<textarea class="step-metadata" rows="3" spellcheck="false">{}</textarea></label><label>Links (JSON object)<textarea class="step-links" rows="3" spellcheck="false">{}</textarea></label><label>Webhooks (one URL per line)<textarea class="step-webhooks" rows="3" spellcheck="false"></textarea></label></details>
       <div class="actions"><button type="button" class="up secondary" aria-label="Move step up">↑</button><button type="button" class="down secondary" aria-label="Move step down">↓</button><button type="button" class="remove danger">Remove step</button></div>
@@ -48,6 +49,7 @@ export function createTaskEditor(onSaved) {
   function addStep(step = {}) {
     const row = $('step-template').content.firstElementChild.cloneNode(true);
     row.querySelector('.step-name').value = step.name ?? '';
+    row.querySelector('.step-description').value = step.description ?? '';
     row.querySelector('.step-status').value = step.status ?? 'PENDING';
     row.querySelector('.step-metadata').value = JSON.stringify(step.metadata ?? {}, null, 2);
     row.querySelector('.step-webhooks').value = (step.webhooks ?? []).join('\n');
@@ -115,7 +117,7 @@ export function createTaskEditor(onSaved) {
       const steps = [...$('step-editors').children].map((row, index) => {
         const name = row.querySelector('.step-name').value.trim();
         if (!name) throw new Error(`Step ${index + 1} needs a name.`);
-        return { name, webhooks: parseWebhooks(row.querySelector('.step-webhooks')), status: row.querySelector('.step-status').value,
+        return { name, description: row.querySelector('.step-description').value, webhooks: parseWebhooks(row.querySelector('.step-webhooks')), status: row.querySelector('.step-status').value,
           metadata: parseObject(row.querySelector('.step-metadata'), `Step ${index + 1} metadata`),
           links: parseObject(row.querySelector('.step-links'), `Step ${index + 1} links`, true) };
       });

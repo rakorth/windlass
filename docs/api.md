@@ -133,6 +133,10 @@ is required. The server generates the immutable UUID `id`. See the
 {"name":"Review release","description":"Check the build","links":{"Build":"https://ci.example.com/builds/42"},"metadata":{"priority":"high"}}
 ```
 
+Each task or template step accepts an optional `description` string (max 10,000
+characters). Missing/null step descriptions default to `""`, including older saved
+steps. Step descriptions are included in responses and template copies.
+
 PUT replaces editable fields; omitted/null optional fields reset to defaults: empty strings/maps/steps, `PENDING` status, and null `notifyMeOn`.
 Missing task IDs return 404. Invalid input returns 400.
 

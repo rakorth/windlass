@@ -75,6 +75,7 @@ async function loadTask(message = '') {
       const heading = element('div', undefined, 'task-step-heading');
       heading.append(element('h4', step.name, 'task-step-name'), element('span', statuses[step.status], `step-badge ${step.status.toLowerCase()}`));
       item.append(heading);
+      if (step.description) item.append(element('p', step.description, 'task-step-description muted'));
       const links = element('nav', undefined, 'external-links');
       links.setAttribute('aria-label', `${step.name} external links`);
       appendLinks(links, step.links);

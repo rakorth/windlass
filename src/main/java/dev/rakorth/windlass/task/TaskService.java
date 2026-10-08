@@ -128,7 +128,7 @@ public class TaskService {
         var steps = request.steps() == null ? List.<Step>of() : request.steps().stream().map(step -> {
             var stepLinks = step.links() == null ? Map.<String, String>of() : step.links();
             validateLinks(stepLinks);
-            return new Step(step.name().strip(), step.status(),
+            return new Step(step.name().strip(), step.description(), step.status(),
                     step.metadata() == null ? Map.of() : step.metadata(), stepLinks, normalizeWebhooks(step.webhooks()));
         }).toList();
         return new Task(id, request.name().strip(), request.description() == null ? "" : request.description(),

@@ -82,6 +82,7 @@ function render(items, total) {
       const heading = element('div', undefined, 'task-step-heading');
       heading.append(element('span', step.name, 'task-step-name'), element('span', statuses[step.status], `step-badge ${step.status.toLowerCase()}`));
       item.append(heading);
+      if (step.description) item.append(element('p', step.description, 'task-step-description muted'));
       if (Object.keys(step.links ?? {}).length || Object.keys(step.metadata ?? {}).length) {
         const extras = element('details');
         extras.append(element('summary', 'Step details'));

@@ -179,6 +179,51 @@ class TaskTests {
     }
 
     @Test
+    void stepDescriptionsPersistValidateAndDefaultForTasksAndTemplates() throws Exception {
+        for (String collection : new String[]{"/api/tasks", "/api/task-templates"}) {
+            var body = java.util.Map.of("name", "Release", "steps", java.util.List.of(
+                    java.util.Map.of("name", "Build", "status", "PENDING", "description", " Check build\nThen deploy <safely> ")));
+            var created = mvc.perform(post(collection).contentType("application/json").content(json.writeValueAsString(body)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.steps[0].description").value(" Check build\nThen deploy <safely> ")).andReturn();
+            String id = json.readTree(created.getResponse().getContentAsString()).get("id").asString();
+            String path = collection + "/" + id;
+            mvc.perform(get(path)).andExpect(jsonPath("$.steps[0].description").value(" Check build\nThen deploy <safely> "));
+            mvc.perform(get(collection).param("search", "Release"))
+                    .andExpect(jsonPath("$.items[0].steps[0].description").value(" Check build\nThen deploy <safely> "));
+            String maximum = json.writeValueAsString(java.util.Map.of("name", "Release", "steps", java.util.List.of(
+                    java.util.Map.of("name", "Build", "status", "PENDING", "description", "x".repeat(10000)))));
+            mvc.perform(put(path).contentType("application/json").content(maximum))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.steps[0].description").value("x".repeat(10000)));
+            String oversized = maximum.replace("x".repeat(10000), "x".repeat(10001));
+            mvc.perform(post(collection).contentType("application/json").content(oversized)).andExpect(status().isBadRequest());
+            mvc.perform(put(path).contentType("application/json").content(oversized)).andExpect(status().isBadRequest());
+            mvc.perform(get(path)).andExpect(jsonPath("$.steps[0].description").value("x".repeat(10000)));
+            for (String optional : new String[]{"", ",\"description\":null", ",\"description\":\"\""}) {
+                String defaults = "{\"name\":\"Release\",\"steps\":[{\"name\":\"Build\",\"status\":\"PENDING\"" + optional + "}]}";
+                mvc.perform(put(path).contentType("application/json").content(defaults))
+                        .andExpect(status().isOk()).andExpect(jsonPath("$.steps[0].description").value(""));
+                mvc.perform(get(path)).andExpect(jsonPath("$.steps[0].description").value(""));
+            }
+            mvc.perform(delete(path)).andExpect(status().isNoContent());
+        }
+    }
+
+    @Test
+    void olderStepJsonDefaultsDescriptionWithoutRewritingStoredSteps() throws Exception {
+        String steps = "[{\"name\":\"Build\",\"status\":\"PENDING\",\"metadata\":{},\"links\":{}}]";
+        for (String table : new String[]{"tasks", "task_templates"}) {
+            jdbc.update("INSERT INTO " + table + " (id, name, description, links, metadata, steps) VALUES (?, ?, '', '{}', '{}', ?)", "legacy-description", "Legacy", steps);
+            String collection = table.equals("tasks") ? "/api/tasks" : "/api/task-templates";
+            mvc.perform(get(collection + "/legacy-description"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.steps[0].description").value(""));
+            org.junit.jupiter.api.Assertions.assertEquals(steps,
+                    jdbc.queryForObject("SELECT steps FROM " + table + " WHERE id = ?", String.class, "legacy-description"));
+            jdbc.update("DELETE FROM " + table + " WHERE id = ?", "legacy-description");
+        }
+    }
+
+    @Test
     void searchesContentAndNestedMetadataBeforePagination() throws Exception {
         jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES ('a', 'Release plan', '', '{}', '{}')");
         jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES ('b', 'Review', 'RELEASE notes', '{}', '{}')");

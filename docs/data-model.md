@@ -29,11 +29,13 @@ defaults. Task status is independent of step statuses. Existing tasks receive
 `PENDING` through an additive startup migration that preserves saved statuses.
 
 Each step has a required nonblank `name` (max 200 characters, stored trimmed),
+an optional `description` (max 10,000 characters; missing/null becomes `""`),
 a required `status` enum, optional `webhooks` URL list (missing/null becomes `[]`),
 and optional `metadata` and `links` maps (missing/null becomes `{}`). Status accepts exactly `DONE`, `PENDING`, or `SKIPPED` (case-sensitive). Step links follow task link validation. Null steps
 are invalid. Steps are stored as JSON in a NOT NULL TEXT column with default `[]`;
 an additive startup migration gives existing tasks an empty list and preserves
-steps on subsequent starts. PUT replaces the complete ordered list.
+steps on subsequent starts. Older step JSON without `description` reads as `""`
+without a database migration. PUT replaces the complete ordered list.
 
 Task and step webhook lists use absolute HTTP(S) URLs. Startup adds empty lists
 to existing tasks and templates; older step JSON defaults to empty lists on read.

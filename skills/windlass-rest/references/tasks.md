@@ -70,7 +70,9 @@ URL-encode timestamps (including `+` offsets). Templates do not expose these fil
 
 `id` is response-only and generated for every new record. Each step requires a
 nonblank `name` (max 200 characters, trimmed) and an exact `status`: `PENDING`,
-`DONE`, or `SKIPPED`. `WAITING` is a task status only. Step `metadata` and `links`
+`DONE`, or `SKIPPED`. Each step accepts an optional `description` string, max
+10,000 characters; missing/null becomes `""`, including older saved steps.
+Preserve it when preparing full-field updates. `WAITING` is a task status only. Step `metadata` and `links`
 follow the task map rules and default to `{}`. Null steps are invalid. Task
 status is independent of step statuses. Each step also accepts a `webhooks`
 array of absolute HTTP(S) URLs with a host; missing/null becomes `[]`.

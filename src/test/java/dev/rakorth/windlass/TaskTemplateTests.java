@@ -32,7 +32,7 @@ class TaskTemplateTests {
                 {"name":" Release ","description":"Ship it","status":"WAITING",
                  "notifyMeOn":"2026-12-01T12:30:00Z","links":{"Issue":"https://example.com/42"},
                  "metadata":{"nested":{"tags":["release"],"optional":null}},"steps":[
-                 {"name":" Build ","status":"DONE","metadata":{"attempt":2},"links":{"CI":"https://ci.example.com"}},
+                 {"name":" Build ","description":"Compile and verify","status":"DONE","metadata":{"attempt":2},"links":{"CI":"https://ci.example.com"}},
                  {"name":"Deploy","status":"PENDING"}]}
                 """))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.name").value("Release")).andReturn();
@@ -54,7 +54,8 @@ class TaskTemplateTests {
             for (String field : new String[]{"name", "description", "status", "notifyMeOn", "links", "metadata", "steps"}) {
                 assertEquals(template.get(field), task.get(field), field);
             }
-            mvc.perform(get("/api/tasks/" + id)).andExpect(jsonPath("$.steps[0].metadata.attempt").value(2));
+            mvc.perform(get("/api/tasks/" + id)).andExpect(jsonPath("$.steps[0].metadata.attempt").value(2))
+                    .andExpect(jsonPath("$.steps[0].description").value("Compile and verify"));
         }
         mvc.perform(put("/api/tasks/" + firstId).contentType("application/json").content("{\"name\":\"Changed task\"}"))
                 .andExpect(status().isOk());
