@@ -9,6 +9,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.core.type.TypeReference;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
@@ -31,13 +32,25 @@ public class NotificationService {
     }
 
     public NotificationPage list(int page, int size, Boolean unread) {
+        return list(page, size, unread, null);
+    }
+
+    public NotificationPage list(int page, int size, Boolean unread, String source) {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "page must be nonnegative and size must be between 1 and 100");
         }
-        String where = unread == null ? "" : " WHERE unread = ?";
+        var conditions = new ArrayList<String>();
         var parameters = new ArrayList<Object>();
-        if (unread != null) parameters.add(unread ? 1 : 0);
+        if (unread != null) {
+            conditions.add("unread = ?");
+            parameters.add(unread ? 1 : 0);
+        }
+        if (source != null) {
+            conditions.add("notification_source = ?");
+            parameters.add(source);
+        }
+        String where = conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions);
         long total = jdbc.queryForObject("SELECT COUNT(*) FROM notifications" + where,
                 Long.class, parameters.toArray());
         parameters.add(size);
@@ -45,6 +58,10 @@ public class NotificationService {
         var items = jdbc.query("SELECT * FROM notifications" + where
                 + " ORDER BY julianday(received_on) DESC, id LIMIT ? OFFSET ?", mapper, parameters.toArray());
         return new NotificationPage(items, page, size, total, (total + size - 1) / size);
+    }
+
+    public List<String> sources() {
+        return jdbc.queryForList("SELECT DISTINCT notification_source FROM notifications ORDER BY notification_source", String.class);
     }
 
     public Notification get(String id) {

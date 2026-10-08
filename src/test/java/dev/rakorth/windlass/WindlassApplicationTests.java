@@ -188,6 +188,41 @@ class WindlassApplicationTests {
     }
 
     @Test
+    void sourceFilteringUsesExactMatchesBeforePaginationAndCombinesWithUnread() throws Exception {
+        mvc.perform(get("/api/notifications/sources"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        String[] sources = {"CI", "Email", "CI", "ci", "CI%_'"};
+        for (int i = 0; i < sources.length; i++) {
+            jdbc.update("INSERT INTO notifications (id, title, description, notification_source, received_on, metadata_map, external_links, unread) VALUES (?, 'Item', '', ?, '2026-01-01T00:00:00Z', '{}', '{}', ?)",
+                    "source-" + i, sources[i], i == 0 ? 0 : 1);
+        }
+        mvc.perform(get("/api/notifications/sources"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0]").value("CI"))
+                .andExpect(jsonPath("$[1]").value("CI%_'"))
+                .andExpect(jsonPath("$[2]").value("Email"))
+                .andExpect(jsonPath("$[3]").value("ci"));
+        mvc.perform(get("/api/notifications").param("source", "CI").param("size", "1").param("page", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("source-2"))
+                .andExpect(jsonPath("$.totalElements").value(2)).andExpect(jsonPath("$.totalPages").value(2));
+        for (boolean unread : new boolean[]{true, false}) {
+            mvc.perform(get("/api/notifications").param("source", "CI").param("unread", Boolean.toString(unread)))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
+                    .andExpect(jsonPath("$.items[0].id").value(unread ? "source-2" : "source-0"))
+                    .andExpect(jsonPath("$.totalElements").value(1));
+        }
+        mvc.perform(get("/api/notifications").param("source", "CI%_'"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].id").value("source-4"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+        for (String source : new String[]{"missing", ""}) {
+            mvc.perform(get("/api/notifications").param("source", source))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
+                    .andExpect(jsonPath("$.totalElements").value(0)).andExpect(jsonPath("$.totalPages").value(0));
+        }
+    }
+
+    @Test
     void automationsOpensConfiguredEditor() throws Exception {
         mvc.perform(get("/automations"))
                 .andExpect(status().isFound())

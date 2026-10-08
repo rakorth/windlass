@@ -212,12 +212,11 @@ Its description includes the destination and error. `metadata_map` contains the
 same event fields plus `webhookUrl`, `error`, and `httpStatus` when an HTTP response
 was received; `external_links.Webhook` points to the destination.
 
-To investigate a task, fetch `/api/notifications` pages and filter with a JSON
-parser by `notification_source == "task-webhooks"` and
-`metadata_map.taskId == <task ID>`. Use `metadata_map.stepIndex`, `occurredOn`,
+To investigate a task, fetch `/api/notifications?source=task-webhooks` pages and filter with a JSON
+parser by `metadata_map.taskId == <task ID>`. Use `metadata_map.stepIndex`, `occurredOn`,
 `webhookUrl`, and `error` to identify the affected event and destination.
-Source/task filtering is client-side; the notification API only offers an unread
-filter. Traverse all pages, including seen notifications unless the user asks
+Task ID filtering is client-side; the notification API offers source and unread
+filters. Traverse all pages, including seen notifications unless the user asks
 for unread failures only. GET does not mark failures seen.
 
 Report the saved status and any observed delivery failures separately. Inspecting

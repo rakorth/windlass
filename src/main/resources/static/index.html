@@ -16,7 +16,7 @@
   <main>
     <div class="heading"><div><p class="eyebrow">YOUR INBOX, ORGANIZED</p><h1>Notifications</h1><p class="muted">Keep updates from all your sources in one place.</p></div><button id="new">+ New notification</button></div>
     <div class="toolbar"><label for="search">Search this page</label><input id="search" type="search" placeholder="Search titles, descriptions, or sources…"><button id="refresh" class="secondary">Refresh</button></div>
-    <div class="inbox-options"><label class="unread-filter"><input id="unread-only" type="checkbox"> Unread only</label><a class="automations-link" href="/notification.html">Find notification by ID</a></div>
+    <div class="inbox-options"><div class="notification-filters"><label class="source-filter" for="source-filter">Source <select id="source-filter"><option value="">All sources</option></select></label><label class="unread-filter"><input id="unread-only" type="checkbox"> Unread only</label></div><a class="automations-link" href="/notification.html">Find notification by ID</a></div>
     <p id="status" role="status" aria-live="polite"></p>
     <div class="list-heading"><h2>Notifications <span id="count">0</span> <span id="unread-count" class="unread-count"></span></h2><span class="muted">Most recent first</span></div>
     <div class="notification-table-scroll" role="region" aria-label="Notifications table" tabindex="0">

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -15,9 +16,13 @@ public class NotificationController {
     @GetMapping
     public NotificationPage list(@RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "20") int size,
-                                 @RequestParam(required = false) Boolean unread) {
-        return service.list(page, size, unread);
+                                 @RequestParam(required = false) Boolean unread,
+                                 @RequestParam(required = false) String source) {
+        return service.list(page, size, unread, source);
     }
+
+    @GetMapping("/sources")
+    public List<String> sources() { return service.sources(); }
 
     @GetMapping("/{id}")
     public Notification get(@PathVariable String id) { return service.get(id); }

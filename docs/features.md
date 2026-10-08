@@ -60,9 +60,10 @@ are rendered. Labels and notification content are inserted as text, not HTML.
 Metadata and external links must be JSON objects; invalid input produces an error
 in the dialog. Failed requests show an error without claiming success.
 
-The notification count shows the total matching the unread filter. Previous/Next
-buttons navigate pages of 20 items. The unread-only toggle resets to the first
-page. Search and the unread count cover only the current page. Search does not include metadata, URLs, IDs, or dates.
+The notification count shows the total matching the source and unread filters.
+Previous/Next buttons navigate pages of 20 items. The source dropdown lists
+sources across all notifications and includes an **All sources** option.
+Changing the source or unread-only filter resets to the first page. Search and the unread count cover only the current page. Search does not include metadata, URLs, IDs, or dates.
 
 Successful create, edit, delete, and mark-as-seen operations update the browser's
 current page by fetching it again. Changes from other clients require Refresh or a page reload;

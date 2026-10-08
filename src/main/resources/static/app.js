@@ -87,11 +87,19 @@ async function load() {
   loading = true;
   $('refresh').disabled = true;
   $('unread-only').disabled = true;
+  $('source-filter').disabled = true;
   $('previous').disabled = true;
   $('next').disabled = true;
   $('status').textContent = 'Loading notifications…';
   try {
-    const suffix = $('unread-only').checked ? '&unread=true' : '';
+    const selectedSource = $('source-filter').value;
+    const sources = await api('/sources');
+    if (selectedSource && !sources.includes(selectedSource)) sources.push(selectedSource);
+    $('source-filter').replaceChildren(new Option('All sources', ''),
+      ...sources.map(source => new Option(source, source)));
+    $('source-filter').value = selectedSource;
+    const suffix = ($('unread-only').checked ? '&unread=true' : '')
+      + (selectedSource ? `&source=${encodeURIComponent(selectedSource)}` : '');
     let result = await api(`?page=${page}&size=${pageSize}${suffix}`);
     if (page > 0 && page >= result.totalPages) {
       page = Math.max(0, result.totalPages - 1);
@@ -107,6 +115,7 @@ async function load() {
     loading = false;
     $('refresh').disabled = false;
     $('unread-only').disabled = false;
+    $('source-filter').disabled = false;
     $('previous').disabled = page === 0;
     $('next').disabled = page + 1 >= totalPages;
   }
@@ -137,6 +146,7 @@ $('cancel').addEventListener('click', () => $('editor').close());
 $('refresh').addEventListener('click', load);
 $('search').addEventListener('input', render);
 $('unread-only').addEventListener('change', () => { page = 0; load(); });
+$('source-filter').addEventListener('change', () => { page = 0; load(); });
 $('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; load(); } });
 $('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; load(); } });
 $('form').addEventListener('submit', async (event) => {

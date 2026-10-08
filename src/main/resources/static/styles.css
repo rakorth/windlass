@@ -30,4 +30,6 @@ button[aria-pressed="true"] { border-color: currentColor; }
 
 .task-content h2 a{color:#80dfc7;text-decoration:none}.task-content h2 a:hover{text-decoration:underline}.task-content h2 a:focus-visible{outline:3px solid #80dfc7;outline-offset:2px}.task-detail-page{max-width:900px;margin:24px auto}.task-detail-page .card{margin-top:16px;padding:20px}.task-detail-page h2{font-size:24px;margin:16px 0;overflow-wrap:anywhere}.task-detail-page .task-step-name{margin:0;font-weight:650}.task-detail-page .task-steps>li{padding:12px 0}.task-detail-page .notification-facts time{font-size:14px}.task-detail-page pre{font-size:14px}.task-detail-page .toolbar{flex-wrap:wrap}
 
+.notification-filters{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.source-filter{display:flex;align-items:center;gap:8px;margin:0;font-size:14px}.source-filter select{width:auto;max-width:260px}
+
 .task-step-description{margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere}

@@ -31,7 +31,7 @@ These documents describe implemented behavior, not a roadmap.
 - `id` and `unread` are response fields, not writable POST/PUT fields.
 - Notification PUT replaces editable content. Omitted description and maps are cleared; an omitted `received_on` timestamp is preserved.
 - Notifications start unread. Only explicit PATCH `/api/notifications/{id}/seen` marks them seen. Reading does not.
-- Notification text search filters the current page in the browser; its REST collection supports an optional unread filter.
+- Notification text search filters the current page in the browser; its REST collection supports optional unread and exact source filters.
 - Tasks and templates share `name`, `description`, `status`, `notifyMeOn`, `links`, `metadata`, `webhooks`, and ordered `steps`. PUT replaces all eight fields; omitted optional fields reset to defaults, including status to `PENDING`, reminder to null, and webhooks to `[]`.
 - Task and template collections support server-side `search` and `status` filters before pagination. All REST collections return a paginated object.
 - Templates are stored separately. POST `/api/task-templates/{id}/tasks` copies all eight fields into an independent task with a new ID, preserving statuses and the absolute reminder timestamp. It does not accept customization fields; customize by copying writable fields into POST `/api/tasks`.

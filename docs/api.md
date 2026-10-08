@@ -13,6 +13,7 @@ uploads, with an explicit request header and restore confirmation.
 | Method | Path | Body | Success |
 | --- | --- | --- | --- |
 | GET | `/api/notifications` | None | 200; paginated notification object |
+| GET | `/api/notifications/sources` | None | 200; sorted array of distinct source strings |
 | GET | `/api/notifications/{id}` | None | 200; notification |
 | POST | `/api/notifications` | Writable fields | 201; notification and relative `Location` header |
 | PUT | `/api/notifications/{id}` | Writable fields | 200; notification |
@@ -20,9 +21,16 @@ uploads, with an explicit request header and restore confirmation.
 | PATCH | `/api/notifications/{id}/unread` | None | 200; notification with `unread: true` |
 | DELETE | `/api/notifications/{id}` | None | 204; empty body |
 
+`GET /api/notifications/sources` returns a sorted JSON array of distinct source
+values across all notifications, independent of list filters and pagination.
+
 The list is ordered newest received time first, then by ID for ties.
 Query parameters: `page` (zero-based, default 0), `size` (1–100, default 20),
-and optional `unread` (`true` for unread, `false` for seen; omit for both).
+optional `unread` (`true` for unread, `false` for seen; omit for both),
+and optional `source` (exact, case-sensitive match on `notification_source`).
+Omit `source` for all sources; an empty value matches no notifications.
+Combine filters with `&`, for example `GET /api/notifications?source=CI&unread=true`.
+URL-encode source values containing special characters.
 Invalid parameters return 400. Filtering applies before pagination and totals.
 
 Example: `GET /api/notifications?page=0&size=20&unread=true` returns

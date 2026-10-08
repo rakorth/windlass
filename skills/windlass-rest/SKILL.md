@@ -29,6 +29,7 @@ All paths below are relative to the base URL. Send `Content-Type: application/js
 | Method | Path | Success |
 | --- | --- | --- |
 | GET | `/api/notifications` | 200; object with `items`, `page`, `size`, `totalElements`, `totalPages`; newest `received_on` first |
+| GET | `/api/notifications/sources` | 200; sorted array of distinct source strings across all notifications |
 | GET | `/api/notifications/{id}` | 200; notification object |
 | POST | `/api/notifications` | 201; created object and `Location` header |
 | PUT | `/api/notifications/{id}` | 200; updated object |
@@ -36,7 +37,9 @@ All paths below are relative to the base URL. Send `Content-Type: application/js
 | PATCH | `/api/notifications/{id}/unread` | 200; object with `unread: true`; no request body |
 | DELETE | `/api/notifications/{id}` | 204; no response body |
 
-Use actual IDs returned by the service. Use zero-based `page` (default 0), `size` (1–100, default 20), and optional `unread=true` or `unread=false`. Read `items` and traverse pages up to `totalPages` for complete results. Text/source filtering is local. GET requests do not mark notifications as seen. PATCH `/api/notifications/{id}/unread` marks a notification unread again. There is no bulk endpoint.
+GET `/api/notifications/sources` returns a sorted JSON array of distinct source values across all notifications.
+
+Use actual IDs returned by the service. Use zero-based `page` (default 0), `size` (1–100, default 20), and optional `unread=true` or `unread=false`. Read `items` and traverse pages up to `totalPages` for complete results. Use optional `source` for an exact, case-sensitive match on `notification_source`; URL-encode the value. Omit it for all sources; an empty value matches no notifications. Combine it with `unread` as needed. Text filtering is local. GET requests do not mark notifications as seen. PATCH `/api/notifications/{id}/unread` marks a notification unread again. There is no bulk endpoint.
 
 The list response is an object, not a bare array:
 
