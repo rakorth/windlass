@@ -8,9 +8,11 @@ Windlass is a Java 24 Spring Boot notification manager with SQLite persistence a
 
 ## Agent Skills
 
-- [Windlass REST](skills/windlass-rest/SKILL.md): Use when operating a running Windlass instance through its API, including notifications, tasks, reusable templates, direct record links, status webhooks, and n8n backups.
-- For task and template operations, follow the skill's [task reference](skills/windlass-rest/references/tasks.md). Task browser links use `/task.html?id=<URL-encoded-id>`; templates have no dedicated details page.
-- For backup downloads and restores, follow the skill's [n8n backup reference](skills/windlass-rest/references/n8n-backups.md).
+- [Windlass REST](skills/windlass-rest/SKILL.md): Read before operating a running Windlass instance through its API. Covers notification CRUD, source discovery and filtering, unread state, tasks, reusable templates, direct record links, status webhooks, and n8n backups. Use the deployment's reachable base URL and actual returned IDs.
+- [Tasks and task templates](skills/windlass-rest/references/tasks.md): Read for task/template CRUD, search and status filters, reminder filters, creating tasks from templates, and webhook delivery failures. Task listing supports strict `notifyMeOnBefore` and `notifyMeOnAfter` bounds with timezone-bearing ISO 8601 timestamps; filters exclude null reminders and apply before pagination. Templates do not expose reminder filters.
+- [n8n backups](skills/windlass-rest/references/n8n-backups.md): Read for backup status, creation, ZIP downloads, and restores, including required headers, confirmation, timeouts, and failure handling.
+
+Share browser links using the deployment's browser-accessible base URL: `/task.html?id=<URL-encoded-id>` for tasks and `/notification.html?id=<URL-encoded-id>` for notifications. Templates have no dedicated details page. Traverse all list pages when complete results are required; collect matching IDs before bulk mutations.
 
 Repository development uses the guidelines below. Keep the REST skill and its relevant references aligned with changes to API behavior and user-facing record links.
 
