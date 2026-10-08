@@ -20,7 +20,10 @@ class TaskTests {
     @Autowired ObjectMapper json;
 
     @BeforeEach
-    void clear() { jdbc.update("DELETE FROM tasks"); }
+    void clear() {
+        jdbc.update("DELETE FROM tasks");
+        jdbc.update("DELETE FROM task_templates");
+    }
 
     @Test
     void completeCrudLifecycleAndDefaults() throws Exception {
