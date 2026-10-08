@@ -149,6 +149,14 @@ the task once. Search ignores ASCII letter case, trims surrounding whitespace,
 and treats missing/blank input as no filter. `%` and `_` are literal characters.
 Filtering happens before pagination and totals. Links are not searched.
 
+Add `notifyMeOnBefore` and/or `notifyMeOnAfter` to filter reminders strictly before
+or after an ISO 8601 timestamp with an explicit timezone. For example,
+`GET /api/tasks?notifyMeOnAfter=2026-10-08T00:00:00Z&notifyMeOnBefore=2026-10-09T00:00:00Z`.
+Bounds exclude equality and tasks with null `notifyMeOn`, retain nanosecond precision,
+and combine with search and status before pagination and totals. Invalid timestamps
+return 400; equal or reversed bounds return an empty result. URL-encode timestamps,
+especially `+` in timezone offsets. These filters apply only to `/api/tasks`.
+
 Add `status=PENDING`, `WAITING`, `DONE`, or `SKIPPED` to filter by task status.
 This combines with `search` and applies before pagination and totals. Omit
 `status` to include all tasks; invalid status values return 400. The task UI

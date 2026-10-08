@@ -48,6 +48,13 @@ statuses below. Filters combine before pagination and totals. Use URL encoding
 for search values. Collect IDs before bulk mutations so shifting pages do not
 skip records.
 
+For `/api/tasks`, optional `notifyMeOnBefore` and `notifyMeOnAfter` accept ISO 8601
+instants with an explicit timezone. They select reminders strictly before/after
+the bounds, excluding equality and null reminders, with nanosecond precision.
+Combine them with search/status; filtering precedes pagination and totals.
+Invalid timestamps return 400; equal/reversed bounds return no matches.
+URL-encode timestamps (including `+` offsets). Templates do not expose these filters.
+
 ## Shared fields
 
 | Writable field | Validation and missing/null default |

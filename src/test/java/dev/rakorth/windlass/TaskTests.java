@@ -236,6 +236,37 @@ class TaskTests {
     }
 
     @Test
+    void filtersReminderBoundsWithNanosecondPrecisionBeforePagination() throws Exception {
+        String[] dates = {null, "2026-10-08T10:00:00Z", "2026-10-08T10:00:00.000000001Z",
+                "2026-10-08T10:00:00.1Z", "2026-10-08T10:00:01Z"};
+        for (int i = 0; i < dates.length; i++) {
+            mvc.perform(post("/api/tasks").contentType("application/json").content(json.writeValueAsString(
+                    java.util.Map.of("name", "Reminder " + i, "status", "WAITING",
+                            "notifyMeOn", dates[i] == null ? "2026-10-08T09:00:00Z" : dates[i]))))
+                    .andExpect(status().isCreated());
+        }
+        jdbc.update("UPDATE tasks SET notify_me_on = NULL WHERE name = 'Reminder 0'");
+        mvc.perform(get("/api/tasks")).andExpect(jsonPath("$.totalElements").value(5));
+        mvc.perform(get("/api/tasks").param("notifyMeOnBefore", "2026-10-08T12:00:00.1+02:00"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2));
+        mvc.perform(get("/api/tasks").param("notifyMeOnAfter", "2026-10-08T10:00:00Z"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3));
+        mvc.perform(get("/api/tasks").param("notifyMeOnAfter", "2026-10-08T10:00:00Z")
+                        .param("notifyMeOnBefore", "2026-10-08T10:00:01Z")
+                        .param("search", "reminder").param("status", "WAITING").param("size", "1").param("page", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].name").value("Reminder 3"))
+                .andExpect(jsonPath("$.totalElements").value(2)).andExpect(jsonPath("$.totalPages").value(2));
+        mvc.perform(get("/api/tasks").param("notifyMeOnAfter", "2026-10-08T10:00:00Z")
+                        .param("notifyMeOnBefore", "2026-10-08T10:00:00Z"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty());
+        for (String parameter : new String[]{"notifyMeOnBefore", "notifyMeOnAfter"}) {
+            for (String invalid : new String[]{"not-a-date", "2026-10-08T10:00:00"}) {
+                mvc.perform(get("/api/tasks").param(parameter, invalid)).andExpect(status().isBadRequest());
+            }
+        }
+    }
+
+    @Test
     void paginatesWithStableOrderingAndValidatesBounds() throws Exception {
         for (int i = 4; i >= 0; i--) {
             jdbc.update("INSERT INTO tasks (id, name, description, links, metadata) VALUES (?, 'Same', '', '{}', '{}')", "id-" + i);

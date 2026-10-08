@@ -46,6 +46,11 @@ public class TaskService {
     }
 
     public TaskPage list(int page, int size, String search, TaskStatus status) {
+        return list(page, size, search, status, null, null);
+    }
+
+    public TaskPage list(int page, int size, String search, TaskStatus status,
+                         Instant notifyMeOnBefore, Instant notifyMeOnAfter) {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "page must be nonnegative and size must be between 1 and 100");
@@ -66,6 +71,17 @@ public class TaskService {
         if (status != null) {
             where += where.isEmpty() ? " WHERE status = ?" : " AND status = ?";
             parameters.add(status.name());
+        }
+        // Remove Z so whole seconds sort before fractional seconds at the same instant.
+        if (notifyMeOnBefore != null) {
+            where += where.isEmpty() ? " WHERE " : " AND ";
+            where += "replace(notify_me_on, 'Z', '') < ?";
+            parameters.add(notifyMeOnBefore.toString().replace("Z", ""));
+        }
+        if (notifyMeOnAfter != null) {
+            where += where.isEmpty() ? " WHERE " : " AND ";
+            where += "replace(notify_me_on, 'Z', '') > ?";
+            parameters.add(notifyMeOnAfter.toString().replace("Z", ""));
         }
         long total = jdbc.queryForObject("SELECT COUNT(*) FROM " + table + where,
                 Long.class, parameters.toArray());

@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.net.URI;
+import java.time.Instant;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -16,8 +18,10 @@ public class TaskController {
     public TaskPage list(@RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "20") int size,
                          @RequestParam(required = false) String search,
-                         @RequestParam(required = false) TaskStatus status) {
-        return service.list(page, size, search, status);
+                         @RequestParam(required = false) TaskStatus status,
+                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant notifyMeOnBefore,
+                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant notifyMeOnAfter) {
+        return service.list(page, size, search, status, notifyMeOnBefore, notifyMeOnAfter);
     }
 
     @GetMapping("/{id}")
