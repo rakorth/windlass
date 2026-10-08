@@ -1,6 +1,10 @@
+import { createTaskEditor } from './task-editor.js';
+
 const $ = id => document.getElementById(id);
 const statuses = { PENDING: 'Pending', WAITING: 'Waiting', DONE: 'Done', SKIPPED: 'Skipped' };
 let loading = false;
+let currentTask = null;
+const editor = createTaskEditor(async () => { await loadTask('Task saved.'); });
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -22,9 +26,10 @@ function appendLinks(parent, links) {
   }
 }
 
-async function loadTask() {
+async function loadTask(message = '') {
   if (loading) return;
   const id = $('task-id').value.trim();
+  currentTask = null;
   $('task-detail').hidden = true;
   document.title = 'Windlass · Task details';
   if (!id) {
@@ -35,7 +40,7 @@ async function loadTask() {
   url.searchParams.set('id', id);
   window.history.replaceState(null, '', url);
   loading = true;
-  for (const name of ['view', 'refresh', 'task-id']) $(name).disabled = true;
+  for (const name of ['view', 'refresh', 'edit', 'task-id']) $(name).disabled = true;
   $('status').textContent = 'Loading task…';
   try {
     const response = await fetch(`/api/tasks/${encodeURIComponent(id)}`);
@@ -44,6 +49,7 @@ async function loadTask() {
       throw new Error(`Could not load task (${response.status}). Please try again.`);
     }
     const task = await response.json();
+    currentTask = task;
     $('task-title').textContent = task.name;
     document.title = `Windlass · ${task.name}`;
     $('identifier').textContent = task.id;
@@ -55,9 +61,9 @@ async function loadTask() {
       time.dateTime = task.notifyMeOn;
       $('reminder').append(time);
     } else $('reminder').textContent = 'No reminder.';
-    $('description').textContent = task.description || 'No description.';
-    $('metadata').textContent = JSON.stringify(task.metadata ?? {}, null, 2);
-    $('webhooks').textContent = task.webhooks?.length ? task.webhooks.join('\n') : 'No webhooks.';
+    $('task-description').textContent = task.description || 'No description.';
+    $('task-metadata').textContent = JSON.stringify(task.metadata ?? {}, null, 2);
+    $('task-webhooks').textContent = task.webhooks?.length ? task.webhooks.join('\n') : 'No webhooks.';
     $('external-links').replaceChildren();
     appendLinks($('external-links'), task.links);
     $('no-links').hidden = $('external-links').childElementCount > 0;
@@ -82,11 +88,11 @@ async function loadTask() {
     }
     $('no-steps').hidden = steps.length > 0;
     $('task-detail').hidden = false;
-    $('status').textContent = '';
+    $('status').textContent = message;
   } catch (error) { $('status').textContent = error.message; }
   finally {
     loading = false;
-    for (const name of ['view', 'refresh', 'task-id']) $(name).disabled = false;
+    for (const name of ['view', 'refresh', 'edit', 'task-id']) $(name).disabled = false;
   }
 }
 
@@ -94,6 +100,7 @@ $('lookup').addEventListener('submit', event => {
   event.preventDefault();
   loadTask();
 });
-$('refresh').addEventListener('click', loadTask);
+$('refresh').addEventListener('click', () => loadTask());
+$('edit').addEventListener('click', () => { if (currentTask && !loading) editor.open(currentTask); });
 $('task-id').value = new URLSearchParams(window.location.search).get('id') ?? '';
 if ($('task-id').value.trim()) loadTask();

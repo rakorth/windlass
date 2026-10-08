@@ -7,7 +7,7 @@
   <title>Windlass · Tasks</title>
   <link rel="icon" type="image/png" href="/favicon-32.png?v=3">
   <link rel="stylesheet" href="/styles.css">
-  <script src="/tasks.js" defer></script>
+  <script src="/tasks.js" type="module"></script>
 </head>
 <body>
   <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/tasks.html" aria-current="page">Tasks</a><a class="automations-link" href="/backups.html">n8n backups</a></nav></header>
@@ -20,33 +20,5 @@
     <div id="tasks" class="task-list" role="list" aria-label="Tasks and templates"></div>
     <nav class="actions pagination" aria-label="Task pages"><button id="previous" class="secondary" disabled>Previous</button><span id="page-info" aria-live="polite"></span><button id="next" class="secondary" disabled>Next</button></nav>
   </main>
-  <dialog id="editor" class="task-editor">
-    <form id="form">
-      <div class="dialog-heading"><h2 id="editor-title">New task</h2><button type="button" id="close" class="secondary" aria-label="Close editor">✕</button></div>
-      <fieldset id="editor-fields">
-        <label for="name">Name <span class="required">*</span></label><input id="name" required maxlength="200">
-        <label for="task-status">Status</label><select id="task-status"><option value="PENDING">Pending</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option><option value="WAITING">Waiting</option></select>
-        <label for="notify-me-on">Notify me on</label><input id="notify-me-on" type="datetime-local" step="any">
-        <label for="description">Description</label><textarea id="description" rows="3" maxlength="10000"></textarea>
-        <label for="metadata">Metadata (JSON object)</label><textarea id="metadata" rows="3" spellcheck="false">{}</textarea>
-        <label for="links">Links (JSON object)</label><textarea id="links" rows="3" spellcheck="false" aria-describedby="links-help">{}</textarea><small id="links-help">Map labels to full HTTP or HTTPS URLs, e.g. {"Issue": "https://github.com"}.</small>
-        <label for="webhooks">Webhooks (one URL per line)</label><textarea id="webhooks" rows="3" spellcheck="false"></textarea><small>Send a JSON POST when the status changes. Failed deliveries appear in Notifications.</small>
-        <div class="list-heading"><h3>Steps</h3><button id="add-step" type="button" class="secondary">+ Add step</button></div>
-        <p class="muted">Steps run in the order shown. Use the arrows to reorder them.</p>
-        <div id="step-editors"></div>
-      </fieldset>
-      <p id="form-error" role="alert"></p>
-      <div class="actions"><button id="cancel" type="button" class="secondary">Cancel</button><button id="save" type="submit">Save task</button></div>
-    </form>
-  </dialog>
-  <template id="step-template">
-    <fieldset class="step-editor">
-      <legend></legend>
-      <label>Step name <span class="required">*</span><input class="step-name" required maxlength="200"></label>
-      <label>Status<select class="step-status"><option value="PENDING">Pending</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option></select></label>
-      <details><summary>Step metadata, links, and webhooks</summary><label>Metadata (JSON object)<textarea class="step-metadata" rows="3" spellcheck="false">{}</textarea></label><label>Links (JSON object)<textarea class="step-links" rows="3" spellcheck="false">{}</textarea></label><label>Webhooks (one URL per line)<textarea class="step-webhooks" rows="3" spellcheck="false"></textarea></label></details>
-      <div class="actions"><button type="button" class="up secondary" aria-label="Move step up">↑</button><button type="button" class="down secondary" aria-label="Move step down">↓</button><button type="button" class="remove danger">Remove step</button></div>
-    </fieldset>
-  </template>
 </body>
 </html>

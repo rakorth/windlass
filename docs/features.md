@@ -110,6 +110,8 @@ bookmark that URL to open the task directly. `/task.html` also lets you look up
 a task by ID. The page shows the task status, description, reminder, ordered
 steps and their statuses, external links, metadata, and webhooks. **Refresh**
 reloads the task; missing or deleted tasks show an error with an option to retry.
+**Edit** opens the task editor from this page so you can modify the task and its
+steps. Saving refreshes the details; Cancel leaves the task unchanged.
 
 Create and edit tasks in a dialog. Add, remove, and reorder steps, set their
 statuses, and edit task and step metadata and links as JSON objects. Saving
