@@ -122,3 +122,13 @@ grant the container UID 10001 read/write access (for a new folder on Linux,
 `mkdir -p ref-docs` then `sudo chown 10001:10001 ref-docs`). Back up this
 folder separately; n8n backups do not include Markdown files. Standalone runs
 use `REF_DOCS_DIRECTORY`, defaulting to `./ref-docs`.
+
+## json-conf host storage
+
+The JSON configuration editor is at `/json-conf.html`. Compose bind-mounts
+`JSON_CONF_HOST_DIRECTORY` (default `./json-conf`) to `/json-conf`. Standalone
+runs use `JSON_CONF_DIRECTORY`, defaulting to `./json-conf`. Prepare the host
+folder and grant container UID 10001 read/write access before starting Compose
+(for a new folder on Linux, `mkdir -p json-conf` then
+`sudo chown 10001:10001 json-conf`). Back up this directory separately from
+SQLite and n8n. Files must contain valid JSON when saved through Windlass.

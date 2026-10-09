@@ -42,6 +42,7 @@ server:
   error:
     include-message: always
 windlass:
+  json-conf-directory: ${JSON_CONF_DIRECTORY:./json-conf}
   ref-docs-directory: ${REF_DOCS_DIRECTORY:./ref-docs}
   automations-url: ${N8N_EDITOR_BASE_URL:http://localhost:5678/}
   n8n-backup-url: ${N8N_BACKUP_URL:}

@@ -9,6 +9,7 @@ These documents describe implemented behavior, not a roadmap.
 
 | Task | Read |
 | --- | --- |
+| Store and edit local JSON configuration files | [json-conf](json-conf.md) |
 | Store and edit local Markdown files | [ref-docs](ref-docs.md) |
 | Understand available features and UI behavior | [Features](features.md) |
 | Understand fields, defaults, validation, and persistence | [Data model](data-model.md) |

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Windlass · json-conf</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/json-conf.js" type="module"></script>
+</head>
+<body>
+  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/tasks.html">Tasks</a><a class="automations-link" href="/ref-docs.html">ref-docs</a><a class="automations-link" href="/json-conf.html" aria-current="page">json-conf</a><a class="automations-link" href="/backups.html">n8n backups</a></nav></header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">YOUR FILES</p><h1>json-conf</h1><p class="muted">Create and edit JSON configuration files in your local storage folder.</p></div><button id="new">+ New file</button></div>
+    <p id="status" role="status" aria-live="polite"></p>
+    <div class="ref-docs-workspace">
+      <section class="card"><div class="card-top"><h2>Files</h2><button id="refresh" class="secondary">Refresh</button></div><ul id="files" class="ref-docs-files"></ul></section>
+      <section class="card"><h2 id="editor-title">New file</h2>
+        <form id="editor">
+          <fieldset id="fields">
+            <label for="filename">Filename</label><input id="filename" required maxlength="199" placeholder="settings.json" pattern="[A-Za-z0-9][A-Za-z0-9 _\.\-]{0,193}\.json">
+            <small>Use a .json filename with letters, numbers, spaces, dots, underscores, or hyphens.</small>
+            <label for="content">JSON content</label><textarea id="content" rows="24" spellcheck="false"></textarea>
+            <div class="actions"><button type="button" id="delete" class="danger" hidden>Delete file</button><button type="submit">Save file</button></div>
+          </fieldset>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

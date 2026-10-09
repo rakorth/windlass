@@ -46,3 +46,6 @@ __pycache__/
 
 # Local Markdown documents
 /ref-docs/
+
+# Local JSON configuration files
+/json-conf/
