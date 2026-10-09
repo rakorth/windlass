@@ -111,3 +111,14 @@ docker compose ps
 docker compose logs --tail=100 -f
 docker compose down
 ```
+
+## ref-docs host storage
+
+The ref-docs UI is at `/ref-docs.html`. Compose bind-mounts
+`REF_DOCS_HOST_DIRECTORY` (default `./ref-docs`) to `/ref-docs`, keeping files
+on the host outside the container and SQLite. Set an absolute host directory
+in `.env` to use an existing folder. Prepare it before starting Compose and
+grant the container UID 10001 read/write access (for a new folder on Linux,
+`mkdir -p ref-docs` then `sudo chown 10001:10001 ref-docs`). Back up this
+folder separately; n8n backups do not include Markdown files. Standalone runs
+use `REF_DOCS_DIRECTORY`, defaulting to `./ref-docs`.

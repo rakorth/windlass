@@ -8,6 +8,7 @@ services:
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${WINDLASS_PORT:-6080}:8080"
     environment:
+      REF_DOCS_DIRECTORY: /ref-docs
       DATABASE_URL: jdbc:sqlite:/data/notifications.db
       WINDLASS_MCP_ENABLED: ${WINDLASS_MCP_ENABLED:-true}
       N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:${N8N_PORT:-5678}/}
@@ -15,6 +16,7 @@ services:
     group_add:
       - "1000"
     volumes:
+      - ${REF_DOCS_HOST_DIRECTORY:-./ref-docs}:/ref-docs
       - windlass-data:/data
       - n8n-control:/n8n-control:ro
     depends_on:

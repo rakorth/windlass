@@ -43,3 +43,6 @@ build/
 # Local backup manager test artifacts
 __pycache__/
 *.pyc
+
+# Local Markdown documents
+/ref-docs/

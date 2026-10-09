@@ -42,6 +42,7 @@ server:
   error:
     include-message: always
 windlass:
+  ref-docs-directory: ${REF_DOCS_DIRECTORY:./ref-docs}
   automations-url: ${N8N_EDITOR_BASE_URL:http://localhost:5678/}
   n8n-backup-url: ${N8N_BACKUP_URL:}
   n8n-backup-token-file: ${N8N_BACKUP_TOKEN_FILE:/n8n-control/token}
