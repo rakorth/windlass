@@ -6,7 +6,7 @@ export function createTaskEditor(onSaved) {
       <div class="dialog-heading"><h2 id="editor-title">New task</h2><button type="button" id="close" class="secondary" aria-label="Close editor">✕</button></div>
       <fieldset id="editor-fields">
         <label for="name">Name <span class="required">*</span></label><input id="name" required maxlength="200">
-        <label for="task-status">Status</label><select id="task-status"><option value="PENDING">Pending</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option><option value="WAITING">Waiting</option></select>
+        <label for="task-status">Status</label><select id="task-status"><option value="PENDING">Pending</option><option value="EXECUTING">Executing</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option><option value="WAITING">Waiting</option></select>
         <label for="notify-me-on">Notify me on</label><input id="notify-me-on" type="datetime-local" step="any">
         <label for="description">Description</label><textarea id="description" rows="3" maxlength="10000"></textarea>
         <label for="metadata">Metadata (JSON object)</label><textarea id="metadata" rows="3" spellcheck="false">{}</textarea>
@@ -25,7 +25,7 @@ export function createTaskEditor(onSaved) {
       <legend></legend>
       <label>Step name <span class="required">*</span><input class="step-name" required maxlength="200"></label>
       <label>Description<textarea class="step-description" rows="3" maxlength="10000"></textarea></label>
-      <label>Status<select class="step-status"><option value="PENDING">Pending</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option></select></label>
+      <label>Status<select class="step-status"><option value="PENDING">Pending</option><option value="EXECUTING">Executing</option><option value="WAITING">Waiting</option><option value="DONE">Done</option><option value="SKIPPED">Skipped</option></select></label>
       <details><summary>Step metadata, links, and webhooks</summary><label>Metadata (JSON object)<textarea class="step-metadata" rows="3" spellcheck="false">{}</textarea></label><label>Links (JSON object)<textarea class="step-links" rows="3" spellcheck="false">{}</textarea></label><label>Webhooks (one URL per line)<textarea class="step-webhooks" rows="3" spellcheck="false"></textarea></label></details>
       <div class="actions"><button type="button" class="up secondary" aria-label="Move step up">↑</button><button type="button" class="down secondary" aria-label="Move step down">↓</button><button type="button" class="remove danger">Remove step</button></div>
     </fieldset>

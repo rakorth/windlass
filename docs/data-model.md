@@ -12,7 +12,7 @@ with the following fields:
 | `description` | string | Optional, max 10,000 characters; missing/null becomes `""` |
 | `links` | object with string values | Nonblank labels mapped to absolute HTTP/HTTPS URLs with a host; missing/null becomes `{}` |
 | `metadata` | object | Arbitrary metadata, including nested JSON values; missing/null becomes `{}` |
-| `status` | string | `PENDING`, `DONE`, `SKIPPED`, or `WAITING` (case-sensitive); missing/null becomes `PENDING` |
+| `status` | string | `PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED` (case-sensitive); missing/null becomes `PENDING` |
 | `notifyMeOn` | ISO 8601 datetime string or null | Optional datetime with a timezone; missing/null becomes null |
 | `webhooks` | array of HTTP(S) URL strings | Status-change webhook destinations; missing/null becomes `[]` |
 | `steps` | array of step objects | Ordered steps; missing/null becomes `[]` |
@@ -31,7 +31,7 @@ defaults. Task status is independent of step statuses. Existing tasks receive
 Each step has a required nonblank `name` (max 200 characters, stored trimmed),
 an optional `description` (max 10,000 characters; missing/null becomes `""`),
 a required `status` enum, optional `webhooks` URL list (missing/null becomes `[]`),
-and optional `metadata` and `links` maps (missing/null becomes `{}`). Status accepts exactly `DONE`, `PENDING`, or `SKIPPED` (case-sensitive). Step links follow task link validation. Null steps
+and optional `metadata` and `links` maps (missing/null becomes `{}`). Status accepts exactly `DONE`, `PENDING`, `SKIPPED`, `EXECUTING`, or `WAITING` (case-sensitive). Step links follow task link validation. Null steps
 are invalid. Steps are stored as JSON in a NOT NULL TEXT column with default `[]`;
 an additive startup migration gives existing tasks an empty list and preserves
 steps on subsequent starts. Older step JSON without `description` reads as `""`

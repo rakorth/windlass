@@ -35,3 +35,5 @@ button[aria-pressed="true"] { border-color: currentColor; }
 .task-step-description{margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere}
 
 .ref-docs-workspace{display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:20px}.ref-docs-files{list-style:none;padding:0;display:grid;gap:8px}.ref-docs-files button{width:100%;text-align:left;overflow-wrap:anywhere}.ref-docs-workspace fieldset{border:0;margin:0;padding:0}.ref-docs-workspace textarea{font-family:monospace;line-height:1.5}.ref-docs-workspace h2{overflow-wrap:anywhere}@media(max-width:650px){.ref-docs-workspace{grid-template-columns:1fr}}
+
+.step-badge.executing{background:#243d53;color:#a9d5ff}

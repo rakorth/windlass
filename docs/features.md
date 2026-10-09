@@ -116,7 +116,7 @@ reloads the task; missing or deleted tasks show an error with an option to retry
 steps. Saving refreshes the details; Cancel leaves the task unchanged.
 
 Create and edit tasks in a dialog. Add, remove, and reorder steps, set their
-statuses and descriptions, and edit task and step metadata and links as JSON objects. Saving
+statuses (Pending, Executing, Waiting, Done, or Skipped) and descriptions, and edit task and step metadata and links as JSON objects. Saving
 replaces the complete task, including its steps. Links require full HTTP/HTTPS
 URLs and open in a new tab. Delete requires confirmation and removes the task
 and its steps. Failed requests and invalid input show errors. Changes from other

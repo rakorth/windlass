@@ -61,7 +61,7 @@ URL-encode timestamps (including `+` offsets). Templates do not expose these fil
 | --- | --- |
 | `name` | Required nonblank string, max 200 characters, trimmed |
 | `description` | String, max 10,000 characters; `""` |
-| `status` | Exactly `PENDING`, `WAITING`, `DONE`, or `SKIPPED`; `PENDING` |
+| `status` | Exactly `PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`; `PENDING` |
 | `notifyMeOn` | ISO 8601 instant with explicit timezone, preferably UTC `Z`; null |
 | `links` | Object mapping nonblank labels to absolute HTTP/HTTPS URLs with a host; `{}` |
 | `metadata` | Object containing arbitrary nested JSON values; `{}` |
@@ -70,9 +70,9 @@ URL-encode timestamps (including `+` offsets). Templates do not expose these fil
 
 `id` is response-only and generated for every new record. Each step requires a
 nonblank `name` (max 200 characters, trimmed) and an exact `status`: `PENDING`,
-`DONE`, or `SKIPPED`. Each step accepts an optional `description` string, max
+`EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`. Each step accepts an optional `description` string, max
 10,000 characters; missing/null becomes `""`, including older saved steps.
-Preserve it when preparing full-field updates. `WAITING` is a task status only. Step `metadata` and `links`
+Preserve it when preparing full-field updates. Step `metadata` and `links`
 follow the task map rules and default to `{}`. Null steps are invalid. Task
 status is independent of step statuses. Each step also accepts a `webhooks`
 array of absolute HTTP(S) URLs with a host; missing/null becomes `[]`.

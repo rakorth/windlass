@@ -169,7 +169,7 @@ and combine with search and status before pagination and totals. Invalid timesta
 return 400; equal or reversed bounds return an empty result. URL-encode timestamps,
 especially `+` in timezone offsets. These filters apply only to `/api/tasks`.
 
-Add `status=PENDING`, `WAITING`, `DONE`, or `SKIPPED` to filter by task status.
+Add `status=PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED` to filter by task status.
 This combines with `search` and applies before pagination and totals. Omit
 `status` to include all tasks; invalid status values return 400. The task UI
 provides a status selector that resets pagination when changed.
@@ -181,7 +181,7 @@ Tasks include an ordered `steps` array. For example:
 ```
 
 Step names are required nonblank strings. Status is a required enum accepting
-exactly `DONE`, `PENDING`, or `SKIPPED` (case-sensitive); other values return 400.
+exactly `DONE`, `PENDING`, `SKIPPED`, `EXECUTING`, or `WAITING` (case-sensitive); other values return 400.
 Step maps default to `{}`; missing/null `steps` defaults to `[]`. PUT replaces
 the complete steps list. Search continues to match task fields and task metadata.
 

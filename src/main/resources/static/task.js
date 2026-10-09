@@ -1,7 +1,7 @@
 import { createTaskEditor } from './task-editor.js';
 
 const $ = id => document.getElementById(id);
-const statuses = { PENDING: 'Pending', WAITING: 'Waiting', DONE: 'Done', SKIPPED: 'Skipped' };
+const statuses = { PENDING: 'Pending', EXECUTING: 'Executing', WAITING: 'Waiting', DONE: 'Done', SKIPPED: 'Skipped' };
 let loading = false;
 let currentTask = null;
 const editor = createTaskEditor(async () => { await loadTask('Task saved.'); });

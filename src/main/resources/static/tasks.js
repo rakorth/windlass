@@ -11,7 +11,7 @@ const editor = createTaskEditor(async (task, templateLibrary) => {
   setLibrary(templateLibrary);
   await load(`${templateLibrary ? 'Template' : 'Task'} saved.`);
 });
-const statuses = { PENDING: 'Pending', DONE: 'Done', SKIPPED: 'Skipped', WAITING: 'Waiting' };
+const statuses = { PENDING: 'Pending', EXECUTING: 'Executing', DONE: 'Done', SKIPPED: 'Skipped', WAITING: 'Waiting' };
 
 async function api(path = '', options = {}, templateLibrary = templates) {
   const response = await fetch(`/api/${templateLibrary ? 'task-templates' : 'tasks'}${path}`, {
