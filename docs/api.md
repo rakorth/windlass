@@ -93,6 +93,12 @@ mark seen. PATCH `/api/notifications/{id}/unread` marks the notification unread
 again and returns the updated object. Both operations preserve content and are
 safe to repeat; missing IDs return 404. No generic PATCH endpoint exists.
 
+Read notifications are automatically deleted daily at 03:00 UTC when their
+`received_on` timestamp is older than `NOTIFICATION_RETENTION_DAYS` days (default
+`30`, positive integer). Age is measured from receipt, rather than when marked
+read. Unread notifications are retained. Restart after changing the environment
+variable; Docker Compose forwards it to Windlass.
+
 ## Delete
 
 ```sh

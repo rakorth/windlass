@@ -42,6 +42,7 @@ server:
   error:
     include-message: always
 windlass:
+  notification-retention-days: ${NOTIFICATION_RETENTION_DAYS:30}
   json-conf-directory: ${JSON_CONF_DIRECTORY:./json-conf}
   ref-docs-directory: ${REF_DOCS_DIRECTORY:./ref-docs}
   automations-url: ${N8N_EDITOR_BASE_URL:http://localhost:5678/}

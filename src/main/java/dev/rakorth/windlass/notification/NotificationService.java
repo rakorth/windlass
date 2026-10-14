@@ -101,6 +101,11 @@ public class NotificationService {
         if (jdbc.update("DELETE FROM notifications WHERE id = ?", id) == 0) throw notFound();
     }
 
+    public int deleteReadBefore(Instant cutoff) {
+        return jdbc.update("DELETE FROM notifications WHERE unread = 0 AND replace(received_on, 'Z', '') < ?",
+                cutoff.toString().replace("Z", ""));
+    }
+
     private Notification normalize(String id, NotificationRequest request, Instant fallback, boolean unread) {
         var links = request.external_links() == null ? Map.<String, String>of() : request.external_links();
         links.forEach((label, url) -> {

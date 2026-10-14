@@ -32,6 +32,7 @@ variables; they do not automatically load `.env`.
 
 | Setting | Default | Scope |
 | --- | --- | --- |
+| `NOTIFICATION_RETENTION_DAYS` | `30` | Positive integer; read notifications older than this many days by `received_on` are deleted daily at 03:00 UTC; unread notifications are retained |
 | `DATABASE_URL` | `jdbc:sqlite:./notifications.db` | Application datasource; Docker overrides to `jdbc:sqlite:/data/notifications.db` |
 | `SERVER_PORT` | `8080` | Spring Boot HTTP listener; no explicit port currently in application YAML |
 | `WINDLASS_MCP_ENABLED` | `true` | Enable notification MCP tools at `/mcp`; see [MCP server](mcp.md) |

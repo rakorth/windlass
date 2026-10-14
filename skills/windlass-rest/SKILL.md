@@ -49,6 +49,11 @@ The list response is an object, not a bare array:
 
 Filtering happens before pagination and totals. Sorting is by newest `received_on`, then ID for ties. Out-of-range pages return empty `items` and current totals, not 404. Offset-based pages can shift under concurrent changes. For a requested bulk mark-seen or deletion, collect matching IDs across all pages before mutating; changing unread state or deleting while advancing pages can skip records. Deduplicate IDs and report any concurrent disappearance separately.
 
+Read notifications are deleted automatically daily at 03:00 UTC once their
+`received_on` is older than `NOTIFICATION_RETENTION_DAYS` days (default 30).
+Unread notifications are retained. Marking an old notification read can make it
+eligible for the next cleanup; retention is measured from receipt.
+
 ## Notification fields
 
 | Field | Type | Request behavior |

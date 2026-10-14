@@ -86,6 +86,12 @@ Seen state is shared by all clients. There are no user accounts or per-user read
 receipts. The UI displays “Seen” after marking a notification as read. The details
 page allows marking it unread again.
 
+Read notifications are automatically deleted daily at 03:00 UTC when their
+`received_on` timestamp is older than `NOTIFICATION_RETENTION_DAYS` days (default
+`30`, positive integer). Age is measured from receipt, rather than when marked
+read. Unread notifications are retained. Restart after changing the environment
+variable; Docker Compose forwards it to Windlass.
+
 ## Not implemented
 
 Do not assume support for automatic email/GitHub/webhook ingestion, outbound
