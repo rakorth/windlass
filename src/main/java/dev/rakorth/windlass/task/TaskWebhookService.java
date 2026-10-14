@@ -26,6 +26,13 @@ public class TaskWebhookService {
         this.notifications = notifications;
     }
 
+    public void created(Task task) {
+        deliver(task.webhooks(), task, null, null, task.status().name());
+        for (int i = 0; i < task.steps().size(); i++) {
+            deliver(task.steps().get(i).webhooks(), task, i, null, task.steps().get(i).status().name());
+        }
+    }
+
     public void statusChanged(Task previous, Task current) {
         if (previous.status() != current.status()) {
             deliver(current.webhooks(), current, null, previous.status().name(), current.status().name());
@@ -41,7 +48,8 @@ public class TaskWebhookService {
 
     private void deliver(List<String> urls, Task task, Integer stepIndex, String previousStatus, String status) {
         var event = new LinkedHashMap<String, Object>();
-        event.put("event", stepIndex == null ? "task.status_changed" : "task_step.status_changed");
+        String eventType = stepIndex == null ? "task" : "task_step";
+        event.put("event", eventType + (previousStatus == null ? ".created" : ".status_changed"));
         event.put("occurredOn", Instant.now().toString());
         event.put("taskId", task.id());
         event.put("previousStatus", previousStatus);

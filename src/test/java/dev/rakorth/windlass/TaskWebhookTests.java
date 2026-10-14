@@ -33,7 +33,7 @@ class TaskWebhookTests {
     }
 
     @Test
-    void sendsTaskAndStepEventsOnlyForStatusChangesAndNotifiesEachFailure() throws Exception {
+    void sendsCreationAndStatusChangeEventsAndNotifiesEachFailure() throws Exception {
         var requests = new ArrayList<String>();
         var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/ok", exchange -> {
@@ -56,7 +56,21 @@ class TaskWebhookTests {
                     .andExpect(status().isCreated()).andExpect(jsonPath("$.webhooks[0]").value(url + "/fail"))
                     .andReturn();
             String id = json.readTree(response.getResponse().getContentAsString()).get("id").asString();
-            assertTrue(requests.isEmpty());
+            assertEquals(2, requests.size());
+            var createdTask = json.readTree(requests.get(0));
+            assertEquals("task.created", createdTask.get("event").asString());
+            assertEquals(id, createdTask.get("taskId").asString());
+            assertTrue(createdTask.get("previousStatus").isNull());
+            assertEquals("PENDING", createdTask.get("status").asString());
+            assertEquals(id, createdTask.get("task").get("id").asString());
+            var createdStep = json.readTree(requests.get(1));
+            assertEquals("task_step.created", createdStep.get("event").asString());
+            assertTrue(createdStep.get("previousStatus").isNull());
+            assertEquals(0, createdStep.get("stepIndex").asInt());
+            assertEquals("Build", createdStep.get("step").get("name").asString());
+            mvc.perform(get("/api/tasks/" + id)).andExpect(status().isOk());
+            requests.clear();
+            jdbc.update("DELETE FROM notifications");
             mvc.perform(put("/api/tasks/" + id).contentType("application/json").content(initial)).andExpect(status().isOk());
             assertTrue(requests.isEmpty());
             mvc.perform(put("/api/tasks/" + id).contentType("application/json").content(body(url, "DONE")))
@@ -90,24 +104,28 @@ class TaskWebhookTests {
     }
 
     @Test
-    void connectionFailuresCreateNotificationsAndDoNotUndoUpdates() throws Exception {
+    void connectionFailuresDoNotUndoCreationOrUpdates() throws Exception {
         var socket = new java.net.ServerSocket(0, 0, java.net.InetAddress.getByName("127.0.0.1"));
         int port = socket.getLocalPort();
         socket.close();
         String body = "{\"name\":\"Test\",\"webhooks\":[\"http://127.0.0.1:" + port + "/\"]}";
-        var response = mvc.perform(post("/api/tasks").contentType("application/json").content(body)).andReturn();
+        var response = mvc.perform(post("/api/tasks").contentType("application/json").content(body)).andExpect(status().isCreated()).andReturn();
         String id = json.readTree(response.getResponse().getContentAsString()).get("id").asString();
+        mvc.perform(get("/api/tasks/" + id)).andExpect(jsonPath("$.status").value("PENDING"));
+        mvc.perform(get("/api/notifications"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].metadata_map.event").value("task.created"));
         mvc.perform(put("/api/tasks/" + id).contentType("application/json")
                 .content(body.replace("\"Test\"", "\"Test\",\"status\":\"DONE\"")))
                 .andExpect(status().isOk());
         mvc.perform(get("/api/notifications"))
-                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.items[0].metadata_map.error").isNotEmpty());
         mvc.perform(get("/api/tasks/" + id)).andExpect(jsonPath("$.status").value("DONE"));
     }
 
     @Test
-    void validatesUrlsAndCopiesTemplatesWithoutSendingEvents() throws Exception {
+    void validatesUrlsAndSendsEventsOnlyWhenTemplateBecomesTask() throws Exception {
         for (String invalid : new String[]{"/relative", "ftp://example.com", "", "http://", "https://bad host"}) {
             for (String field : new String[]{"\"webhooks\":[\"%s\"]", "\"steps\":[{\"name\":\"Build\",\"status\":\"PENDING\",\"webhooks\":[\"%s\"]}]"}) {
                 mvc.perform(post("/api/tasks").contentType("application/json")
@@ -120,10 +138,12 @@ class TaskWebhookTests {
         String id = json.readTree(response.getResponse().getContentAsString()).get("id").asString();
         mvc.perform(put("/api/task-templates/" + id).contentType("application/json")
                 .content(body("http://127.0.0.1:1", "DONE"))).andExpect(status().isOk());
+        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM notifications", Integer.class));
         mvc.perform(post("/api/task-templates/" + id + "/tasks"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.webhooks.length()").value(2))
                 .andExpect(jsonPath("$.steps[0].webhooks.length()").value(2));
-        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM notifications", Integer.class));
+        assertEquals(4, jdbc.queryForObject("SELECT COUNT(*) FROM notifications", Integer.class));
+        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM notifications WHERE json_extract(metadata_map, '$.event') = 'task_step.created'", Integer.class));
     }
 
     @Test

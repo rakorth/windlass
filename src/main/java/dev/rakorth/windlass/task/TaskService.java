@@ -103,6 +103,7 @@ public class TaskService {
                 value.id(), value.name(), value.description(),
                 json.writeValueAsString(value.links()), json.writeValueAsString(value.metadata()), json.writeValueAsString(value.steps()), value.status().name(),
                 value.notifyMeOn() == null ? null : value.notifyMeOn().toString(), json.writeValueAsString(value.webhooks()));
+        if (table.equals("tasks")) webhooks.created(value);
         return value;
     }
 

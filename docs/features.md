@@ -138,8 +138,9 @@ are copied exactly, so review them when reusing a template.
 
 See [Task templates](task-templates.md) for the complete UI and REST workflow.
 
-Task and step editors include status-change webhooks (one HTTP(S) URL per line).
-Saving a changed status sends a JSON POST to each destination; delivery failures
+Task and step editors include webhooks (one HTTP(S) URL per line).
+Creating a task, including from a template, calls every task and step destination.
+Saving a changed status also sends a JSON POST to each affected destination; delivery failures
 appear as unread notifications with the task, step, destination, and error details.
 Templates preserve webhook settings when copied into tasks. See the
 [webhook contract](api.md#task-status-webhooks) for matching rules and delivery limits.

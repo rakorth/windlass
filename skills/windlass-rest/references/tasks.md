@@ -105,7 +105,7 @@ curl --fail-with-body --silent --show-error --max-time 15 \
 
 Expect 201, a new task object, and `/api/tasks/{newId}` in `Location`. Every
 editable field is copied exactly, including task/step statuses and the absolute
-reminder instant and task/step webhook lists. Creation sends no webhook events.
+reminder instant and task/step webhook lists. Creating the task calls all copied task and step webhooks.
 The endpoint has no override mechanism; do not send a body
 expecting it to customize the copy.
 
@@ -174,32 +174,34 @@ webhook list. A changed step sends to its own updated list, independently of the
 task status. Step comparisons use zero-based position and unchanged name;
 steps have no IDs. Adding, removing, renaming, or reordering steps is not itself
 a status event. Preserve names and ordering when changing step statuses.
-Unchanged statuses, task creation, template creation/edits, and template copying
-send no events. Templates store webhook settings for future task copies.
+Task creation, including template copying, sends `task.created` to every task
+webhook and `task_step.created` to every step webhook, with `previousStatus: null`
+and the initial status. Unchanged statuses and template creation/edits send no
+events. Templates store webhook settings for future task copies.
 
 Each POST uses `Content-Type: application/json`. Payload fields are:
 
 | Field | Value |
 | --- | --- |
-| `event` | `task.status_changed` or `task_step.status_changed` |
+| `event` | `task.created`, `task_step.created`, `task.status_changed`, or `task_step.status_changed` |
 | `occurredOn` | UTC event timestamp |
 | `taskId` | Updated task ID |
-| `previousStatus` | Previous task or step status |
+| `previousStatus` | Previous task or step status; null on creation |
 | `status` | Updated task or step status |
 | `task` | Complete updated task |
 | `stepIndex` | Zero-based position; step events only |
 | `step` | Updated step; step events only |
 
 Delivery is synchronous and follows list order, with task destinations attempted
-before changed-step destinations. Each URL has a 5-second connection timeout and
+before step destinations. Each URL has a 5-second connection timeout and
 a 10-second request timeout. All 2xx responses succeed; redirects are not followed.
-There are no automatic retries or durable delivery queue. For a status-changing
+There are no automatic retries or durable delivery queue. For task creation or a status-changing
 PUT, increase the client timeout beyond 10 seconds times the number of triggered
 destinations, plus time for persistence and network overhead. The skill's
 15-second notification examples may be too short for these task updates.
 
-A saved status is not rolled back when delivery fails, and other destinations
-are still attempted. A successful task PUT confirms the saved task; it does not
+A saved task or status is not rolled back when delivery fails, and other destinations
+are still attempted. A successful task POST or PUT confirms the saved task; it does not
 prove every webhook succeeded. If the client times out, GET the task to inspect
 the saved state before retrying. Repeating the same saved status does not resend
 webhooks. Do not toggle status to force a retry unless the user requests it.

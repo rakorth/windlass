@@ -160,7 +160,8 @@ For task or template requests, read [references/tasks.md](references/tasks.md).
 It covers both libraries, their shared fields and validation, complete-field
 updates, exact or customized copies, and status-change webhooks. Templates live at `/api/task-templates`,
 separately from `/api/tasks`; use the template library when asked to save a
-reusable template. Tasks and steps use `webhooks` URL lists; preserve them during
+reusable template. Task creation calls all task and step webhooks, including for template copies.
+Tasks and steps use `webhooks` URL lists; preserve them during
 unrelated edits. Status changes send outbound POSTs and failed deliveries create
 unread notifications with source `task-webhooks`. Read the reference for delivery
 timeouts and failure inspection. Notification field names and unread operations

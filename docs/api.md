@@ -215,7 +215,10 @@ example and the UI workflow, see [Task templates](task-templates.md).
 Tasks and steps accept a `webhooks` array of absolute HTTP or HTTPS URLs, defaulting
 to `[]` when omitted or null. PUT replaces this list along with other editable fields.
 The Tasks editor accepts one webhook URL per line for the task and each step.
-Templates store and copy these settings; template edits and task creation send no events.
+Templates store and copy these settings; template creation and edits send no events.
+After a task is saved on creation (including a template copy), every task and step
+webhook is called with `task.created` or `task_step.created`, respectively. Creation
+events use `previousStatus: null` and the initial task or step `status`.
 
 ```json
 {"name":"Release","status":"DONE","webhooks":["https://example.com/task-events"],"steps":[{"name":"Build","status":"DONE","webhooks":["https://example.com/step-events"]}]}
@@ -227,7 +230,8 @@ Step changes are matched by zero-based position and unchanged name, since steps
 have no IDs. Added, removed, renamed, or reordered steps do not themselves trigger
 status events. Updating an unchanged status sends nothing.
 
-Payload fields: `event` (`task.status_changed` or `task_step.status_changed`),
+Payload fields: `event` (`task.created`, `task_step.created`,
+`task.status_changed`, or `task_step.status_changed`),
 `occurredOn` (UTC timestamp), `taskId`, `previousStatus`, `status`, and the complete
 updated `task`. Step events also include `stepIndex` and the updated `step`.
 Requests use `Content-Type: application/json`; all 2xx responses count as success.
@@ -239,4 +243,4 @@ Each HTTP non-2xx response, connection error, or timeout creates an unread
 notification with source `task-webhooks`, a description of the error, and
 `metadata_map` containing the event, `webhookUrl`, `error`, and `httpStatus` when
 available. Its external links include the webhook URL. Failed destinations do
-not prevent attempts to other destinations and do not undo the saved status.
+not prevent attempts to other destinations and do not undo the saved task or status.
