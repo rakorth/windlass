@@ -22,6 +22,14 @@ No separate database server or frontend package manager is needed.
 
 ## Configuration
 
+For a demo configuration in this checkout, copy the root
+[.env.example](../.env.example) to `.env` with `cp .env.example .env`.
+Compose loads it automatically. It includes browser ports, n8n defaults, and
+host folders for ref-docs and json-conf. Prepare the host folders and grant
+container UID 10001 read/write access as described in the example before
+starting Compose. Standalone Maven/Java runs require exporting environment
+variables; they do not automatically load `.env`.
+
 | Setting | Default | Scope |
 | --- | --- | --- |
 | `DATABASE_URL` | `jdbc:sqlite:./notifications.db` | Application datasource; Docker overrides to `jdbc:sqlite:/data/notifications.db` |
@@ -232,7 +240,11 @@ docker run --name windlass-app --rm \
 The root [Dockerfile](../Dockerfile) uses Java 25 JDK for Maven `verify`, compiling
 with the project's Java 24 target. The runtime stage contains a Java 25 JRE and
 the executable JAR, runs as non-root UID/GID `10001`, exposes port 8080, and uses
-`/data` for SQLite. Integration tests must pass when the build stage runs.
+`/data` for SQLite. Image defaults also store ref-docs in `/data/ref-docs` and
+json-conf in `/data/json-conf`, so standalone containers can create the folders
+as UID 10001 and retain files in the data volume. Compose overrides these paths
+with its separate host bind mounts. Integration tests must pass when the build
+stage runs.
 BuildKit caches Maven downloads. [.dockerignore](../.dockerignore) limits the
 context to build inputs, excluding local databases, environment files, and Git
 metadata.
@@ -315,3 +327,19 @@ folder and grant container UID 10001 read/write access before starting Compose
 (for a new folder on Linux, `mkdir -p json-conf` then
 `sudo chown 10001:10001 json-conf`). Back up this directory separately from
 SQLite and n8n. Files must contain valid JSON when saved through Windlass.
+
+## Document folder access errors
+
+`AccessDeniedException: /app/json-conf` means the application is resolving the
+standalone relative default under its container working directory. The current
+Compose configuration explicitly sets `JSON_CONF_DIRECTORY=/json-conf` and
+`REF_DOCS_DIRECTORY=/ref-docs`. Check the effective configuration with
+`docker compose config`, including any override files you use, then recreate
+the Windlass container with `docker compose up -d --build windlass` for the
+source-build stack. For the published-image deployment, use
+`docker compose -f compose.deploy.yaml up -d --force-recreate windlass`.
+
+If the error names `/json-conf` or `/ref-docs`, check the corresponding host
+folder permissions. They must allow UID 10001 to create, read, update, and delete
+files. See the storage sections above. Changing `.env` alone does not update
+the environment or mounts of an existing container.

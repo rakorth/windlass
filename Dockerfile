@@ -15,7 +15,9 @@ RUN groupadd --gid 10001 windlass \
     && chown windlass:windlass /data
 WORKDIR /app
 COPY --from=build /workspace/target/windlass-*.jar /app/windlass.jar
-ENV DATABASE_URL=jdbc:sqlite:/data/notifications.db
+ENV DATABASE_URL=jdbc:sqlite:/data/notifications.db \
+    REF_DOCS_DIRECTORY=/data/ref-docs \
+    JSON_CONF_DIRECTORY=/data/json-conf
 USER 10001:10001
 VOLUME ["/data"]
 EXPOSE 8080

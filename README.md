@@ -138,7 +138,10 @@ docker run --name windlass-app --rm -p 127.0.0.1:6080:8080 \
 
 Open http://localhost:6080. The image runs as UID/GID `10001`, uses Java 25
 with the project's Java 24 compilation target, and stores SQLite data under
-`/data`. The named volume preserves notifications when the container is removed.
+`/data`. Standalone image defaults place ref-docs and json-conf under
+`/data/ref-docs` and `/data/json-conf`, also preserved by this volume. Compose
+uses separate host folders for these files. The named volume preserves
+notifications when the container is removed.
 If using a host bind mount instead, give UID `10001` write access to that directory.
 If host port 6080 is occupied, use `-p 127.0.0.1:6081:8080`.
 
