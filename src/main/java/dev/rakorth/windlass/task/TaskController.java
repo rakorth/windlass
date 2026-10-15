@@ -38,6 +38,12 @@ public class TaskController {
         return service.update(id, request);
     }
 
+    @PatchMapping("/{id}/steps/{stepIndex}/status")
+    public Task updateStepStatus(@PathVariable String id, @PathVariable int stepIndex,
+                                 @Valid @RequestBody StepStatusRequest request) {
+        return service.updateStepStatus(id, stepIndex, request.status());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
         service.delete(id);

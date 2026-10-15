@@ -4,6 +4,7 @@ const $ = id => document.getElementById(id);
 const statuses = { PENDING: 'Pending', EXECUTING: 'Executing', WAITING: 'Waiting', DONE: 'Done', SKIPPED: 'Skipped' };
 let loading = false;
 let currentTask = null;
+let savingStep = false;
 const editor = createTaskEditor(async () => { await loadTask('Task saved.'); });
 
 function element(tag, text, className) {
@@ -27,7 +28,7 @@ function appendLinks(parent, links) {
 }
 
 async function loadTask(message = '') {
-  if (loading) return;
+  if (loading || savingStep) return;
   const id = $('task-id').value.trim();
   currentTask = null;
   $('task-detail').hidden = true;
@@ -70,10 +71,46 @@ async function loadTask(message = '') {
     $('steps').replaceChildren();
     const steps = task.steps ?? [];
     $('progress').textContent = `${steps.filter(step => step.status === 'DONE').length} of ${steps.length} steps done`;
-    for (const step of steps) {
+    for (const [stepIndex, step] of steps.entries()) {
       const item = element('li');
       const heading = element('div', undefined, 'task-step-heading');
-      heading.append(element('h4', step.name, 'task-step-name'), element('span', statuses[step.status], `step-badge ${step.status.toLowerCase()}`));
+      const select = element('select', undefined, 'step-status-select');
+      select.setAttribute('aria-label', `Status for step ${stepIndex + 1}: ${step.name}`);
+      for (const [value, label] of Object.entries(statuses)) {
+        const option = element('option', label);
+        option.value = value;
+        select.append(option);
+      }
+      select.value = step.status;
+      select.addEventListener('change', async () => {
+        savingStep = true;
+        const nextStatus = select.value;
+        const controls = [...document.querySelectorAll('.step-status-select'), ...['view', 'refresh', 'edit', 'task-id'].map($)];
+        controls.forEach(control => { control.disabled = true; });
+        $('status').textContent = `Saving status for ${step.name}…`;
+        try {
+          const response = await fetch(`/api/tasks/${encodeURIComponent(task.id)}/steps/${stepIndex}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: nextStatus })
+          });
+          if (!response.ok) throw new Error(response.status === 409
+            ? 'Task steps changed. Refresh the task and try again.'
+            : `Could not save step status (${response.status}). Please try again.`);
+          currentTask = await response.json();
+          step.status = currentTask.steps[stepIndex].status;
+          select.value = step.status;
+          $('progress').textContent = `${currentTask.steps.filter(item => item.status === 'DONE').length} of ${currentTask.steps.length} steps done`;
+          $('status').textContent = `Status for ${step.name} saved.`;
+        } catch (error) {
+          select.value = step.status;
+          $('status').textContent = error.message;
+        } finally {
+          savingStep = false;
+          controls.forEach(control => { control.disabled = false; });
+        }
+      });
+      heading.append(element('h4', step.name, 'task-step-name'), select);
       item.append(heading);
       if (step.description) item.append(element('p', step.description, 'task-step-description muted'));
       const links = element('nav', undefined, 'external-links');
@@ -102,6 +139,6 @@ $('lookup').addEventListener('submit', event => {
   loadTask();
 });
 $('refresh').addEventListener('click', () => loadTask());
-$('edit').addEventListener('click', () => { if (currentTask && !loading) editor.open(currentTask); });
+$('edit').addEventListener('click', () => { if (currentTask && !loading && !savingStep) editor.open(currentTask); });
 $('task-id').value = new URLSearchParams(window.location.search).get('id') ?? '';
 if ($('task-id').value.trim()) loadTask();

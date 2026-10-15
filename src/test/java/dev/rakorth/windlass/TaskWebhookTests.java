@@ -93,6 +93,19 @@ class TaskWebhookTests {
                     .andExpect(jsonPath("$.items[0].metadata_map.taskId").value(id));
             mvc.perform(put("/api/tasks/" + id).contentType("application/json").content(body(url, "DONE"))).andExpect(status().isOk());
             assertEquals(2, requests.size());
+            requests.clear();
+            mvc.perform(patch("/api/tasks/" + id + "/steps/0/status").contentType("application/json")
+                    .content("{\"status\":\"EXECUTING\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("DONE"));
+            assertEquals(1, requests.size());
+            var patchEvent = json.readTree(requests.get(0));
+            assertEquals("task_step.status_changed", patchEvent.get("event").asString());
+            assertEquals("DONE", patchEvent.get("previousStatus").asString());
+            assertEquals("EXECUTING", patchEvent.get("status").asString());
+            assertEquals(0, patchEvent.get("stepIndex").asInt());
+            mvc.perform(patch("/api/tasks/" + id + "/steps/0/status").contentType("application/json")
+                    .content("{\"status\":\"EXECUTING\"}")).andExpect(status().isOk());
+            assertEquals(1, requests.size());
         } finally { server.stop(0); }
     }
 

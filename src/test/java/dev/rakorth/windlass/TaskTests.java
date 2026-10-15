@@ -26,6 +26,42 @@ class TaskTests {
     }
 
     @Test
+    void patchStepStatusPreservesTaskAndOtherSteps() throws Exception {
+        String body = """
+                {"name":"Release","description":"Keep description","status":"WAITING",
+                 "notifyMeOn":"2026-10-15T12:00:00Z","metadata":{"keep":true},
+                 "links":{"Build":"https://example.com"},"steps":[
+                 {"name":"Build","description":"Keep step","status":"PENDING","metadata":{"attempt":2},
+                  "links":{"Logs":"https://example.com/logs"}},
+                 {"name":"Deploy","status":"WAITING"}]}
+                """;
+        var created = mvc.perform(post("/api/tasks").contentType("application/json").content(body))
+                .andExpect(status().isCreated()).andReturn();
+        var original = json.readTree(created.getResponse().getContentAsString());
+        String path = "/api/tasks/" + original.get("id").asString();
+        for (String value : new String[]{"DONE", "SKIPPED", "EXECUTING", "WAITING", "PENDING", "PENDING"}) {
+            mvc.perform(patch(path + "/steps/0/status").contentType("application/json")
+                    .content("{\"status\":\"" + value + "\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.steps[0].status").value(value));
+            var saved = mvc.perform(get(path)).andExpect(status().isOk()).andReturn();
+            var expected = (tools.jackson.databind.node.ObjectNode) original.deepCopy();
+            ((tools.jackson.databind.node.ObjectNode) expected.get("steps").get(0)).put("status", value);
+            org.junit.jupiter.api.Assertions.assertEquals(expected,
+                    json.readTree(saved.getResponse().getContentAsString()));
+        }
+        for (String invalid : new String[]{"{}", "{\"status\":null}", "{\"status\":\"INVALID\"}"}) {
+            mvc.perform(patch(path + "/steps/0/status").contentType("application/json").content(invalid))
+                    .andExpect(status().isBadRequest());
+        }
+        for (String suffix : new String[]{"/steps/-1/status", "/steps/2/status"}) {
+            mvc.perform(patch(path + suffix).contentType("application/json").content("{\"status\":\"DONE\"}"))
+                    .andExpect(status().isNotFound());
+        }
+        mvc.perform(patch("/api/tasks/missing/steps/0/status").contentType("application/json")
+                .content("{\"status\":\"DONE\"}")).andExpect(status().isNotFound());
+    }
+
+    @Test
     void completeCrudLifecycleAndDefaults() throws Exception {
         var result = mvc.perform(post("/api/tasks").contentType("application/json").content("""
                 {"name":"  Review  ","description":"Check build","links":{"Build":"https://ci.example.com/42"},

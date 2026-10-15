@@ -250,3 +250,15 @@ notification with source `task-webhooks`, a description of the error, and
 `metadata_map` containing the event, `webhookUrl`, `error`, and `httpStatus` when
 available. Its external links include the webhook URL. Failed destinations do
 not prevent attempts to other destinations and do not undo the saved task or status.
+
+### Update one task step status
+
+`PATCH /api/tasks/{id}/steps/{stepIndex}/status` accepts `{"status":"DONE"}`
+and returns the updated task (200). `stepIndex` is zero-based; fetch the current
+ordered steps before choosing it. Status is required and accepts `PENDING`,
+`EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`. Only that step's status changes;
+all task fields and other step fields are preserved. Existing step status-change
+webhooks run when the status changes; repeating the same status sends no event.
+Invalid/missing/null status returns 400. Missing task or step returns 404.
+A concurrent step edit during the update returns 409; refresh before retrying.
+This endpoint applies to tasks only, not templates.

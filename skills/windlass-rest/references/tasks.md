@@ -223,3 +223,15 @@ for unread failures only. GET does not mark failures seen.
 
 Report the saved status and any observed delivery failures separately. Inspecting
 failure notifications does not authorize directly calling their webhook URLs.
+
+### Update one task step status
+
+`PATCH /api/tasks/{id}/steps/{stepIndex}/status` accepts `{"status":"DONE"}`
+and returns the updated task (200). `stepIndex` is zero-based; fetch the current
+ordered steps before choosing it. Status is required and accepts `PENDING`,
+`EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`. Only that step's status changes;
+all task fields and other step fields are preserved. Existing step status-change
+webhooks run when the status changes; repeating the same status sends no event.
+Invalid/missing/null status returns 400. Missing task or step returns 404.
+A concurrent step edit during the update returns 409; refresh before retrying.
+This endpoint applies to tasks only, not templates.

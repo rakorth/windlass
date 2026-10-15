@@ -150,3 +150,7 @@ Saving a changed status also sends a JSON POST to each affected destination; del
 appear as unread notifications with the task, step, destination, and error details.
 Templates preserve webhook settings when copied into tasks. See the
 [webhook contract](api.md#task-status-webhooks) for matching rules and delivery limits.
+
+On the task details page, each step has a status dropdown that saves immediately.
+The completion count updates after saving. Failed saves restore the previous
+selection and show an error; status changes use the focused step PATCH endpoint.

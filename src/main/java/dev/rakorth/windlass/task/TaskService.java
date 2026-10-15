@@ -119,6 +119,25 @@ public class TaskService {
         return value;
     }
 
+    public Task updateStepStatus(String id, int stepIndex, StepStatus status) {
+        String storedSteps = jdbc.query("SELECT steps FROM " + table + " WHERE id = ?",
+                (rs, row) -> rs.getString("steps"), id).stream().findFirst().orElseThrow(this::notFound);
+        var previous = get(id);
+        if (stepIndex < 0 || stepIndex >= previous.steps().size()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task step not found");
+        }
+        // Guard against replacing steps that were edited or reordered since the read.
+        int changed = jdbc.update("UPDATE " + table + " SET steps = json_set(steps, ?, ?) WHERE id = ? AND steps = ?",
+                "$[" + stepIndex + "].status", status.name(), id, storedSteps);
+        if (changed == 0) {
+            get(id);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Task steps changed; refresh and try again");
+        }
+        var current = get(id);
+        if (table.equals("tasks")) webhooks.statusChanged(previous, current);
+        return current;
+    }
+
     public void delete(String id) {
         if (jdbc.update("DELETE FROM " + table + " WHERE id = ?", id) == 0) throw notFound();
     }
