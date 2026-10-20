@@ -19,9 +19,10 @@ public class TaskController {
                          @RequestParam(defaultValue = "20") int size,
                          @RequestParam(required = false) String search,
                          @RequestParam(required = false) TaskStatus status,
+                         @RequestParam(required = false) java.util.List<TaskStatus> excludeStatus,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant notifyMeOnBefore,
                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant notifyMeOnAfter) {
-        return service.list(page, size, search, status, notifyMeOnBefore, notifyMeOnAfter);
+        return service.list(page, size, search, status, notifyMeOnBefore, notifyMeOnAfter, excludeStatus);
     }
 
     @GetMapping("/{id}")

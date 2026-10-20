@@ -6,6 +6,7 @@ let page = 0;
 let totalPages = 0;
 let search = '';
 let statusFilter = '';
+let excludedStatuses = [];
 let loading = false;
 const editor = createTaskEditor(async (task, templateLibrary) => {
   setLibrary(templateLibrary);
@@ -53,7 +54,7 @@ function render(items, total) {
   $('count').textContent = total;
   $('page-info').textContent = totalPages ? `Page ${page + 1} of ${totalPages}` : 'No pages';
   $('tasks').replaceChildren();
-  if (!items.length) $('tasks').append(element('p', search || statusFilter ? `No ${templates ? 'templates' : 'tasks'} match your filters.` : templates ? 'No templates yet. Create a template to reuse its fields and steps.' : 'No tasks yet. Create a task to get started.', 'empty'));
+  if (!items.length) $('tasks').append(element('p', search || statusFilter || excludedStatuses.length ? `No ${templates ? 'templates' : 'tasks'} match your filters.` : templates ? 'No templates yet. Create a template to reuse its fields and steps.' : 'No tasks yet. Create a task to get started.', 'empty'));
   for (const task of items) {
     const row = element('article', undefined, 'task-row');
     row.setAttribute('role', 'listitem');
@@ -123,7 +124,7 @@ async function load(message = '') {
   $('previous').disabled = $('next').disabled = true;
   $('status').textContent = templates ? 'Loading templates…' : 'Loading tasks…';
   try {
-    const query = () => `?page=${page}&size=20&search=${encodeURIComponent(search)}${statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : ''}`;
+    const query = () => `?page=${page}&size=20&search=${encodeURIComponent(search)}${statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : ''}${excludedStatuses.map(value => `&excludeStatus=${encodeURIComponent(value)}`).join('')}`;
     let result = await api(query());
     if (page > 0 && page >= result.totalPages) {
       page = Math.max(0, result.totalPages - 1);
@@ -156,8 +157,16 @@ for (const [id, value] of [['show-tasks', false], ['show-templates', true]]) {
   $(id).addEventListener('click', () => { if (!loading && !editor.saving) { setLibrary(value); load(); } });
 }
 $('new').addEventListener('click', () => editor.open(null, templates));
-$('search-form').addEventListener('submit', event => { event.preventDefault(); search = $('search').value.trim(); statusFilter = $('status-filter').value; page = 0; load(); });
-$('status-filter').addEventListener('change', () => { search = $('search').value.trim(); statusFilter = $('status-filter').value; page = 0; load(); });
+function applyFilters() {
+  search = $('search').value.trim();
+  statusFilter = $('status-filter').value;
+  excludedStatuses = Array.from(document.querySelectorAll('input[name="exclude-status"]:checked'), input => input.value);
+  page = 0;
+  load();
+}
+$('search-form').addEventListener('submit', event => { event.preventDefault(); applyFilters(); });
+$('status-filter').addEventListener('change', applyFilters);
+document.querySelectorAll('input[name="exclude-status"]').forEach(input => input.addEventListener('change', applyFilters));
 $('refresh').addEventListener('click', () => load());
 $('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; load(); } });
 $('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; load(); } });

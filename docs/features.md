@@ -165,3 +165,17 @@ notifications link directly to their details. Counts include all retained
 records across every inbox page, including sources with no unread notifications.
 Use Refresh to update; failures preserve the previous view with an error message.
 Opening the dashboard does not change read state. Deleted records are excluded.
+
+## Excluding task statuses
+
+The Tasks and Task templates lists offer **Exclude statuses** checkboxes. Select
+one or more statuses to hide; clear the checkboxes to include them again. Changes
+apply immediately and reset pagination to the first page. Search and the existing
+status selector combine with exclusions; including and excluding the same status
+produces no results. Filters remain selected when switching between the two lists.
+
+Both `GET /api/tasks` and `GET /api/task-templates` accept repeated `excludeStatus`
+parameters, for example `?excludeStatus=DONE&excludeStatus=SKIPPED`. Values must be
+`PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`; invalid values return 400.
+Omit the parameter to exclude nothing. Exclusions apply before pagination and
+counts and combine with `search`, `status`, and task reminder bounds.

@@ -92,3 +92,17 @@ Missing IDs return 404 and invalid input returns 400. Creation is not idempotent
 inspect saved records before retrying a POST after a timeout or uncertain result.
 Agents can use the [Windlass REST skill](../skills/windlass-rest/SKILL.md) and its
 [task reference](../skills/windlass-rest/references/tasks.md) for these workflows.
+
+## Excluding task statuses
+
+The Tasks and Task templates lists offer **Exclude statuses** checkboxes. Select
+one or more statuses to hide; clear the checkboxes to include them again. Changes
+apply immediately and reset pagination to the first page. Search and the existing
+status selector combine with exclusions; including and excluding the same status
+produces no results. Filters remain selected when switching between the two lists.
+
+Both `GET /api/tasks` and `GET /api/task-templates` accept repeated `excludeStatus`
+parameters, for example `?excludeStatus=DONE&excludeStatus=SKIPPED`. Values must be
+`PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`; invalid values return 400.
+Omit the parameter to exclude nothing. Exclusions apply before pagination and
+counts and combine with `search`, `status`, and task reminder bounds.

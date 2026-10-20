@@ -29,8 +29,9 @@ public class TaskTemplateController {
     public TaskPage list(@RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "20") int size,
                          @RequestParam(required = false) String search,
-                         @RequestParam(required = false) TaskStatus status) {
-        return service.list(page, size, search, status);
+                         @RequestParam(required = false) TaskStatus status,
+                         @RequestParam(required = false) java.util.List<TaskStatus> excludeStatus) {
+        return service.list(page, size, search, status, null, null, excludeStatus);
     }
 
     @GetMapping("/{id}")

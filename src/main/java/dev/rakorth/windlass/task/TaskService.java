@@ -51,6 +51,11 @@ public class TaskService {
 
     public TaskPage list(int page, int size, String search, TaskStatus status,
                          Instant notifyMeOnBefore, Instant notifyMeOnAfter) {
+        return list(page, size, search, status, notifyMeOnBefore, notifyMeOnAfter, null);
+    }
+
+    public TaskPage list(int page, int size, String search, TaskStatus status,
+                         Instant notifyMeOnBefore, Instant notifyMeOnAfter, List<TaskStatus> excludeStatus) {
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "page must be nonnegative and size must be between 1 and 100");
@@ -71,6 +76,14 @@ public class TaskService {
         if (status != null) {
             where += where.isEmpty() ? " WHERE status = ?" : " AND status = ?";
             parameters.add(status.name());
+        }
+        if (excludeStatus != null && !excludeStatus.isEmpty()) {
+            if (excludeStatus.stream().anyMatch(java.util.Objects::isNull)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "excludeStatus must contain valid task statuses");
+            }
+            where += where.isEmpty() ? " WHERE " : " AND ";
+            where += "status NOT IN (" + String.join(",", java.util.Collections.nCopies(excludeStatus.size(), "?")) + ")";
+            excludeStatus.forEach(value -> parameters.add(value.name()));
         }
         // Remove Z so whole seconds sort before fractional seconds at the same instant.
         if (notifyMeOnBefore != null) {

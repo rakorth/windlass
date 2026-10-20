@@ -255,3 +255,7 @@ or filters apply. Counts cover retained records only; deleted notifications do
 not contribute. Reading the dashboard does not mark notifications seen.
 
 The browser dashboard is available at `/dashboard.html`, linked from the inbox.
+
+Task and template lists support repeated `excludeStatus` parameters to omit
+multiple statuses before pagination, for example `excludeStatus=DONE&excludeStatus=SKIPPED`.
+See [tasks](references/tasks.md) for interactions with other filters.

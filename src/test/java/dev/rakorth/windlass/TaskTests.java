@@ -320,6 +320,40 @@ class TaskTests {
     }
 
     @Test
+    void excludesMultipleStatusesBeforePaginationAndCombinesFilters() throws Exception {
+        for (String table : new String[]{"tasks", "task_templates"}) {
+            String collection = "/api/" + table.replace('_', '-');
+            for (String value : new String[]{"PENDING", "EXECUTING", "WAITING", "DONE", "SKIPPED"}) {
+                jdbc.update("INSERT INTO " + table + " (id, name, description, links, metadata, status, notify_me_on) VALUES (?, ?, '', '{}', '{}', ?, '2026-10-01T00:00:00Z')",
+                        value, "Release " + value, value);
+            }
+            mvc.perform(get(collection).param("excludeStatus", "DONE", "SKIPPED").param("size", "1").param("page", "1"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3))
+                    .andExpect(jsonPath("$.totalPages").value(3))
+                    .andExpect(jsonPath("$.items[0].status").value("PENDING"));
+            mvc.perform(get(collection).param("excludeStatus", "DONE", "SKIPPED").param("search", "Waiting").param("status", "WAITING"))
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.items[0].status").value("WAITING"));
+            mvc.perform(get(collection).param("excludeStatus", "WAITING").param("status", "WAITING"))
+                    .andExpect(jsonPath("$.items").isEmpty()).andExpect(jsonPath("$.totalElements").value(0));
+            mvc.perform(get(collection).param("excludeStatus", "PENDING", "EXECUTING", "WAITING", "DONE", "SKIPPED"))
+                    .andExpect(jsonPath("$.items").isEmpty()).andExpect(jsonPath("$.totalPages").value(0));
+            mvc.perform(get(collection).param("excludeStatus", "DONE", "DONE"))
+                    .andExpect(jsonPath("$.totalElements").value(4));
+            mvc.perform(get(collection)).andExpect(jsonPath("$.totalElements").value(5));
+            for (String invalid : new String[]{"done", "UNKNOWN", "' OR 1=1 --"}) {
+                mvc.perform(get(collection).param("excludeStatus", "DONE", invalid)).andExpect(status().isBadRequest());
+            }
+        }
+        mvc.perform(get("/api/tasks").param("excludeStatus", "DONE", "SKIPPED")
+                        .param("notifyMeOnBefore", "2026-10-02T00:00:00Z").param("notifyMeOnAfter", "2026-09-30T00:00:00Z"))
+                .andExpect(jsonPath("$.totalElements").value(3));
+        mvc.perform(get("/api/tasks").param("excludeStatus", "DONE", "SKIPPED")
+                        .param("notifyMeOnAfter", "2026-10-02T00:00:00Z"))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
     void filtersReminderBoundsWithNanosecondPrecisionBeforePagination() throws Exception {
         String[] dates = {null, "2026-10-08T10:00:00Z", "2026-10-08T10:00:00.000000001Z",
                 "2026-10-08T10:00:00.1Z", "2026-10-08T10:00:01Z"};
