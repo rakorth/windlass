@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
 
-@org.springframework.context.annotation.DependsOn("taskWebhookSchemaMigration")
+@org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization
 @Service
 public class TaskService {
     private final JdbcTemplate jdbc;

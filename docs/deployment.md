@@ -19,6 +19,9 @@ java -jar target/windlass-0.0.1-SNAPSHOT.jar
 
 Local runs store data in `notifications.db` in the process working directory.
 No separate database server or frontend package manager is needed.
+Flyway migrates the configured SQLite database before the application starts serving
+requests. Existing pre-Flyway databases are adopted automatically without deleting
+records. See [Database migrations](migrations.md) for upgrade behavior and recovery.
 
 ## Configuration
 

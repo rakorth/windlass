@@ -131,24 +131,6 @@ class WindlassApplicationTests {
     }
 
     @Test
-    void migratesLegacyDatabaseWithoutLosingNotifications() {
-        var source = new org.springframework.jdbc.datasource.SingleConnectionDataSource("jdbc:sqlite::memory:", true);
-        try {
-            var legacy = new JdbcTemplate(source);
-            legacy.execute("CREATE TABLE notifications (id TEXT PRIMARY KEY, title TEXT)");
-            legacy.update("INSERT INTO notifications VALUES ('existing', 'Keep me')");
-            var migration = new dev.rakorth.windlass.notification.NotificationSchemaMigration(legacy);
-            migration.migrate();
-            org.junit.jupiter.api.Assertions.assertEquals(1, legacy.queryForObject("SELECT unread FROM notifications", Integer.class));
-            legacy.update("UPDATE notifications SET unread = 0");
-            migration.migrate();
-            org.junit.jupiter.api.Assertions.assertEquals(0, legacy.queryForObject("SELECT unread FROM notifications", Integer.class));
-            org.junit.jupiter.api.Assertions.assertEquals("Keep me", legacy.queryForObject("SELECT title FROM notifications", String.class));
-            org.junit.jupiter.api.Assertions.assertEquals("{}", legacy.queryForObject("SELECT external_links FROM notifications", String.class));
-        } finally { source.destroy(); }
-    }
-
-    @Test
     void unreadStatePersistsAndSurvivesEdits() throws Exception {
         String body = """
                 {"title":"New notification","notification_source":"App"}

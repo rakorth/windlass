@@ -1,12 +1,11 @@
+-- IF NOT EXISTS also supports databases created before Flyway was introduced.
 CREATE TABLE IF NOT EXISTS notifications (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     notification_source TEXT NOT NULL,
     received_on TEXT NOT NULL,
-    metadata_map TEXT NOT NULL,
-    external_links TEXT NOT NULL DEFAULT '{}',
-    unread INTEGER NOT NULL DEFAULT 1 CHECK (unread IN (0, 1))
+    metadata_map TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tasks (
@@ -17,7 +16,6 @@ CREATE TABLE IF NOT EXISTS tasks (
     metadata TEXT NOT NULL,
     steps TEXT NOT NULL DEFAULT '[]',
     status TEXT NOT NULL DEFAULT 'PENDING',
-    webhooks TEXT NOT NULL DEFAULT '[]',
     notify_me_on TEXT
 );
 
@@ -29,6 +27,5 @@ CREATE TABLE IF NOT EXISTS task_templates (
     metadata TEXT NOT NULL,
     steps TEXT NOT NULL DEFAULT '[]',
     status TEXT NOT NULL DEFAULT 'PENDING',
-    webhooks TEXT NOT NULL DEFAULT '[]',
     notify_me_on TEXT
 );

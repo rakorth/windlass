@@ -30,7 +30,11 @@ spring:
       maximum-pool-size: 1
   sql:
     init:
-      mode: always
+      mode: never
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: "0"
+    clean-disabled: true
   servlet:
     multipart:
       max-file-size: 512MB

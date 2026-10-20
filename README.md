@@ -17,6 +17,8 @@ Open http://localhost:8080. Create notifications, search by title/description/so
 
 Open **Tasks** to track ordered steps or save reusable task templates. **Use template** opens a prefilled new task; **Save as template** copies an existing task into the separate template library. See [Task templates](docs/task-templates.md) for the UI and REST workflow.
 
+Flyway applies versioned database migrations automatically on startup, including upgrades of existing databases. See [Database migrations](docs/migrations.md) for adding schema changes.
+
 Data is stored in `notifications.db` in the working directory and survives restarts. Set `DATABASE_URL` to change the SQLite JDBC URL (for example `jdbc:sqlite:/tmp/windlass.db`). Set `SERVER_PORT` to change the port. The app is intended for local use and has no authentication.
 
 ## Model

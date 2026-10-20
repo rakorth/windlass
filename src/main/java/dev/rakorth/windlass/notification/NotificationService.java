@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
-@org.springframework.context.annotation.DependsOn("notificationSchemaMigration")
+@org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization
 @Service
 public class NotificationService {
     private final JdbcTemplate jdbc;

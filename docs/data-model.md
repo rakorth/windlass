@@ -100,12 +100,13 @@ ordering is `julianday(received_on) DESC, id`.
 
 ## Startup and migration
 
-[The schema](../src/main/resources/schema.sql) creates the table if absent.
-[The migration component](../src/main/java/dev/rakorth/windlass/notification/NotificationSchemaMigration.java)
-then inspects existing columns and adds missing `external_links` and `unread`
-columns. Older records receive `{}` and `true`, respectively. Re-running the
-migration preserves existing values, including records already marked seen.
-This is a small additive migration, not a general versioned migration framework.
+Flyway manages SQLite schema versions at startup. V1 creates missing notification,
+task, and template tables; V2 adds missing `external_links`, `unread`, and task/template
+`webhooks` columns to pre-Flyway databases. Older notifications receive `{}` and
+`true` for links and unread state, and tasks/templates receive `[]` for webhooks.
+Existing values and records are preserved. Applied versions are tracked in
+`flyway_schema_history`, so upgrades are not repeated on restart. See
+[database migrations](migrations.md) for migration files and development workflow.
 
 Local runs default to `./notifications.db`; containers use
 `/data/notifications.db`. See [deployment and persistence](deployment.md) before

@@ -54,8 +54,9 @@ Paths below are relative to this document; links point to the implementation.
 | Full backups, validation, restore, and rollback | [manager.py](../docker/n8n-backup/manager.py) |
 | Scoped n8n process supervision | [process.mjs](../docker/n8n/process.mjs) |
 | SQL, defaults, ordering, link checks, seen operation | [NotificationService.java](../src/main/java/dev/rakorth/windlass/notification/NotificationService.java) |
-| Initial SQLite table | [schema.sql](../src/main/resources/schema.sql) |
-| Additive upgrades for existing databases | [NotificationSchemaMigration.java](../src/main/java/dev/rakorth/windlass/notification/NotificationSchemaMigration.java) |
+| Initial SQLite tables | [V1__create_initial_tables.sql](../src/main/resources/db/migration/V1__create_initial_tables.sql) |
+| Compatibility upgrade for pre-Flyway databases | [V2__upgrade_legacy_columns.java](../src/main/java/db/migration/V2__upgrade_legacy_columns.java) |
+| Fresh, legacy, and restart migration tests | [FlywayMigrationTests.java](../src/test/java/dev/rakorth/windlass/FlywayMigrationTests.java) |
 | Datasource and server defaults | [application.yaml](../src/main/resources/application.yaml) |
 | Page, dialog, and card template | [index.html](../src/main/resources/static/index.html) |
 | Fetch calls, local state, search, rendering, actions | [app.js](../src/main/resources/static/app.js) |
@@ -68,14 +69,14 @@ Paths below are relative to this document; links point to the implementation.
 
 ## Implementation invariants
 
-- Startup schema initialization precedes additive migrations, which precede service use.
+- Flyway runs versioned migrations before database-dependent services are initialized; SQL script initialization is disabled.
 - SQL uses bound parameters for notification values and IDs.
 - Maps are serialized to JSON text and deserialized on reads.
 - Content updates exclude the unread column; marking seen changes only that column.
 - GET returns persisted values. POST generates a UUID and uses the database unread default.
 - The UI keeps one page in memory; search filters that page without a server request. Pagination and unread filtering use server requests.
 - The form sends the full editable payload. New fields may require changes across model, request, service SQL, schema, migration, form, and rendering.
-- A field added only to `CREATE TABLE IF NOT EXISTS` will not upgrade an existing database; add an appropriate migration too.
+- Add schema changes as new versioned migrations; do not edit migrations that have already shipped.
 
 ## Verification
 
@@ -114,6 +115,7 @@ independent copies; `tasks.html` and `tasks.js` provide both library views.
 
 Task status updates call `task/TaskWebhookService.java` after persistence. It sends
 bounded HTTP POSTs and creates failure notifications through `NotificationService`.
-`TaskWebhookSchemaMigration` adds webhook lists to existing task/template tables;
+Flyway V2 adds webhook lists to existing task/template tables;
 step webhook lists live in the existing JSON steps column. `TaskWebhookTests`
-covers delivery, failure reporting, URL validation, template copying, and migration.
+covers delivery, failure reporting, URL validation, and template copying.
+`FlywayMigrationTests` covers schema upgrades and preservation of existing data.

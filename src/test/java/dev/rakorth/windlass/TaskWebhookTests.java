@@ -1,7 +1,6 @@
 package dev.rakorth.windlass;
 
 import com.sun.net.httpserver.HttpServer;
-import dev.rakorth.windlass.task.TaskWebhookSchemaMigration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -183,21 +182,4 @@ class TaskWebhookTests {
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM notifications", Integer.class));
     }
 
-    @Test
-    void migratesLegacyTablesIdempotentlyWithoutLosingData() {
-        var legacy = new org.springframework.jdbc.datasource.SingleConnectionDataSource("jdbc:sqlite::memory:", true);
-        try {
-            var db = new JdbcTemplate(legacy);
-            for (String table : new String[]{"tasks", "task_templates"}) {
-                db.execute("CREATE TABLE " + table + " (id TEXT, steps TEXT)");
-                db.update("INSERT INTO " + table + " VALUES ('old', '[]')");
-            }
-            var migration = new TaskWebhookSchemaMigration(db);
-            migration.migrate();
-            migration.migrate();
-            for (String table : new String[]{"tasks", "task_templates"}) {
-                assertEquals("[]", db.queryForObject("SELECT webhooks FROM " + table + " WHERE id = 'old'", String.class));
-            }
-        } finally { legacy.destroy(); }
-    }
 }
