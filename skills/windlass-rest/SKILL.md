@@ -243,3 +243,15 @@ There is no concurrent-edit protection. UI: `/json-conf.html`. See
 
 For a single step status change, use `PATCH /api/tasks/{id}/steps/{stepIndex}/status`
 with `{"status":"DONE"}`. The index is zero-based; see the tasks reference.
+
+## Notification dashboard
+
+`GET /api/notifications/dashboard` returns database-wide `total` and `unread`
+counts, `sources` (`source`, `total`, `unread`) ordered by unread count descending
+then source, `activity` (`day`, `total`) for the last seven UTC calendar days
+including today with zero-filled days, and up to five `recentUnread` notification
+objects ordered newest first. Sources with zero unread are included. No pagination
+or filters apply. Counts cover retained records only; deleted notifications do
+not contribute. Reading the dashboard does not mark notifications seen.
+
+The browser dashboard is available at `/dashboard.html`, linked from the inbox.

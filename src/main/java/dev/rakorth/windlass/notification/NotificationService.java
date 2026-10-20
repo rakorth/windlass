@@ -64,6 +64,32 @@ public class NotificationService {
         return jdbc.queryForList("SELECT DISTINCT notification_source FROM notifications ORDER BY notification_source", String.class);
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public NotificationDashboard dashboard() {
+        var today = java.time.LocalDate.now(java.time.ZoneOffset.UTC);
+        var sources = jdbc.query("""
+                SELECT notification_source, COUNT(*) AS total, SUM(unread) AS unread
+                FROM notifications GROUP BY notification_source
+                ORDER BY unread DESC, notification_source
+                """, (rs, row) -> new NotificationDashboard.SourceCount(
+                rs.getString("notification_source"), rs.getLong("total"), rs.getLong("unread")));
+        var counts = jdbc.query("""
+                SELECT date(received_on) AS day, COUNT(*) AS total FROM notifications
+                WHERE julianday(received_on) >= julianday(?) AND julianday(received_on) < julianday(?)
+                GROUP BY date(received_on)
+                """, (rs, row) -> new NotificationDashboard.DayCount(rs.getString("day"), rs.getLong("total")),
+                today.minusDays(6).toString(), today.plusDays(1).toString());
+        var activity = new ArrayList<NotificationDashboard.DayCount>();
+        for (int i = 6; i >= 0; i--) {
+            String day = today.minusDays(i).toString();
+            activity.add(new NotificationDashboard.DayCount(day, counts.stream()
+                    .filter(count -> count.day().equals(day)).mapToLong(NotificationDashboard.DayCount::total).sum()));
+        }
+        var recent = jdbc.query("SELECT * FROM notifications WHERE unread = 1 ORDER BY julianday(received_on) DESC, id LIMIT 5", mapper);
+        return new NotificationDashboard(sources.stream().mapToLong(NotificationDashboard.SourceCount::total).sum(),
+                sources.stream().mapToLong(NotificationDashboard.SourceCount::unread).sum(), sources, activity, recent);
+    }
+
     public Notification get(String id) {
         return jdbc.query("SELECT * FROM notifications WHERE id = ?", mapper, id).stream()
                 .findFirst().orElseThrow(this::notFound);

@@ -21,6 +21,9 @@ public class NotificationController {
         return service.list(page, size, unread, source);
     }
 
+    @GetMapping("/dashboard")
+    public NotificationDashboard dashboard() { return service.dashboard(); }
+
     @GetMapping("/sources")
     public List<String> sources() { return service.sources(); }
 

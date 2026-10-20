@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Windlass · Dashboard</title>
+  <link rel="icon" href="/favicon.ico?v=3">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/dashboard.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/tasks.html">Tasks</a></nav></header>
+  <main class="dashboard-page">
+    <div class="heading"><div><p class="eyebrow">YOUR WORKSPACE AT A GLANCE</p><h1>Notification dashboard</h1><p class="muted">See what needs attention across your notification sources.</p></div><button id="refresh" class="secondary">Refresh</button></div>
+    <p id="status" role="status" aria-live="polite">Loading dashboard…</p>
+    <div id="dashboard" hidden>
+      <section class="dashboard-metrics" aria-label="Notification totals">
+        <article class="card"><h2>Unread</h2><strong id="unread-total">—</strong><p class="muted">Waiting for your attention</p></article>
+        <article class="card"><h2>All notifications</h2><strong id="all-total">—</strong><p class="muted">Currently retained</p></article>
+        <article class="card"><h2>Read</h2><strong id="read-total">—</strong><p id="read-percent" class="muted"></p></article>
+        <article class="card"><h2>Sources with unread</h2><strong id="source-total">—</strong><p id="source-caption" class="muted"></p></article>
+      </section>
+      <div class="dashboard-grid">
+        <section class="card"><h2>Unread by notification type</h2><p class="muted">Grouped by source, highest unread count first.</p><div id="sources" class="dashboard-sources"></div></section>
+        <section class="card"><h2>Activity over the last 7 days</h2><p class="muted">Notifications received per UTC day, including today.</p><div id="activity" class="dashboard-activity"></div><p class="muted">Counts reflect retained notifications; deleted records are excluded.</p></section>
+      </div>
+      <section class="card dashboard-recent"><div class="list-heading"><h2>Recent unread notifications</h2><a class="automations-link" href="/">Open inbox →</a></div><div id="recent"></div></section>
+    </div>
+  </main>
+</body>
+</html>

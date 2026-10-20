@@ -154,3 +154,14 @@ Templates preserve webhook settings when copied into tasks. See the
 On the task details page, each step has a status dropdown that saves immediately.
 The completion count updates after saving. Failed saves restore the previous
 selection and show an error; status changes use the focused step PATCH endpoint.
+
+## Notification dashboard
+
+Open **Dashboard** from the inbox or visit `/dashboard.html` for unread counts
+by notification source (type), retained notification totals, read percentage,
+and the number of sources with unread notifications. A seven-day UTC activity
+chart shows received notification counts, and the five most recent unread
+notifications link directly to their details. Counts include all retained
+records across every inbox page, including sources with no unread notifications.
+Use Refresh to update; failures preserve the previous view with an error message.
+Opening the dashboard does not change read state. Deleted records are excluded.

@@ -26,6 +26,43 @@ class WindlassApplicationTests {
     void clear() { jdbc.update("DELETE FROM notifications"); }
 
     @Test
+    void dashboardAggregatesAllSourcesAndFillsSevenUtcDays() throws Exception {
+        var today = java.time.LocalDate.now(java.time.ZoneOffset.UTC);
+        for (int i = 0; i < 125; i++) {
+            jdbc.update("INSERT INTO notifications (id, title, description, notification_source, received_on, metadata_map, external_links, unread) VALUES (?, 'Update', '', ?, ?, '{}', '{}', ?)",
+                    "dashboard-" + i, i < 120 ? "CI" : "Email", today + "T12:00:00Z", i < 110 ? 1 : 0);
+        }
+        jdbc.update("INSERT INTO notifications (id, title, description, notification_source, received_on, metadata_map, external_links, unread) VALUES ('old', 'Old', '', 'Archive', ?, '{}', '{}', 1)",
+                today.minusDays(10) + "T00:00:00Z");
+        mvc.perform(get("/api/notifications/dashboard"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(126))
+                .andExpect(jsonPath("$.unread").value(111))
+                .andExpect(jsonPath("$.sources[0].source").value("CI"))
+                .andExpect(jsonPath("$.sources[0].unread").value(110))
+                .andExpect(jsonPath("$.sources[2].source").value("Email"))
+                .andExpect(jsonPath("$.sources[2].unread").value(0))
+                .andExpect(jsonPath("$.activity.length()").value(7))
+                .andExpect(jsonPath("$.activity[0].total").value(0))
+                .andExpect(jsonPath("$.activity[6].total").value(125))
+                .andExpect(jsonPath("$.recentUnread.length()").value(5))
+                .andExpect(jsonPath("$.recentUnread[0].unread").value(true));
+        mvc.perform(get("/api/notifications?unread=true"))
+                .andExpect(jsonPath("$.totalElements").value(111));
+    }
+
+    @Test
+    void emptyDashboardHasZeroCountsAndSevenDays() throws Exception {
+        mvc.perform(get("/api/notifications/dashboard"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.unread").value(0))
+                .andExpect(jsonPath("$.sources").isEmpty())
+                .andExpect(jsonPath("$.recentUnread").isEmpty())
+                .andExpect(jsonPath("$.activity.length()").value(7))
+                .andExpect(jsonPath("$.activity[6].total").value(0));
+        mvc.perform(get("/dashboard.html")).andExpect(status().isOk());
+    }
+
+    @Test
     void completeCrudLifecycle() throws Exception {
         var result = mvc.perform(post("/api/notifications").contentType("application/json").content("""
                 {"title":"Build complete","description":"Ready to deploy","notification_source":"CI",
