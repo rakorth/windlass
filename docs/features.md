@@ -179,3 +179,24 @@ parameters, for example `?excludeStatus=DONE&excludeStatus=SKIPPED`. Values must
 `PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`; invalid values return 400.
 Omit the parameter to exclude nothing. Exclusions apply before pagination and
 counts and combine with `search`, `status`, and task reminder bounds.
+
+## Bookmarkable list filters
+
+The notification inbox and Tasks page keep applied filters and the current page
+in the browser URL. Bookmark or copy the address to reopen the same view. Changing
+filters or pages updates the URL; browser Back and Forward restore earlier views.
+Default filters and page zero are omitted from the URL. Invalid page numbers and
+unknown task statuses fall back to defaults. If a saved page no longer exists,
+the list moves to the last available page and updates the address.
+
+- Notifications: `/?source=CI&unread=true&search=build&page=1` restores source,
+  unread-only, search text, and zero-based page. Search still filters only the
+  current page in the browser and updates the URL as you type. Bookmarked source
+  names remain selectable even when they no longer have notifications.
+- Tasks: `/tasks.html?search=release&status=WAITING&excludeStatus=DONE&excludeStatus=SKIPPED`
+  restores the applied search, status, and exclusions. Apply search with Search
+  or Enter; status and exclusion changes apply immediately.
+- Templates: add `library=templates` to a Tasks page URL to restore the template
+  library with the same filter options. Page position uses zero-based `page`.
+
+These are browser page URLs. REST endpoint parameters remain unchanged.

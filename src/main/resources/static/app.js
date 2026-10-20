@@ -1,3 +1,5 @@
+import { readListUrl, updateListUrl } from './list-url.js';
+
 const $ = (id) => document.getElementById(id);
 let notifications = [];
 let editingId = null;
@@ -6,6 +8,11 @@ let page = 0;
 let totalElements = 0;
 let totalPages = 0;
 const pageSize = 20;
+
+function syncUrl(replace = false) {
+  updateListUrl({ search: $('search').value, source: $('source-filter').value,
+    unread: $('unread-only').checked, page }, replace);
+}
 
 async function api(path = '', options = {}) {
   const response = await fetch(`/api/notifications${path}`, {
@@ -85,6 +92,7 @@ function render() {
 async function load() {
   if (loading) return;
   loading = true;
+  syncUrl(true);
   $('refresh').disabled = true;
   $('unread-only').disabled = true;
   $('source-filter').disabled = true;
@@ -105,6 +113,7 @@ async function load() {
       page = Math.max(0, result.totalPages - 1);
       result = await api(`?page=${page}&size=${pageSize}${suffix}`);
     }
+    syncUrl(true);
     notifications = result.items;
     totalElements = result.totalElements;
     totalPages = result.totalPages;
@@ -144,11 +153,11 @@ $('new').addEventListener('click', () => openEditor());
 $('close').addEventListener('click', () => $('editor').close());
 $('cancel').addEventListener('click', () => $('editor').close());
 $('refresh').addEventListener('click', load);
-$('search').addEventListener('input', render);
-$('unread-only').addEventListener('change', () => { page = 0; load(); });
-$('source-filter').addEventListener('change', () => { page = 0; load(); });
-$('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; load(); } });
-$('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; load(); } });
+$('search').addEventListener('input', () => { syncUrl(true); render(); });
+$('unread-only').addEventListener('change', () => { page = 0; syncUrl(); load(); });
+$('source-filter').addEventListener('change', () => { page = 0; syncUrl(); load(); });
+$('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; syncUrl(); load(); } });
+$('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; syncUrl(); load(); } });
 $('form').addEventListener('submit', async (event) => {
   event.preventDefault();
   $('form-error').textContent = '';
@@ -185,4 +194,13 @@ $('form').addEventListener('submit', async (event) => {
   finally { $('save').disabled = false; $('cancel').disabled = false; $('close').disabled = false; }
 });
 $('editor').addEventListener('cancel', event => { if ($('save').disabled) event.preventDefault(); });
+const initialFilters = readListUrl('notifications');
+page = initialFilters.page;
+$('search').value = initialFilters.search;
+$('unread-only').checked = initialFilters.unread;
+// Keep bookmarked sources selectable even if their last notification was deleted.
+if (initialFilters.source) $('source-filter').add(new Option(initialFilters.source, initialFilters.source));
+$('source-filter').value = initialFilters.source;
+// Reload on history navigation so in-flight requests cannot overwrite the restored view.
+window.addEventListener('popstate', () => window.location.reload());
 load();

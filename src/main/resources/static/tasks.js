@@ -1,4 +1,5 @@
 import { createTaskEditor } from './task-editor.js';
+import { readListUrl, updateListUrl } from './list-url.js';
 
 const $ = id => document.getElementById(id);
 let templates = false;
@@ -13,6 +14,11 @@ const editor = createTaskEditor(async (task, templateLibrary) => {
   await load(`${templateLibrary ? 'Template' : 'Task'} saved.`);
 });
 const statuses = { PENDING: 'Pending', EXECUTING: 'Executing', DONE: 'Done', SKIPPED: 'Skipped', WAITING: 'Waiting' };
+
+function syncUrl(replace = false) {
+  updateListUrl({ search, status: statusFilter, excludeStatus: excludedStatuses,
+    library: templates ? 'templates' : '', page }, replace);
+}
 
 async function api(path = '', options = {}, templateLibrary = templates) {
   const response = await fetch(`/api/${templateLibrary ? 'task-templates' : 'tasks'}${path}`, {
@@ -118,6 +124,7 @@ function render(items, total) {
 async function load(message = '') {
   if (loading) return;
   loading = true;
+  syncUrl(true);
   $('tasks').querySelectorAll('button').forEach(node => { node.disabled = true; });
   for (const id of ['show-tasks', 'show-templates', 'new']) $(id).disabled = true;
   $('search-form').querySelectorAll('input, select, button').forEach(node => { node.disabled = true; });
@@ -130,6 +137,7 @@ async function load(message = '') {
       page = Math.max(0, result.totalPages - 1);
       result = await api(query());
     }
+    syncUrl(true);
     totalPages = result.totalPages;
     render(result.items, result.totalElements);
     $('status').textContent = message;
@@ -154,7 +162,7 @@ function setLibrary(value) {
   $('show-templates').setAttribute('aria-pressed', String(templates));
 }
 for (const [id, value] of [['show-tasks', false], ['show-templates', true]]) {
-  $(id).addEventListener('click', () => { if (!loading && !editor.saving) { setLibrary(value); load(); } });
+  $(id).addEventListener('click', () => { if (!loading && !editor.saving) { setLibrary(value); syncUrl(); load(); } });
 }
 $('new').addEventListener('click', () => editor.open(null, templates));
 function applyFilters() {
@@ -162,12 +170,25 @@ function applyFilters() {
   statusFilter = $('status-filter').value;
   excludedStatuses = Array.from(document.querySelectorAll('input[name="exclude-status"]:checked'), input => input.value);
   page = 0;
+  syncUrl();
   load();
 }
 $('search-form').addEventListener('submit', event => { event.preventDefault(); applyFilters(); });
 $('status-filter').addEventListener('change', applyFilters);
 document.querySelectorAll('input[name="exclude-status"]').forEach(input => input.addEventListener('change', applyFilters));
 $('refresh').addEventListener('click', () => load());
-$('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; load(); } });
-$('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; load(); } });
+$('previous').addEventListener('click', () => { if (!loading && page > 0) { page--; syncUrl(); load(); } });
+$('next').addEventListener('click', () => { if (!loading && page + 1 < totalPages) { page++; syncUrl(); load(); } });
+const initialFilters = readListUrl('tasks');
+search = initialFilters.search;
+statusFilter = initialFilters.status;
+excludedStatuses = initialFilters.excludeStatus;
+setLibrary(initialFilters.library === 'templates');
+page = initialFilters.page;
+$('search').value = search;
+$('status-filter').value = statusFilter;
+document.querySelectorAll('input[name="exclude-status"]').forEach(input => {
+  input.checked = excludedStatuses.includes(input.value);
+});
+window.addEventListener('popstate', () => window.location.reload());
 load();

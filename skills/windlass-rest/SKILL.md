@@ -259,3 +259,13 @@ The browser dashboard is available at `/dashboard.html`, linked from the inbox.
 Task and template lists support repeated `excludeStatus` parameters to omit
 multiple statuses before pagination, for example `excludeStatus=DONE&excludeStatus=SKIPPED`.
 See [tasks](references/tasks.md) for interactions with other filters.
+
+## Filtered browser links
+
+For bookmarkable lists, use `/?source=<encoded-source>&unread=true&search=<encoded-text>`
+for notifications, or `/tasks.html?search=<encoded-text>&status=WAITING&excludeStatus=DONE&excludeStatus=SKIPPED`
+for tasks. Add `library=templates` for templates and optional zero-based `page` for
+page position. Omit unused filters. URL-encode values; repeat `excludeStatus` for
+multiple exclusions. Notification browser search filters the current page only.
+Use the deployment's browser-accessible base URL. Direct record links remain
+`/notification.html?id=<encoded-id>` and `/task.html?id=<encoded-id>`.

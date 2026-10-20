@@ -59,6 +59,7 @@ Paths below are relative to this document; links point to the implementation.
 | Fresh, legacy, and restart migration tests | [FlywayMigrationTests.java](../src/test/java/dev/rakorth/windlass/FlywayMigrationTests.java) |
 | Datasource and server defaults | [application.yaml](../src/main/resources/application.yaml) |
 | Page, dialog, and card template | [index.html](../src/main/resources/static/index.html) |
+| Shared bookmarkable list state | [list-url.js](../src/main/resources/static/list-url.js) |
 | Fetch calls, local state, search, rendering, actions | [app.js](../src/main/resources/static/app.js) |
 | Dark theme and compact responsive layout | [styles.css](../src/main/resources/static/styles.css) |
 | API and migration integration tests | [WindlassApplicationTests.java](../src/test/java/dev/rakorth/windlass/WindlassApplicationTests.java) |
@@ -119,3 +120,9 @@ Flyway V2 adds webhook lists to existing task/template tables;
 step webhook lists live in the existing JSON steps column. `TaskWebhookTests`
 covers delivery, failure reporting, URL validation, and template copying.
 `FlywayMigrationTests` covers schema upgrades and preservation of existing data.
+
+List URL parsing and serialization tests run with Node.js 22 or newer:
+
+```sh
+node src/test/js/list-url.test.mjs
+```
