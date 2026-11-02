@@ -156,5 +156,6 @@ Default-branch images include the `latest` tag, releases use their Git tag
 Image names are normalized to lowercase by the metadata action.
 
 The workflow requests `packages: write`; repository/organization settings must
-allow GitHub Actions to publish packages. Images are built for `linux/amd64`.
+allow GitHub Actions to publish packages. Images are built and tested in parallel on native `linux/amd64` and
+`linux/arm64` runners, then published together under the same multi-platform tags.
 The application Dockerfile is separate from `.devcontainer/Dockerfile`.

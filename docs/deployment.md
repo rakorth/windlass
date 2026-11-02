@@ -60,7 +60,7 @@ loopback (`127.0.0.1`).
 ## Portable deployment with the published image
 
 [compose.deploy.yaml](../compose.deploy.yaml) is a standalone deployment file
-using `ghcr.io/rakorth/windlass:latest` (Linux AMD64), with the same n8n supervisor,
+using `ghcr.io/rakorth/windlass:latest` (Linux AMD64 and ARM64), with the same n8n supervisor,
 backup manager, and persistent volumes as the development stack. It does not
 build Windlass. Run it by itself:
 
@@ -271,8 +271,10 @@ it does not automatically share Compose's project-prefixed volume.
 The registry destination is `ghcr.io/<owner>/<repository>`, normalized to
 lowercase. Published images include a `sha-<short-commit>` tag. Default-branch
 builds also publish the branch tag and `latest`; release builds publish the full
-Git tag, such as `v1.0.0`. The workflow builds `linux/amd64`, uses the GitHub
-Actions layer cache, and cancels superseded runs for the same ref.
+Git tag, such as `v1.0.0`. The workflow builds and tests `linux/amd64` and `linux/arm64` in parallel on
+native runners, then combines their digests into the same multi-platform tags.
+Each architecture uses its own GitHub Actions layer cache. Superseded runs for
+the same ref are canceled.
 
 Publishing uses the built-in `GITHUB_TOKEN` with `packages: write`. Repository
 and organization settings must permit package publication. No Docker Hub secret
