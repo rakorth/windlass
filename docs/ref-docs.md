@@ -1,7 +1,10 @@
 # ref-docs
 
 Open **ref-docs** in the navigation, or visit `/ref-docs.html`, to list, read,
-create, edit, and permanently delete Markdown files. The editor shows raw
+create, edit, and permanently delete Markdown files, and upload, download, or delete binary files.
+Use **Upload file** to choose a file from your computer (up to 512 MB).
+Uploads preserve the original filename and bytes and never replace existing files.
+Select a non-Markdown file in the list to download or delete it. The editor shows raw
 Markdown text. It does not render HTML. Existing filenames cannot be renamed
 in the editor. Unsaved edits prompt before switching files or leaving the page.
 Refresh discovers files added or changed outside Windlass; reopen a file to read
@@ -10,12 +13,13 @@ can be overwritten.
 
 ## Storage and Docker
 
-Files are UTF-8 text on the server's filesystem, separate from SQLite. Standalone
+Files are stored on the server's filesystem, separate from SQLite. Standalone
 runs default to `./ref-docs`; set `REF_DOCS_DIRECTORY` to another directory.
 Windlass creates the directory on startup and requires read/write access.
-Only top-level `.md` files are supported, with filenames starting with an ASCII
+Only top-level files are supported, with filenames starting with an ASCII
 letter or digit and containing ASCII letters, digits, spaces, dots, underscores,
-or hyphens, at most 199 characters. Subdirectories and symlinks are excluded.
+or hyphens, at most 199 characters. Subdirectories and symlinks are excluded. The text editor and JSON create/update
+endpoints only support `.md` files as UTF-8 text; other files use upload/download.
 
 Both Compose configurations bind-mount `${REF_DOCS_HOST_DIRECTORY:-./ref-docs}`
 on the host to `/ref-docs` in the container. Set `REF_DOCS_HOST_DIRECTORY` in
@@ -45,9 +49,11 @@ Deletion in Windlass deletes the host file. No authentication is provided.
 | Method | Path | Result |
 | --- | --- | --- |
 | GET | `/api/ref-docs` | Sorted array of supported filenames, without pagination |
-| GET | `/api/ref-docs/{name}` | `{ "name": "notes.md", "content": "# Notes\n" }` |
-| POST | `/api/ref-docs` | 201 and Location; body requires `name` and `content` |
-| PUT | `/api/ref-docs/{name}` | 200; body requires `content`, replaces existing content |
+| GET | `/api/ref-docs/{name}` | Markdown only: `{ "name": "notes.md", "content": "# Notes\n" }` |
+| POST | `/api/ref-docs` | Markdown only: 201 and Location; body requires `name` and `content` |
+| PUT | `/api/ref-docs/{name}` | Markdown only: 200; body requires `content`, replaces existing content |
+| POST | `/api/ref-docs/upload` | Multipart `file` field; 201 and download Location, no response body |
+| GET | `/api/ref-docs/{name}/download` | Original bytes as an octet-stream attachment |
 | DELETE | `/api/ref-docs/{name}` | 204; permanently deletes the file |
 
 URL-encode filenames in paths. Content must be a string; empty strings create

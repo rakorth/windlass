@@ -21,20 +21,24 @@ function canLeave() {
 async function run(action) {
   if (busy) return;
   busy = true;
-  $('fields').disabled = $('new').disabled = $('refresh').disabled = true;
+  $('fields').disabled = $('new').disabled = $('refresh').disabled = $('upload').disabled = $('delete-binary').disabled = true;
   $('files').querySelectorAll('button').forEach(button => { button.disabled = true; });
   $('status').textContent = '';
   try { await action(); }
   catch (error) { $('status').textContent = error.message; }
   finally {
     busy = false;
-    $('fields').disabled = $('new').disabled = $('refresh').disabled = false;
+    $('fields').disabled = $('new').disabled = $('refresh').disabled = $('upload').disabled = $('delete-binary').disabled = false;
     $('files').querySelectorAll('button').forEach(button => { button.disabled = false; });
   }
 }
 
 function edit(document = null) {
   selected = document?.name ?? null;
+  const binary = selected !== null && !selected.endsWith('.md');
+  $('binary').hidden = !binary;
+  $('editor').hidden = binary;
+  $('download').href = selected ? `/api/ref-docs/${encodeURIComponent(selected)}/download` : '';
   $('filename').value = selected || '';
   $('filename').readOnly = selected !== null;
   $('content').value = document?.content ?? '';
@@ -58,7 +62,7 @@ async function load() {
     button.textContent = name;
     button.disabled = busy;
     button.addEventListener('click', () => {
-      if (!busy && canLeave()) run(async () => edit(await api(`/${encodeURIComponent(name)}`)));
+      if (!busy && canLeave()) run(async () => edit(name.endsWith('.md') ? await api(`/${encodeURIComponent(name)}`) : { name }));
     });
     item.append(button);
     $('files').append(item);
@@ -80,7 +84,7 @@ $('editor').addEventListener('submit', event => {
     await load();
   });
 });
-$('delete').addEventListener('click', () => {
+function deleteSelected() {
   if (!selected || !confirm(`Permanently delete “${selected}” from disk?`)) return;
   run(async () => {
     await api(`/${encodeURIComponent(selected)}`, { method: 'DELETE' });
@@ -88,6 +92,28 @@ $('delete').addEventListener('click', () => {
     $('status').textContent = 'File deleted.';
     await load();
   });
+}
+$('delete').addEventListener('click', deleteSelected);
+$('delete-binary').addEventListener('click', deleteSelected);
+$('upload').addEventListener('click', () => {
+  if (canLeave()) $('upload-file').click();
+});
+$('upload-file').addEventListener('change', () => {
+  const file = $('upload-file').files[0];
+  if (!file) return;
+  run(async () => {
+    const body = new FormData();
+    body.append('file', file);
+    const response = await fetch('/api/ref-docs/upload', { method: 'POST', body });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || error.message || `Upload failed (${response.status}).`);
+    }
+    edit(file.name.endsWith('.md') ? await api(`/${encodeURIComponent(file.name)}`) : { name: file.name });
+    await load();
+    $('status').textContent = 'File uploaded.';
+  });
+  $('upload-file').value = '';
 });
 window.addEventListener('beforeunload', event => {
   if (dirty) { event.preventDefault(); event.returnValue = ''; }

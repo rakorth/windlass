@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -21,6 +22,14 @@ public class RefDocsService {
 
     public record Document(String name, String content) {}
 
+    private Path filePath(String name) {
+        if (name == null || !name.matches("[A-Za-z0-9][A-Za-z0-9 _.-]{0,198}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Use a filename starting with a letter or digit, containing only letters, digits, spaces, dots, underscores or hyphens (maximum 199 characters).");
+        }
+        return directory.resolve(name);
+    }
+
     private Path path(String name) {
         if (name == null || !name.matches("[A-Za-z0-9][A-Za-z0-9 _.-]{0,195}\\.md")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -33,7 +42,7 @@ public class RefDocsService {
         try (var files = Files.list(directory)) {
             return files.filter(file -> Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS))
                     .map(file -> file.getFileName().toString())
-                    .filter(name -> name.matches("[A-Za-z0-9][A-Za-z0-9 _.-]{0,195}\\.md"))
+                    .filter(name -> name.matches("[A-Za-z0-9][A-Za-z0-9 _.-]{0,198}"))
                     .sorted().toList();
         }
     }
@@ -80,8 +89,29 @@ public class RefDocsService {
         return new Document(name, content);
     }
 
+    public synchronized void upload(String name, InputStream content) throws IOException {
+        Path file = filePath(name);
+        try (var channel = Files.newByteChannel(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW)) {
+            try {
+                content.transferTo(java.nio.channels.Channels.newOutputStream(channel));
+            } catch (IOException exception) {
+                Files.deleteIfExists(file);
+                throw exception;
+            }
+        } catch (FileAlreadyExistsException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A file with that name already exists.");
+        }
+    }
+
+    public synchronized InputStream download(String name) throws IOException {
+        Path file = filePath(name);
+        requireFile(file);
+        return java.nio.channels.Channels.newInputStream(
+                Files.newByteChannel(file, StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS));
+    }
+
     public synchronized void delete(String name) throws IOException {
-        Path file = path(name);
+        Path file = filePath(name);
         requireFile(file);
         Files.delete(file);
     }

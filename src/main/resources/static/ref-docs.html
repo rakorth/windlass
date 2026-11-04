@@ -10,11 +10,12 @@
 <body>
   <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/tasks.html">Tasks</a><a class="automations-link" href="/ref-docs.html" aria-current="page">ref-docs</a><a class="automations-link" href="/json-conf.html">json-conf</a><a class="automations-link" href="/backups.html">n8n backups</a></nav></header>
   <main>
-    <div class="heading"><div><p class="eyebrow">YOUR FILES</p><h1>ref-docs</h1><p class="muted">Create and edit reference documents as Markdown files in your local storage folder.</p></div><button id="new">+ New file</button></div>
+    <div class="heading"><div><p class="eyebrow">YOUR FILES</p><h1>ref-docs</h1><p class="muted">Edit Markdown documents and upload reference files to your local storage folder.</p></div><div class="actions"><button id="upload" class="secondary">Upload file</button><input id="upload-file" type="file" hidden><button id="new">+ New file</button></div></div>
     <p id="status" role="status" aria-live="polite"></p>
     <div class="ref-docs-workspace">
       <section class="card"><div class="card-top"><h2>Files</h2><button id="refresh" class="secondary">Refresh</button></div><ul id="files" class="ref-docs-files"></ul></section>
       <section class="card"><h2 id="editor-title">New file</h2>
+        <div id="binary" hidden><p>This file is available to download.</p><div class="actions"><a id="download" class="secondary" download>Download file</a><button id="delete-binary" class="danger">Delete file</button></div></div>
         <form id="editor">
           <fieldset id="fields">
             <label for="filename">Filename</label><input id="filename" required maxlength="199" placeholder="notes.md" pattern="[A-Za-z0-9][A-Za-z0-9 _\.\-]{0,195}\.md">
