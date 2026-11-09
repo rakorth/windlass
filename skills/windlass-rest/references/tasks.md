@@ -17,7 +17,13 @@ count, ordered steps and their statuses, external links, metadata, and webhooks.
 Step metadata and webhooks are expandable. Missing or deleted tasks show an error;
 opening the page does not recreate them or change their status.
 
-The `/tasks.html` list shows task and step statuses and completion counts without
+The `/tasks.html` page defaults to a Kanban board with columns for all five task
+statuses and all matching tasks across API pages. Tasks and steps have separate
+cards with their own status selectors. Step cards link to their parent task and
+use the step-status PATCH endpoint; task cards show progress. Board status and
+exclusion filters apply to each card’s own status. Search matches parent-task
+fields, not step text. Use `?view=list` for the paginated list; templates always use the
+list view. Both views show task and step statuses and completion counts without
 expanding details. Task names link to their details pages. The template library
 shares the list UI but has no dedicated details page; do not build task details
 URLs from template IDs.

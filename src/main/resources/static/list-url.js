@@ -10,6 +10,7 @@ export function readListUrl(kind, href = window.location.href) {
   }
   return {
     ...common,
+    view: params.get('view') === 'list' ? 'list' : 'board',
     library: params.get('library') === 'templates' ? 'templates' : '',
     status: taskStatuses.has(params.get('status')) ? params.get('status') : '',
     excludeStatus: [...new Set(params.getAll('excludeStatus').filter(value => taskStatuses.has(value)))]

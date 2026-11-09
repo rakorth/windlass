@@ -105,7 +105,25 @@ links describe other services; Windlass does not connect to them automatically.
 
 The **Tasks** header link opens `/tasks.html`. The page lists tasks sorted by
 name, with server-side search across task names, descriptions, and metadata,
-and pages of 20 tasks. Tasks and templates appear in full-width list rows with
+and a **Board** / **List** switch. The default board groups all matching tasks
+across every API page into Pending, Executing, Waiting, Done, and Skipped columns.
+Scroll horizontally on smaller screens. Each column shows its task count; cards
+show task descriptions, reminders, and step completion counts. Each step is a
+separate card in its own status column, labeled with its step number and parent
+task link. Step cards show descriptions, links, and metadata. Use a step card’s
+**Move to** selector to update only that step and refresh task progress. Use
+**Move to** on a card to save its task status; the card moves to the matching
+column after saving, or disappears if its new status is filtered out. Status
+changes trigger configured status webhooks. A failed save shows an error and
+restores the selection. The board uses the same search and status filters as
+the list. On the board, status and exclusion filters apply independently to
+each task and step card, so a visible step can have a hidden parent task. Search
+continues to match parent-task names, descriptions, and metadata, rather than
+step text. Column counts distinguish tasks from steps. **List** retains pages
+of 20 tasks with nested steps, and templates use the list view.
+The view is bookmarkable with `view=list` (the board is the default).
+
+Tasks and templates in list view appear in full-width rows with
 their descriptions, task status, step completion count, and ordered steps always
 visible. Each step shows its Pending, Done, or Skipped status.
 Step descriptions appear below their names, preserving line breaks. On smaller

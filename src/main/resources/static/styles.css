@@ -45,3 +45,27 @@ button[aria-pressed="true"] { border-color: currentColor; }
 .task-exclusions{display:flex;flex-wrap:wrap;gap:10px 16px;flex-basis:100%;border:1px solid #40585a;border-radius:8px;padding:10px 12px;margin:0}.task-exclusions legend{font-size:13px;color:#b3c9c8;padding:0 4px}.toolbar .task-exclusions label{position:static;clip-path:none;width:auto;height:auto;overflow:visible;display:flex;align-items:center;gap:6px;font-size:13px;margin:0}.task-exclusions input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:#80dfc7;margin:0}
 
 .ref-docs-workspace #download{display:inline-block;border:1px solid #40585a;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;text-decoration:none}
+
+/* Task board: keep status columns together and scroll horizontally on small screens. */
+[hidden]{display:none!important}
+.task-view-switch{margin:0}
+.kanban-board{display:flex;gap:16px;overflow-x:auto;align-items:flex-start;padding:2px 2px 18px;min-height:260px}
+.kanban-board>.empty{flex:0 0 100%;margin:0}
+.kanban-column{flex:1 0 290px;min-width:0;background:#142022;border:1px solid #34494b;border-radius:10px;padding:12px}
+.kanban-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+.kanban-cards{display:flex;flex-direction:column;gap:12px}
+.kanban-cards .task-row{display:flex;flex-direction:column;gap:14px;padding:14px;border:1px solid #40585a;border-radius:8px;background:#182426}
+.kanban-cards .task-row>*{width:100%}
+.kanban-cards .task-state{order:-1}
+.kanban-cards .task-label{margin-bottom:0}
+.kanban-cards .task-state label{display:flex;align-items:center;gap:10px}
+.kanban-cards .task-state select{flex:1;min-width:0}
+.kanban-cards .task-content h2{font-size:17px}
+.kanban-cards .task-actions{flex-direction:row;flex-wrap:wrap;justify-content:flex-start}
+.kanban-cards .task-actions button{flex:1 0 auto}
+.kanban-empty{text-align:center;padding:24px 0;margin:0}
+@media(max-width:650px){.kanban-column{flex-basis:85vw}.list-heading{gap:12px;flex-wrap:wrap}}
+.kanban-kind{display:block;color:#a0b5b7;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;margin-bottom:8px}
+.kanban-parent{display:block;color:#80dfc7;font-size:12px;overflow-wrap:anywhere;margin-bottom:8px}
+.kanban-cards .kanban-step{border-left:3px solid #80dfc7;background:#1b2b2d}
+.kanban-heading .column-count{font-size:11px;text-align:right}

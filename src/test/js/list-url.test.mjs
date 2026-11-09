@@ -13,7 +13,7 @@ test('notification bookmarks round-trip special characters and page filters', ()
 });
 
 test('task bookmarks restore search, status, exclusions, library and page', () => {
-  const values = { search: 'Deploy + review', status: 'WAITING', excludeStatus: ['DONE', 'SKIPPED'], library: 'templates', page: 2 };
+  const values = { search: 'Deploy + review', status: 'WAITING', excludeStatus: ['DONE', 'SKIPPED'], library: 'templates', view: 'list', page: 2 };
   const url = buildListUrl(`${base}/tasks.html`, values);
   assert.deepEqual(readListUrl('tasks', url.href), values);
   assert.deepEqual(url.searchParams.getAll('excludeStatus'), ['DONE', 'SKIPPED']);
@@ -54,4 +54,11 @@ test('URL updates use history without navigation and do not add duplicate entrie
     assert.deepEqual(calls, ['push', 'replace']);
     assert.deepEqual(readListUrl('tasks').excludeStatus, ['DONE', 'SKIPPED']);
   } finally { delete globalThis.window; }
+});
+
+test('task board is the default and view selection can be bookmarked', () => {
+  assert.equal(readListUrl('tasks', `${base}/tasks.html`).view, 'board');
+  assert.equal(readListUrl('tasks', `${base}/tasks.html?view=unknown`).view, 'board');
+  const url = buildListUrl(`${base}/tasks.html`, { view: 'list' });
+  assert.equal(readListUrl('tasks', url.href).view, 'list');
 });
