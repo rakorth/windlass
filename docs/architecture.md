@@ -86,20 +86,6 @@ write/read in an isolated database volume as the non-root user. Do not use real
 notifications as disposable test data. GitHub workflow behavior can be checked
 with `actionlint` when available; a local build does not verify registry access.
 
-Task templates use `TaskTemplateController` and `TaskTemplateService` in the
-`task` package. They reuse task persistence and validation against the separate
-`task_templates` table. `TaskTemplateTests` covers the library, validation, and
-independent copies; `tasks.html` and `tasks.js` provide both library views.
-`task.html` and `task.js` provide task details. Both pages reuse the dialog in
-`task-editor.js` to edit task fields and ordered steps.
-
-Task status updates call `task/TaskWebhookService.java` after persistence. It sends
-bounded HTTP POSTs and creates failure notifications through `NotificationService`.
-Flyway V2 adds webhook lists to existing task/template tables;
-step webhook lists live in the existing JSON steps column. `TaskWebhookTests`
-covers delivery, failure reporting, URL validation, and template copying.
-`FlywayMigrationTests` covers schema upgrades and preservation of existing data.
-
 List URL parsing and serialization tests run with Node.js 22 or newer:
 
 ```sh

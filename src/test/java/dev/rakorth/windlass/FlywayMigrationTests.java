@@ -23,24 +23,21 @@ class FlywayMigrationTests {
 
     @Test
     void createsFreshDatabaseAndDoesNotReapplyMigrationsOnRestart() {
-        assertEquals(2, flyway().migrate().migrationsExecuted);
+        assertEquals(3, flyway().migrate().migrationsExecuted);
         var jdbc = new JdbcTemplate(source());
         jdbc.update("INSERT INTO notifications (id, title, description, notification_source, received_on, metadata_map) VALUES ('new', 'Hello', '', 'CI', '2026-01-01T00:00:00Z', '{}')");
         assertEquals(1, jdbc.queryForObject("SELECT unread FROM notifications", Integer.class));
         assertEquals("{}", jdbc.queryForObject("SELECT external_links FROM notifications", String.class));
-        for (String table : new String[]{"tasks", "task_templates"}) {
-            jdbc.update("INSERT INTO " + table + " (id, name, description, links, metadata) VALUES ('new', 'Task', '', '{}', '{}')");
-            assertEquals("[]", jdbc.queryForObject("SELECT webhooks FROM " + table, String.class));
-        }
+        assertTaskTablesRemoved(jdbc);
         jdbc.update("UPDATE notifications SET unread = 0");
         assertEquals(0, flyway().migrate().migrationsExecuted);
         assertEquals(0, jdbc.queryForObject("SELECT unread FROM notifications", Integer.class));
-        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE type <> 'BASELINE'", Integer.class));
+        assertEquals(3, jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE type <> 'BASELINE'", Integer.class));
         assertTrue(flyway().validateWithResult().validationSuccessful);
     }
 
     @Test
-    void adoptsLegacyDatabaseAndPreservesNotificationTaskAndTemplateData() {
+    void adoptsLegacyDatabasePreservesNotificationsAndRemovesTaskStorage() {
         var jdbc = new JdbcTemplate(source());
         jdbc.execute("""
                 CREATE TABLE notifications (id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL,
@@ -51,22 +48,18 @@ class FlywayMigrationTests {
             jdbc.execute("CREATE TABLE " + table + " (id TEXT PRIMARY KEY, name TEXT, description TEXT, links TEXT, metadata TEXT, steps TEXT, status TEXT, notify_me_on TEXT)");
             jdbc.update("INSERT INTO " + table + " VALUES ('old', 'Task', '', '{}', '{}', '[{\"name\":\"Step\"}]', 'DONE', '2026-01-01T00:00:00Z')");
         }
-        assertEquals(2, flyway().migrate().migrationsExecuted);
+        assertEquals(3, flyway().migrate().migrationsExecuted);
         assertEquals("Keep me", jdbc.queryForObject("SELECT title FROM notifications", String.class));
         assertEquals("{\"attempt\":2}", jdbc.queryForObject("SELECT metadata_map FROM notifications", String.class));
         assertEquals(1, jdbc.queryForObject("SELECT unread FROM notifications", Integer.class));
         assertEquals("{}", jdbc.queryForObject("SELECT external_links FROM notifications", String.class));
-        for (String table : new String[]{"tasks", "task_templates"}) {
-            assertEquals("DONE", jdbc.queryForObject("SELECT status FROM " + table, String.class));
-            assertEquals("[{\"name\":\"Step\"}]", jdbc.queryForObject("SELECT steps FROM " + table, String.class));
-            assertEquals("[]", jdbc.queryForObject("SELECT webhooks FROM " + table, String.class));
-        }
+        assertTaskTablesRemoved(jdbc);
         assertEquals("0", jdbc.queryForObject("SELECT version FROM flyway_schema_history WHERE type = 'BASELINE'", String.class));
         assertEquals(0, flyway().migrate().migrationsExecuted);
     }
 
     @Test
-    void preservesAlreadyUpgradedColumnsAndCreatesMissingTables() {
+    void preservesAlreadyUpgradedNotificationColumnsAndRemovesTaskStorage() {
         var jdbc = new JdbcTemplate(source());
         jdbc.execute("""
                 CREATE TABLE notifications (id TEXT PRIMARY KEY, title TEXT, description TEXT,
@@ -83,14 +76,36 @@ class FlywayMigrationTests {
                         "--windlass.ref-docs-directory=" + directory.resolve("ref-docs"),
                         "--windlass.json-conf-directory=" + directory.resolve("json-conf"))) {
             var configuredFlyway = context.getBean(Flyway.class);
-            assertEquals("2", configuredFlyway.info().current().getVersion().toString());
+            assertEquals("3", configuredFlyway.info().current().getVersion().toString());
             assertEquals(0, configuredFlyway.migrate().migrationsExecuted);
             assertTrue(configuredFlyway.getConfiguration().isCleanDisabled());
         }
         assertEquals(0, jdbc.queryForObject("SELECT unread FROM notifications", Integer.class));
         assertEquals("{\"Build\":\"https://example.com\"}", jdbc.queryForObject("SELECT external_links FROM notifications", String.class));
-        assertEquals("[{\"url\":\"https://example.com/hook\"}]", jdbc.queryForObject("SELECT webhooks FROM tasks", String.class));
-        assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM task_templates", Integer.class));
+        assertTaskTablesRemoved(jdbc);
         assertEquals(0, flyway().migrate().migrationsExecuted);
+    }
+
+    @Test
+    void upgradesVersionTwoDatabaseWithoutChangingNotifications() {
+        var previous = Flyway.configure().dataSource(source()).target("2").load();
+        assertEquals(2, previous.migrate().migrationsExecuted);
+        var jdbc = new JdbcTemplate(source());
+        jdbc.update("INSERT INTO notifications VALUES ('keep', 'Saved', 'Description', 'CI', '2026-01-01T00:00:00Z', '{\"nested\":{\"value\":1}}', '{\"Build\":\"https://example.com\"}', 0)");
+        var notification = jdbc.queryForMap("SELECT * FROM notifications");
+        for (String table : new String[]{"tasks", "task_templates"}) {
+            jdbc.update("INSERT INTO " + table + " (id, name, description, links, metadata, steps, status, webhooks) VALUES ('retired', 'Old work', '', '{}', '{}', '[]', 'DONE', '[]')");
+        }
+        assertEquals(1, flyway().migrate().migrationsExecuted);
+        assertTaskTablesRemoved(jdbc);
+        assertEquals(notification, jdbc.queryForMap("SELECT * FROM notifications"));
+        assertEquals(0, flyway().migrate().migrationsExecuted);
+        assertTrue(flyway().validateWithResult().validationSuccessful);
+    }
+
+    private void assertTaskTablesRemoved(JdbcTemplate jdbc) {
+        assertEquals(0, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('tasks', 'task_templates')",
+                Integer.class));
     }
 }

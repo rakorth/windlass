@@ -1,9 +1,9 @@
 # Windlass
 
-A small notification and task manager: Spring Boot REST API, SQLite persistence, and a responsive vanilla JavaScript UI. No separate frontend build or database server is needed.
+A small notification manager: Spring Boot REST API, SQLite persistence, and a responsive vanilla JavaScript UI. No separate frontend build or database server is needed.
 
 Detailed feature, API, persistence, deployment, and code documentation is in
-[docs/README.md](docs/README.md), with a task index for AI agents.
+[docs/README.md](docs/README.md), with an index for AI agents.
 
 ## Run
 
@@ -14,8 +14,6 @@ Requires JDK 24 or newer. The Maven wrapper downloads Maven and dependencies on 
 ```
 
 Open http://localhost:8080. Create notifications, search by title/description/source, inspect metadata, edit, mark as seen, and delete from the UI. Unread cards are highlighted and the header shows the unread count.
-
-Open **Tasks** to track ordered steps or save reusable task templates. **Use template** opens a prefilled new task; **Save as template** copies an existing task into the separate template library. See [Task templates](docs/task-templates.md) for the UI and REST workflow.
 
 Flyway applies versioned database migrations automatically on startup, including upgrades of existing databases. See [Database migrations](docs/migrations.md) for adding schema changes.
 

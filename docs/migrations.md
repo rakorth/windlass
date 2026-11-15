@@ -15,10 +15,15 @@ tests. There is no separate migration command required for deployment.
   fields and task/template `webhooks` fields. Existing values are preserved;
   missing fields default to `{}`, `1`, and `[]`, respectively.
 
+- [V3](../src/main/resources/db/migration/V3__remove_task_system.sql) removes the
+  retired `tasks` and `task_templates` tables and their data. Notification records,
+  metadata, links, and unread state are preserved. Back up an existing database
+  before upgrading if you need to retain historical task or template data.
+
 For an existing database without Flyway history, `baseline-on-migrate: true`
-and `baseline-version: "0"` record the pre-Flyway state at version 0. Both V1
-and V2 then run, so adoption works for older and fully upgraded databases.
-New databases run V1 and V2 directly. Flyway records applied versions in
+and `baseline-version: "0"` record the pre-Flyway state at version 0. V1, V2,
+and V3 then run, so adoption works for older and fully upgraded databases.
+New databases run V1, V2, and V3 directly. Flyway records applied versions in
 `flyway_schema_history`; subsequent starts only execute pending migrations.
 Automatic adoption assumes `DATABASE_URL` points at a Windlass database.
 It does not repair arbitrary or manually corrupted schemas.
@@ -26,7 +31,7 @@ It does not repair arbitrary or manually corrupted schemas.
 ## Adding a migration
 
 1. Add the next unused version to `src/main/resources/db/migration`, for example
-   `V3__add_notification_index.sql`. Use two underscores between version and name.
+   `V4__add_notification_index.sql`. Use two underscores between version and name.
 2. Write the change against the schema produced by all previous migrations.
    For example: `CREATE INDEX idx_notifications_source ON notifications(notification_source);`.
 3. Add migration tests for existing records as well as empty databases, and run

@@ -252,6 +252,24 @@ class WindlassApplicationTests {
     }
 
     @Test
+    void taskAndTemplateRoutesAreUnavailable() throws Exception {
+        for (String path : new String[]{"/tasks.html", "/task.html", "/tasks.js", "/task.js", "/task-editor.js",
+                "/api/tasks", "/api/tasks/old-id", "/api/task-templates", "/api/task-templates/old-id"}) {
+            mvc.perform(get(path)).andExpect(status().isNotFound());
+        }
+        for (String path : new String[]{"/api/tasks", "/api/task-templates", "/api/task-templates/old-id/tasks"}) {
+            mvc.perform(post(path).contentType("application/json").content("{}"))
+                    .andExpect(status().isNotFound());
+        }
+        mvc.perform(patch("/api/tasks/old-id/steps/0/status").contentType("application/json")
+                .content("{\"status\":\"DONE\"}")).andExpect(status().isNotFound());
+        for (String path : new String[]{"/index.html", "/dashboard.html", "/notification.html", "/ref-docs.html", "/json-conf.html"}) {
+            mvc.perform(get(path)).andExpect(status().isOk())
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("/tasks.html"))));
+        }
+    }
+
+    @Test
     void newestFirstAndUiAvailable() throws Exception {
         for (String timestamp : new String[]{"2025-01-01T00:00:00Z", "2026-01-01T00:00:00Z"}) {
             mvc.perform(post("/api/notifications").contentType("application/json").content(

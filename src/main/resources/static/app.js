@@ -194,7 +194,7 @@ $('form').addEventListener('submit', async (event) => {
   finally { $('save').disabled = false; $('cancel').disabled = false; $('close').disabled = false; }
 });
 $('editor').addEventListener('cancel', event => { if ($('save').disabled) event.preventDefault(); });
-const initialFilters = readListUrl('notifications');
+const initialFilters = readListUrl();
 page = initialFilters.page;
 $('search').value = initialFilters.search;
 $('unread-only').checked = initialFilters.unread;

@@ -1,45 +1,4 @@
-# Backend data models
-
-## Task
-
-[`Task`](../src/main/java/dev/rakorth/windlass/task/Task.java) is a Java record
-with the following fields:
-
-| Field | JSON type | Meaning |
-| --- | --- | --- |
-| `id` | string (UUID) | Generated, immutable identifier |
-| `name` | string | Required, nonblank, max 200 characters; stored trimmed |
-| `description` | string | Optional, max 10,000 characters; missing/null becomes `""` |
-| `links` | object with string values | Nonblank labels mapped to absolute HTTP/HTTPS URLs with a host; missing/null becomes `{}` |
-| `metadata` | object | Arbitrary metadata, including nested JSON values; missing/null becomes `{}` |
-| `status` | string | `PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED` (case-sensitive); missing/null becomes `PENDING` |
-| `notifyMeOn` | ISO 8601 datetime string or null | Optional datetime with a timezone; missing/null becomes null |
-| `webhooks` | array of HTTP(S) URL strings | Status-change webhook destinations; missing/null becomes `[]` |
-| `steps` | array of step objects | Ordered steps; missing/null becomes `[]` |
-
-Tasks are persisted using `JdbcTemplate` in the SQLite `tasks` table.
-Columns are TEXT; all are NOT NULL except `notify_me_on`, which stores
-the nullable `notifyMeOn` instant in UTC. Missing/null on PUT clears this field;
-existing tasks receive null through the startup migration.
-`id` is the primary key and both maps are serialized JSON.
-Startup creates the table if absent, including for existing notification databases.
-The [REST API](api.md#tasks) supports creation, retrieval, replacement, deletion,
-and listing ordered by name then ID. PUT resets omitted optional fields to their
-defaults. Task status is independent of step statuses. Existing tasks receive
-`PENDING` through an additive startup migration that preserves saved statuses.
-
-Each step has a required nonblank `name` (max 200 characters, stored trimmed),
-an optional `description` (max 10,000 characters; missing/null becomes `""`),
-a required `status` enum, optional `webhooks` URL list (missing/null becomes `[]`),
-and optional `metadata` and `links` maps (missing/null becomes `{}`). Status accepts exactly `DONE`, `PENDING`, `SKIPPED`, `EXECUTING`, or `WAITING` (case-sensitive). Step links follow task link validation. Null steps
-are invalid. Steps are stored as JSON in a NOT NULL TEXT column with default `[]`;
-an additive startup migration gives existing tasks an empty list and preserves
-steps on subsequent starts. Older step JSON without `description` reads as `""`
-without a database migration. PUT replaces the complete ordered list.
-
-Task and step webhook lists use absolute HTTP(S) URLs. Startup adds empty lists
-to existing tasks and templates; older step JSON defaults to empty lists on read.
-See the [delivery contract](api.md#task-status-webhooks) for events and failure notifications.
+# Notification data model
 
 ## Notification
 
@@ -100,23 +59,13 @@ ordering is `julianday(received_on) DESC, id`.
 
 ## Startup and migration
 
-Flyway manages SQLite schema versions at startup. V1 creates missing notification,
-task, and template tables; V2 adds missing `external_links`, `unread`, and task/template
-`webhooks` columns to pre-Flyway databases. Older notifications receive `{}` and
-`true` for links and unread state, and tasks/templates receive `[]` for webhooks.
-Existing values and records are preserved. Applied versions are tracked in
-`flyway_schema_history`, so upgrades are not repeated on restart. See
-[database migrations](migrations.md) for migration files and development workflow.
+Flyway manages SQLite schema versions at startup. Historical V1 and V2 migrations
+remain unchanged for upgrade compatibility. V3 removes the retired task and template
+tables, including their saved records, while retaining notifications and unread state.
+Applied versions are tracked in `flyway_schema_history`, so upgrades are not
+repeated on restart. See [database migrations](migrations.md) for migration files
+and development workflow.
 
 Local runs default to `./notifications.db`; containers use
 `/data/notifications.db`. See [deployment and persistence](deployment.md) before
 changing storage location or removing volumes.
-
-## Task template
-
-Task templates share the [task](#task) model, including all eight writable fields
-and ordered steps. The SQLite `task_templates` table is created automatically at
-startup, separately from `tasks`. Both libraries use the same normalization,
-validation, and persistence logic. A template's ID identifies the template;
-creating a task from it assigns a fresh task ID and persists an independent copy.
-There is no ongoing link between a template and its copies.

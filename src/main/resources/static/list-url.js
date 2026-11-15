@@ -1,20 +1,9 @@
-const taskStatuses = new Set(['PENDING', 'EXECUTING', 'WAITING', 'DONE', 'SKIPPED']);
-
-export function readListUrl(kind, href = window.location.href) {
+export function readListUrl(href = window.location.href) {
   const params = new URL(href).searchParams;
   const rawPage = params.get('page') ?? '0';
   const page = /^\d+$/.test(rawPage) && Number.isSafeInteger(Number(rawPage)) && Number(rawPage) <= 2147483647 ? Number(rawPage) : 0;
-  const common = { page, search: params.get('search') ?? '' };
-  if (kind === 'notifications') {
-    return { ...common, source: params.get('source') ?? '', unread: params.get('unread') === 'true' };
-  }
-  return {
-    ...common,
-    view: params.get('view') === 'list' ? 'list' : 'board',
-    library: params.get('library') === 'templates' ? 'templates' : '',
-    status: taskStatuses.has(params.get('status')) ? params.get('status') : '',
-    excludeStatus: [...new Set(params.getAll('excludeStatus').filter(value => taskStatuses.has(value)))]
-  };
+  return { page, search: params.get('search') ?? '',
+    source: params.get('source') ?? '', unread: params.get('unread') === 'true' };
 }
 
 export function buildListUrl(href, values) {

@@ -87,78 +87,6 @@ undo-delete, real-time updates, deduplication, idempotency keys,
 optimistic locking, or an OpenAPI/Swagger endpoint. The source string and external
 links describe other services; Windlass does not connect to them automatically.
 
-## Tasks and steps UI
-
-The **Tasks** header link opens `/tasks.html`. The page lists tasks sorted by
-name, with server-side search across task names, descriptions, and metadata,
-and a **Board** / **List** switch. The default board groups all matching tasks
-across every API page into Pending, Executing, Waiting, Done, and Skipped columns.
-Scroll horizontally on smaller screens. Each column shows its task count; cards
-show task descriptions, reminders, and step completion counts. Each step is a
-separate card in its own status column, labeled with its step number and parent
-task link. Step cards show descriptions, links, and metadata. Use a step card’s
-**Move to** selector to update only that step and refresh task progress. Use
-**Move to** on a card to save its task status; the card moves to the matching
-column after saving, or disappears if its new status is filtered out. Status
-changes trigger configured status webhooks. A failed save shows an error and
-restores the selection. The board uses the same search and status filters as
-the list. On the board, status and exclusion filters apply independently to
-each task and step card, so a visible step can have a hidden parent task. Search
-continues to match parent-task names, descriptions, and metadata, rather than
-step text. Column counts distinguish tasks from steps. **List** retains pages
-of 20 tasks with nested steps, and templates use the list view.
-The view is bookmarkable with `view=list` (the board is the default).
-
-Tasks and templates in list view appear in full-width rows with
-their descriptions, task status, step completion count, and ordered steps always
-visible. Each step shows its Pending, Done, or Skipped status.
-Step descriptions appear below their names, preserving line breaks. On smaller
-screens, steps appear below the task summary. Refresh fetches current data.
-Expand **View task details** to see the ID, links, and metadata; **Step details**
-reveals any step links and metadata.
-
-Click a task name to open its details page at `/task.html?id=<id>`. Share or
-bookmark that URL to open the task directly. `/task.html` also lets you look up
-a task by ID. The page shows the task status, description, reminder, ordered
-steps and their statuses, external links, metadata, and webhooks. **Refresh**
-reloads the task; missing or deleted tasks show an error with an option to retry.
-**Edit** opens the task editor from this page so you can modify the task and its
-steps. Saving refreshes the details; Cancel leaves the task unchanged.
-
-Create and edit tasks in a dialog. Add, remove, and reorder steps, set their
-statuses (Pending, Executing, Waiting, Done, or Skipped) and descriptions, and edit task and step metadata and links as JSON objects. Saving
-replaces the complete task, including its steps. Links require full HTTP/HTTPS
-URLs and open in a new tab. Delete requires confirmation and removes the task
-and its steps. Failed requests and invalid input show errors. Changes from other
-clients require Refresh; concurrent edits are not merged.
-
-## Task templates
-
-In `/tasks.html`, select **Task templates**, then **+ New template**. Templates
-have the same fields and ordered steps as tasks, with the same validation.
-They are saved in a separate library and do not appear in the task list.
-Use **Edit** or **Delete** to maintain a template, or **Save as template** on an
-existing task to open a copy in the template editor.
-
-Select **Use template** to open a new task with all the template's fields filled
-in. Adjust the name, status, reminder date, or other fields, then **Save task**.
-Cancel creates nothing. Each saved copy has a new ID; editing or deleting a
-copy or its template does not change the other. Statuses and reminder timestamps
-are copied exactly, so review them when reusing a template.
-
-See [Task templates](task-templates.md) for the complete UI and REST workflow.
-
-Task and step editors include webhooks (one HTTP(S) URL per line).
-Creating a task, including from a template, calls every task and step destination.
-Saving a changed status also sends a JSON POST to each affected destination; delivery failures
-appear as unread notifications with the task, step, destination, and error details.
-Templates preserve webhook settings when copied into tasks. See the
-[webhook contract](api.md#task-status-webhooks) for matching rules and delivery limits.
-
-On the task details page, each step has a status dropdown that saves immediately.
-The completion count updates after saving. Failed saves restore the previous
-selection and show an error; status changes use the focused step PATCH endpoint.
-
 ## Notification dashboard
 
 Open **Dashboard** from the inbox or visit `/dashboard.html` for unread counts
@@ -170,37 +98,18 @@ records across every inbox page, including sources with no unread notifications.
 Use Refresh to update; failures preserve the previous view with an error message.
 Opening the dashboard does not change read state. Deleted records are excluded.
 
-## Excluding task statuses
-
-The Tasks and Task templates lists offer **Exclude statuses** checkboxes. Select
-one or more statuses to hide; clear the checkboxes to include them again. Changes
-apply immediately and reset pagination to the first page. Search and the existing
-status selector combine with exclusions; including and excluding the same status
-produces no results. Filters remain selected when switching between the two lists.
-
-Both `GET /api/tasks` and `GET /api/task-templates` accept repeated `excludeStatus`
-parameters, for example `?excludeStatus=DONE&excludeStatus=SKIPPED`. Values must be
-`PENDING`, `EXECUTING`, `WAITING`, `DONE`, or `SKIPPED`; invalid values return 400.
-Omit the parameter to exclude nothing. Exclusions apply before pagination and
-counts and combine with `search`, `status`, and task reminder bounds.
-
 ## Bookmarkable list filters
 
-The notification inbox and Tasks page keep applied filters and the current page
+The notification inbox keeps applied filters and the current page
 in the browser URL. Bookmark or copy the address to reopen the same view. Changing
 filters or pages updates the URL; browser Back and Forward restore earlier views.
 Default filters and page zero are omitted from the URL. Invalid page numbers and
-unknown task statuses fall back to defaults. If a saved page no longer exists,
+invalid filters fall back to defaults. If a saved page no longer exists,
 the list moves to the last available page and updates the address.
 
 - Notifications: `/?source=CI&unread=true&search=build&page=1` restores source,
   unread-only, search text, and zero-based page. Search still filters only the
   current page in the browser and updates the URL as you type. Bookmarked source
   names remain selectable even when they no longer have notifications.
-- Tasks: `/tasks.html?search=release&status=WAITING&excludeStatus=DONE&excludeStatus=SKIPPED`
-  restores the applied search, status, and exclusions. Apply search with Search
-  or Enter; status and exclusion changes apply immediately.
-- Templates: add `library=templates` to a Tasks page URL to restore the template
-  library with the same filter options. Page position uses zero-based `page`.
 
 These are browser page URLs. REST endpoint parameters remain unchanged.
