@@ -3,7 +3,7 @@
 Windlass exposes six notification tools through an embedded Spring AI MCP server.
 It runs in the same application as the UI and REST API and uses the same SQLite
 database. No model provider, API key, separate process, or database migration is
-required. n8n backup and restore operations are not exposed.
+required.
 
 ## Connect
 

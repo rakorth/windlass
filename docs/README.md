@@ -1,8 +1,7 @@
 # Windlass documentation
 
 Windlass manages notifications, tasks, and reusable task templates with a Spring Boot REST API, SQLite storage,
-and a static HTML/CSS/JavaScript UI served by the same application. Docker Compose
-also runs n8n for workflow automation, with an editor linked from Windlass.
+and a static HTML/CSS/JavaScript UI served by the same application. Docker Compose runs Windlass with persistent storage.
 These documents describe implemented behavior, not a roadmap.
 
 ## Choose a document
@@ -19,7 +18,6 @@ These documents describe implemented behavior, not a roadmap.
 | Connect an MCP client to notification tools | [MCP server](mcp.md) |
 | Run locally, use Docker, preserve data, or understand CI | [Deployment](deployment.md) |
 | Hand out a Docker deployment using the published image | [Portable deployment](deployment.md#portable-deployment-with-the-published-image) |
-| Download or restore a full n8n backup | [n8n backups](n8n-backups.md) |
 | Find implementation files or decide what to test | [Architecture](architecture.md) |
 | Use an agent skill to operate the service | [Windlass REST skill](../skills/windlass-rest/SKILL.md) |
 
@@ -27,8 +25,6 @@ These documents describe implemented behavior, not a roadmap.
 
 - Default UI URL: `http://localhost:6080/` in Docker Compose, `http://localhost:8080/` for standalone runs. REST collections: `/api/notifications`, `/api/tasks`, and `/api/task-templates`.
 - MCP URL: `/mcp` on the same server, using Streamable HTTP. Notification CRUD tools share REST persistence; disable them with `WINDLASS_MCP_ENABLED=false`.
-- Default n8n editor URL: `http://localhost:5678/`. In Compose, n8n calls the Windlass API at `http://windlass:8080/api/notifications`.
-- n8n backup UI: `/backups.html`. Backups pause n8n; restores replace its data after validation and an automatic recovery snapshot.
 - Use the deployment's actual base URL; `localhost` refers to the caller's machine/container.
 - JSON property names are exact: `notification_source`, `received_on`, `metadata_map`, `external_links`, `unread`.
 - `id` and `unread` are response fields, not writable POST/PUT fields.

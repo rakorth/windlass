@@ -13,8 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:sqlite::memory:",
-        "N8N_EDITOR_BASE_URL=http://localhost:15678/"
+        "spring.datasource.url=jdbc:sqlite::memory:"
 })
 @AutoConfigureMockMvc
 class WindlassApplicationTests {
@@ -242,10 +241,14 @@ class WindlassApplicationTests {
     }
 
     @Test
-    void automationsOpensConfiguredEditor() throws Exception {
-        mvc.perform(get("/automations"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("http://localhost:15678/"));
+    void removedAutomationRoutesAreUnavailable() throws Exception {
+        for (String path : new String[]{"/automations", "/backups.html", "/backups.js",
+                "/api/automations/backups/status", "/api/automations/backups/recovery"}) {
+            mvc.perform(get(path)).andExpect(status().isNotFound());
+        }
+        for (String path : new String[]{"/api/automations/backups", "/api/automations/backups/restore"}) {
+            mvc.perform(post(path)).andExpect(status().isNotFound());
+        }
     }
 
     @Test

@@ -5,8 +5,6 @@ Base URL defaults to `http://localhost:6080` in Docker Compose and
 port; use 6080 for Docker Compose. All routes below are relative to the base URL.
 POST/PUT consume JSON with `Content-Type: application/json`. Success bodies
 are JSON except DELETE, which has no body. There is no built-in authentication.
-The separate [n8n backup API](n8n-backups.md#api) uses ZIP downloads and multipart
-uploads, with an explicit request header and restore confirmation.
 
 ## Endpoints
 

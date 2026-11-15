@@ -10,7 +10,7 @@
   <script src="/dashboard.js" defer></script>
 </head>
 <body>
-  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="automations-link" href="/">Notifications</a><a class="automations-link" href="/tasks.html">Tasks</a></nav></header>
+  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><a class="workspace-link" href="/">Notifications</a><a class="workspace-link" href="/tasks.html">Tasks</a></nav></header>
   <main class="dashboard-page">
     <div class="heading"><div><p class="eyebrow">YOUR WORKSPACE AT A GLANCE</p><h1>Notification dashboard</h1><p class="muted">See what needs attention across your notification sources.</p></div><button id="refresh" class="secondary">Refresh</button></div>
     <p id="status" role="status" aria-live="polite">Loading dashboard…</p>
@@ -25,7 +25,7 @@
         <section class="card"><h2>Unread by notification type</h2><p class="muted">Grouped by source, highest unread count first.</p><div id="sources" class="dashboard-sources"></div></section>
         <section class="card"><h2>Activity over the last 7 days</h2><p class="muted">Notifications received per UTC day, including today.</p><div id="activity" class="dashboard-activity"></div><p class="muted">Counts reflect retained notifications; deleted records are excluded.</p></section>
       </div>
-      <section class="card dashboard-recent"><div class="list-heading"><h2>Recent unread notifications</h2><a class="automations-link" href="/">Open inbox →</a></div><div id="recent"></div></section>
+      <section class="card dashboard-recent"><div class="list-heading"><h2>Recent unread notifications</h2><a class="workspace-link" href="/">Open inbox →</a></div><div id="recent"></div></section>
     </div>
   </main>
 </body>

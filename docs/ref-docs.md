@@ -41,7 +41,7 @@ using your preferred permissions policy. Do not change ownership of an existing
 folder without considering other applications that use it. Standalone runs and
 Docker can share files by configuring the same host folder.
 
-Back up this directory separately; SQLite and n8n backups do not include it.
+Back up this directory separately; SQLite backups do not include it.
 Deletion in Windlass deletes the host file. No authentication is provided.
 
 ## REST API

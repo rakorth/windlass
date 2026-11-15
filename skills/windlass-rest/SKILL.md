@@ -1,6 +1,6 @@
 ---
 name: windlass-rest
-description: Operate Windlass through its REST API to manage notifications, tasks, reusable task templates, and n8n backups. Use for searching or updating Windlass records, sharing direct record links, creating tasks from templates, status webhooks, unread state, and backup downloads or restores.
+description: Operate Windlass through its REST API to manage notifications, tasks, reusable task templates. Use for searching or updating Windlass records, sharing direct record links, creating tasks from templates, status webhooks, unread state.
 ---
 
 # Windlass REST
@@ -192,12 +192,6 @@ The Tasks list at `/tasks.html` links task names to their details pages. Templat
 are accessed through **Task templates** on that list; they have no dedicated
 details URL. Opening a record page reads it without changing its status or
 marking a notification seen.
-
-## n8n backups and automations
-
-For status, ZIP downloads, or restore requests, read [references/n8n-backups.md](references/n8n-backups.md). These operations use different headers, bodies, timeouts, and failure handling from notifications. Creating a backup temporarily stops n8n; restoring replaces its data. A notification request does not authorize either operation.
-
-`GET /automations` returns a 302 redirect to the configured n8n editor. It is a navigation route, not a workflow-management API. Windlass exposes no API for creating or editing n8n workflows.
 
 ## Failures and reporting
 

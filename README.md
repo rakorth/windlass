@@ -72,7 +72,7 @@ Integration tests exercise the complete CRUD lifecycle, nested metadata, validat
 
 ## Deploy on another machine
 
-To use the published `ghcr.io/rakorth/windlass:latest` image with n8n and backups,
+To use the published `ghcr.io/rakorth/windlass:latest` image,
 create a small bundle to hand out:
 
 ```sh
@@ -80,48 +80,28 @@ sh scripts/package-deployment.sh
 ```
 
 Share `target/windlass-deployment.tar.gz`. The recipient extracts it and runs
-`docker compose pull windlass` followed by `docker compose up -d --build --wait`
-inside the extracted directory. Docker pulls Windlass and builds only the
-included n8n helpers; no Java or application source is required. See the
+`docker compose pull windlass` followed by `docker compose up -d --wait`
+inside the extracted directory. No Java or application source is required. See the
 [bundled instructions](deploy/README.md) for configuration, remote access, and updates.
 
 To run the same deployment from this checkout, use
-`docker compose -f compose.deploy.yaml up -d --build --wait`.
+`docker compose -f compose.deploy.yaml up -d --wait`.
 The existing `compose.yaml` below remains the source-build development setup.
 
 ## Docker image
 
-Run Windlass and the n8n workflow editor with persistent storage:
+Run Windlass with persistent storage:
 
 ```sh
 docker compose up -d --build
 ```
 
-Inside the development container, use
-`docker compose -f compose.yaml -f .devcontainer/compose.ports.yaml up -d --build --wait`
-and open http://localhost:18080 for Windlass or http://localhost:15678 for n8n.
-These development ports avoid collisions with existing host services; see
-[dev container access](.devcontainer/README.md#web-app-access-from-the-host).
-
-Open Windlass at http://localhost:6080 and click **Automations ↗** to open n8n
-in a new tab, or open http://localhost:5678 directly. On the first visit to n8n,
-create your owner account. Both services are bound to localhost by default.
-
-n8n workflows can use the HTTP Request node to call
-`http://windlass:8080/api/notifications`. See the
-[n8n setup and first workflow](docs/deployment.md#n8n-automations) for a working
-request and configuration options. n8n stores workflows, credentials, execution
-history, and its encryption key in the separate `n8n-data` volume.
-
-Click **n8n backups** to download a full backup or restore a Windlass backup ZIP.
-n8n pauses briefly for a consistent snapshot. Restores validate the upload and
-save a recovery copy before replacing data. See [backup and restore](docs/n8n-backups.md)
-for what is included, limits, and recovery behavior.
+Open Windlass at http://localhost:6080. The service is bound to localhost by default.
 
 Compose mounts the named volume `windlass-data` at `/data`, where the app stores
 `notifications.db` and SQLite journal files. Data survives container recreation
 and `docker compose down`. `docker compose down --volumes` deletes all project
-volumes, including n8n workflows, credentials, and the saved recovery backup.
+volumes, including the Windlass database.
 The volume starts with a separate database; it does not import an existing
 `notifications.db` from the project directory.
 

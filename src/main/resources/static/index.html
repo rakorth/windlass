@@ -12,11 +12,11 @@
   <script src="/app.js" type="module"></script>
 </head>
 <body>
-  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><span>Notification workspace</span><a class="automations-link" href="/dashboard.html">Dashboard</a><a class="automations-link" href="/tasks.html">Tasks</a><a class="automations-link" href="/ref-docs.html">ref-docs</a><a class="automations-link" href="/json-conf.html">json-conf</a><a class="automations-link" href="/backups.html">n8n backups</a><a class="automations-link" href="/automations" target="_blank" rel="noopener noreferrer" aria-label="Automations (opens n8n in a new tab)">Automations ↗</a></nav></header>
+  <header><a class="brand" href="/">◈ Windlass</a><nav class="header-nav" aria-label="Workspace"><span>Notification workspace</span><a class="workspace-link" href="/dashboard.html">Dashboard</a><a class="workspace-link" href="/tasks.html">Tasks</a><a class="workspace-link" href="/ref-docs.html">ref-docs</a><a class="workspace-link" href="/json-conf.html">json-conf</a></nav></header>
   <main>
     <div class="heading"><div><p class="eyebrow">YOUR INBOX, ORGANIZED</p><h1>Notifications</h1><p class="muted">Keep updates from all your sources in one place.</p></div><button id="new">+ New notification</button></div>
     <div class="toolbar"><label for="search">Search this page</label><input id="search" type="search" placeholder="Search titles, descriptions, or sources…"><button id="refresh" class="secondary">Refresh</button></div>
-    <div class="inbox-options"><div class="notification-filters"><label class="source-filter" for="source-filter">Source <select id="source-filter"><option value="">All sources</option></select></label><label class="unread-filter"><input id="unread-only" type="checkbox"> Unread only</label></div><a class="automations-link" href="/notification.html">Find notification by ID</a></div>
+    <div class="inbox-options"><div class="notification-filters"><label class="source-filter" for="source-filter">Source <select id="source-filter"><option value="">All sources</option></select></label><label class="unread-filter"><input id="unread-only" type="checkbox"> Unread only</label></div><a class="workspace-link" href="/notification.html">Find notification by ID</a></div>
     <p id="status" role="status" aria-live="polite"></p>
     <div class="list-heading"><h2>Notifications <span id="count">0</span> <span id="unread-count" class="unread-count"></span></h2><span class="muted">Most recent first</span></div>
     <div class="notification-table-scroll" role="region" aria-label="Notifications table" tabindex="0">

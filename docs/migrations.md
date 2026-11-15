@@ -54,5 +54,4 @@ is disabled to prevent accidental schema deletion.
 If migration fails, inspect the startup error and the database state before
 retrying. Do not delete the history table or enable clean to bypass an error.
 Restore a known backup when rollback is needed; application rollback alone does
-not undo schema changes. The n8n backup service backs up n8n and does not replace
-a Windlass database backup.
+not undo schema changes. Preserve a separate Windlass database backup.
