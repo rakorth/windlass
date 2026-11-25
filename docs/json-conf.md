@@ -10,20 +10,19 @@ can be overwritten.
 
 ## Storage and Docker
 
-Files are UTF-8 text on the server's filesystem, separate from SQLite. Standalone
+Files are UTF-8 text on the server's filesystem, separate from PostgreSQL. Standalone
 runs default to `./json-conf`; set `JSON_CONF_DIRECTORY` to another directory.
 Windlass creates the directory on startup and requires read/write access.
 Only top-level `.json` files are supported, with filenames starting with an ASCII
 letter or digit and containing ASCII letters, digits, spaces, dots, underscores,
 or hyphens, at most 199 characters. Subdirectories and symlinks are excluded.
 
-Both Compose configurations bind-mount `${JSON_CONF_HOST_DIRECTORY:-./json-conf}`
-on the host to `/json-conf` in the container. Set `JSON_CONF_HOST_DIRECTORY` in
-`.env` to an absolute path to use an existing local folder. This is a host bind
-mount, so files survive image rebuilds and container removal and can be opened
-with local tools. With a remote Docker daemon, the folder is on the daemon host.
+The Docker image uses `/data/json-conf`. A named volume mounted at `/data`
+preserves the files across container replacement. To use a host folder, bind
+mount it at `/data/json-conf`. With a remote Docker daemon, the source path is
+on the daemon host.
 
-Prepare the folder before starting Docker. The application runs as UID/GID
+Prepare a bind-mounted folder before starting Docker. The application runs as UID/GID
 10001; the folder must be writable by that account, using ownership or an ACL.
 For a new default folder on Linux:
 
@@ -37,7 +36,7 @@ using your preferred permissions policy. Do not change ownership of an existing
 folder without considering other applications that use it. Standalone runs and
 Docker can share files by configuring the same host folder.
 
-Back up this directory separately; SQLite backups do not include it.
+Back up this directory separately; PostgreSQL backups do not include it.
 Deletion in Windlass deletes the host file. No authentication is provided.
 
 ## REST API

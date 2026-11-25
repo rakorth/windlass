@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite::memory:")
+@SpringBootTest
 class NotificationCleanupTests {
     @Autowired NotificationService notifications;
     @Autowired NotificationCleanup cleanup;

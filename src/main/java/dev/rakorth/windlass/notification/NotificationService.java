@@ -28,7 +28,7 @@ public class NotificationService {
                 rs.getString("description"), rs.getString("notification_source"),
                 Instant.parse(rs.getString("received_on")),
                 json.readValue(rs.getString("metadata_map"), new TypeReference<Map<String, Object>>() {}),
-                json.readValue(rs.getString("external_links"), new TypeReference<Map<String, String>>() {}), rs.getBoolean("unread"));
+                json.readValue(rs.getString("external_links"), new TypeReference<Map<String, String>>() {}), rs.getInt("unread") != 0);
     }
 
     public NotificationPage list(int page, int size, Boolean unread) {
@@ -56,12 +56,15 @@ public class NotificationService {
         parameters.add(size);
         parameters.add((long) page * size);
         var items = jdbc.query("SELECT * FROM notifications" + where
-                + " ORDER BY julianday(received_on) DESC, id LIMIT ? OFFSET ?", mapper, parameters.toArray());
+                + " ORDER BY replace(received_on, 'Z', '') COLLATE \"C\" DESC, id LIMIT ? OFFSET ?", mapper, parameters.toArray());
         return new NotificationPage(items, page, size, total, (total + size - 1) / size);
     }
 
     public List<String> sources() {
-        return jdbc.queryForList("SELECT DISTINCT notification_source FROM notifications ORDER BY notification_source", String.class);
+        return jdbc.queryForList("""
+                SELECT DISTINCT notification_source COLLATE "C" AS source
+                FROM notifications ORDER BY source
+                """, String.class);
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
@@ -70,22 +73,23 @@ public class NotificationService {
         var sources = jdbc.query("""
                 SELECT notification_source, COUNT(*) AS total, SUM(unread) AS unread
                 FROM notifications GROUP BY notification_source
-                ORDER BY unread DESC, notification_source
+                ORDER BY unread DESC, notification_source COLLATE "C"
                 """, (rs, row) -> new NotificationDashboard.SourceCount(
                 rs.getString("notification_source"), rs.getLong("total"), rs.getLong("unread")));
         var counts = jdbc.query("""
-                SELECT date(received_on) AS day, COUNT(*) AS total FROM notifications
-                WHERE julianday(received_on) >= julianday(?) AND julianday(received_on) < julianday(?)
-                GROUP BY date(received_on)
+                SELECT split_part(received_on, 'T', 1) AS day, COUNT(*) AS total
+                FROM notifications
+                WHERE received_on COLLATE "C" >= ? AND received_on COLLATE "C" < ?
+                GROUP BY day
                 """, (rs, row) -> new NotificationDashboard.DayCount(rs.getString("day"), rs.getLong("total")),
-                today.minusDays(6).toString(), today.plusDays(1).toString());
+                today.minusDays(6) + "T", today.plusDays(1) + "T");
         var activity = new ArrayList<NotificationDashboard.DayCount>();
         for (int i = 6; i >= 0; i--) {
             String day = today.minusDays(i).toString();
             activity.add(new NotificationDashboard.DayCount(day, counts.stream()
                     .filter(count -> count.day().equals(day)).mapToLong(NotificationDashboard.DayCount::total).sum()));
         }
-        var recent = jdbc.query("SELECT * FROM notifications WHERE unread = 1 ORDER BY julianday(received_on) DESC, id LIMIT 5", mapper);
+        var recent = jdbc.query("SELECT * FROM notifications WHERE unread = 1 ORDER BY replace(received_on, 'Z', '') COLLATE \"C\" DESC, id LIMIT 5", mapper);
         return new NotificationDashboard(sources.stream().mapToLong(NotificationDashboard.SourceCount::total).sum(),
                 sources.stream().mapToLong(NotificationDashboard.SourceCount::unread).sum(), sources, activity, recent);
     }
@@ -128,7 +132,7 @@ public class NotificationService {
     }
 
     public int deleteReadBefore(Instant cutoff) {
-        return jdbc.update("DELETE FROM notifications WHERE unread = 0 AND replace(received_on, 'Z', '') < ?",
+        return jdbc.update("DELETE FROM notifications WHERE unread = 0 AND replace(received_on, 'Z', '') COLLATE \"C\" < ?",
                 cutoff.toString().replace("Z", ""));
     }
 

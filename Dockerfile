@@ -5,8 +5,7 @@ COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw
 COPY src/ src/
-# Tests run as part of every image build, including pull requests.
-RUN --mount=type=cache,target=/root/.m2 ./mvnw --batch-mode --no-transfer-progress verify
+RUN --mount=type=cache,target=/root/.m2 ./mvnw --batch-mode --no-transfer-progress -DskipTests package
 
 FROM eclipse-temurin:25-jre-noble AS runtime
 RUN groupadd --gid 10001 windlass \
@@ -15,8 +14,7 @@ RUN groupadd --gid 10001 windlass \
     && chown windlass:windlass /data
 WORKDIR /app
 COPY --from=build /workspace/target/windlass-*.jar /app/windlass.jar
-ENV DATABASE_URL=jdbc:sqlite:/data/notifications.db \
-    REF_DOCS_DIRECTORY=/data/ref-docs \
+ENV REF_DOCS_DIRECTORY=/data/ref-docs \
     JSON_CONF_DIRECTORY=/data/json-conf
 USER 10001:10001
 VOLUME ["/data"]

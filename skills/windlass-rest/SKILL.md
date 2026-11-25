@@ -9,7 +9,7 @@ Use HTTP requests to interact with Windlass. Work within the user's requested sc
 
 ## Connection
 
-Use the base URL supplied by the user or environment. Docker Compose publishes Windlass at `http://localhost:6080`; standalone runs default to `http://localhost:8080`. Choose the address from deployment context, falling back to the standalone default. Examples use a client-side `WINDLASS_BASE_URL` variable; the server does not read this variable.
+Use the base URL supplied by the user or environment. The documented Docker command publishes Windlass at `http://localhost:6080`; standalone runs default to `http://localhost:8080`. Choose the address from deployment context, falling back to the standalone default. Examples use a client-side `WINDLASS_BASE_URL` variable; the server does not read this variable.
 
 ```sh
 WINDLASS_BASE_URL="${WINDLASS_BASE_URL:-http://localhost:8080}"

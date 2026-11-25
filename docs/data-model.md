@@ -45,27 +45,19 @@ example map is `{"Issue": "https://github.com/example/project/issues/42"}`.
 This is illustrative, not an existing record. Omit `id` and `unread` when using
 its content as a create/update request.
 
-## SQLite representation
+## PostgreSQL representation
 
 The `notifications` table stores ID, title, description, source, and timestamp as
 TEXT. Both maps are serialized JSON in TEXT columns. `unread` is INTEGER with a
 check restricting it to `0` or `1`; its default is `1`. All columns are NOT NULL.
 The ID is the primary key. Length, URL, and JSON-object validation is enforced by
-the application rather than equivalent SQLite constraints.
+the application rather than equivalent PostgreSQL constraints.
 
-The service uses `JdbcTemplate`, parameterized SQL, and a connection pool with
-maximum size 1. It is not a JPA entity/repository implementation. Collection
-ordering is `julianday(received_on) DESC, id`.
+The service uses `JdbcTemplate`, parameterized SQL, and a connection pool.
+Collections are sorted by descending UTC receipt time, with `id` as the tie breaker.
 
 ## Startup and migration
 
-Flyway manages SQLite schema versions at startup. Historical V1 and V2 migrations
-remain unchanged for upgrade compatibility. V3 removes the retired task and template
-tables, including their saved records, while retaining notifications and unread state.
-Applied versions are tracked in `flyway_schema_history`, so upgrades are not
-repeated on restart. See [database migrations](migrations.md) for migration files
-and development workflow.
-
-Local runs default to `./notifications.db`; containers use
-`/data/notifications.db`. See [deployment and persistence](deployment.md) before
-changing storage location or removing volumes.
+Flyway initializes the PostgreSQL notifications table at startup and tracks
+applied versions in `flyway_schema_history`. See [database migrations](migrations.md)
+and [deployment and persistence](deployment.md) for configuration and backups.

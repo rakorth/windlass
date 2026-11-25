@@ -1,13 +1,13 @@
 # Windlass
 
-A small notification manager: Spring Boot REST API, SQLite persistence, and a responsive vanilla JavaScript UI. No separate frontend build or database server is needed.
+A small notification manager: Spring Boot REST API, PostgreSQL persistence, and a responsive vanilla JavaScript UI. No separate frontend build is needed.
 
 Detailed feature, API, persistence, deployment, and code documentation is in
 [docs/README.md](docs/README.md), with an index for AI agents.
 
 ## Run
 
-Requires JDK 24 or newer. The Maven wrapper downloads Maven and dependencies on first use.
+Requires JDK 24 or newer and a PostgreSQL database. The Maven wrapper downloads Maven and dependencies on first use.
 
 ```sh
 ./mvnw spring-boot:run
@@ -17,7 +17,10 @@ Open http://localhost:8080. Create notifications, search by title/description/so
 
 Flyway applies versioned database migrations automatically on startup, including upgrades of existing databases. See [Database migrations](docs/migrations.md) for adding schema changes.
 
-Data is stored in `notifications.db` in the working directory and survives restarts. Set `DATABASE_URL` to change the SQLite JDBC URL (for example `jdbc:sqlite:/tmp/windlass.db`). Set `SERVER_PORT` to change the port. The app is intended for local use and has no authentication.
+Set `DATABASE_URL` to a PostgreSQL JDBC URL and set `DATABASE_USERNAME` and
+`DATABASE_PASSWORD` for the database account. See the
+[deployment guide](docs/deployment.md#configuration) for setup. Set `SERVER_PORT`
+to change the port. The app is intended for local use and has no authentication.
 
 ## Model
 
@@ -32,7 +35,7 @@ Data is stored in `notifications.db` in the working directory and survives resta
 | `external_links` | Map of labels to URL strings | Optional; defaults to `{}`. HTTP/HTTPS URLs only; shown as links opening in new tabs. Example: `{"Issue": "https://github.com/example/project/issues/1"}` |
 | `metadata_map` | JSON object | Optional; defaults to `{}`; supports nested JSON values |
 
-Existing SQLite databases are upgraded automatically; existing notifications receive an empty `external_links` map and start unread. Seen state persists across restarts.
+Seen state persists across restarts.
 
 ## API
 
@@ -60,13 +63,17 @@ curl -i http://localhost:8080/api/notifications \
 
 ## Verify and package
 
+Set `TEST_DATABASE_URL`, `TEST_DATABASE_USERNAME`, and `TEST_DATABASE_PASSWORD`
+for a dedicated PostgreSQL test database. Integration tests delete rows in that
+database. Running the packaged JAR uses the regular `DATABASE_*` settings.
+
 ```sh
 ./mvnw test
 ./mvnw package
 java -jar target/windlass-0.0.1-SNAPSHOT.jar
 ```
 
-Integration tests exercise the complete CRUD lifecycle, nested metadata, validation, missing resources, defaults, ordering, and static UI delivery using an isolated in-memory SQLite database.
+Integration tests exercise the complete CRUD lifecycle, nested metadata, validation, missing resources, defaults, ordering, and static UI delivery using PostgreSQL.
 
 ## Deploy on another machine
 
@@ -77,53 +84,25 @@ create a small bundle to hand out:
 sh scripts/package-deployment.sh
 ```
 
-Share `target/windlass-deployment.tar.gz`. The recipient extracts it and runs
-`docker compose pull windlass` followed by `docker compose up -d --wait`
-inside the extracted directory. No Java or application source is required. See the
-[bundled instructions](deploy/README.md) for configuration, remote access, and updates.
-
-To run the same deployment from this checkout, use
-`docker compose -f compose.deploy.yaml up -d --wait`.
-The existing `compose.yaml` below remains the source-build development setup.
+Share `target/windlass-deployment.tar.gz`. The bundle includes the
+[deployment instructions](deploy/README.md) and an environment template for
+running the published image with Docker.
 
 ## Docker image
 
-Run Windlass with persistent storage:
-
-```sh
-docker compose up -d --build
-```
-
-Open Windlass at http://localhost:6080. The service is bound to localhost by default.
-
-Compose mounts the named volume `windlass-data` at `/data`, where the app stores
-`notifications.db` and SQLite journal files. Data survives container recreation
-and `docker compose down`. `docker compose down --volumes` deletes all project
-volumes, including the Windlass database.
-The volume starts with a separate database; it does not import an existing
-`notifications.db` from the project directory.
-
-Open http://localhost:6080. If that port is occupied, use
-`WINDLASS_PORT=6081 docker compose up -d --build` and open http://localhost:6081.
-The app listens on port 8080 inside its container; `WINDLASS_PORT` controls the
-published browser port.
-
-Build the application image (including its integration tests):
+Copy `.env.example` to `.env` and fill in the PostgreSQL connection. To run an
+image built from this checkout:
 
 ```sh
 docker build -t windlass:local .
-docker run --name windlass-app --rm -p 127.0.0.1:6080:8080 \
-  -v windlass-data:/data windlass:local
+docker run -d --name windlass --restart unless-stopped \
+  -p 127.0.0.1:6080:8080 --env-file .env \
+  -v windlass-files:/data windlass:local
 ```
 
-Open http://localhost:6080. The image runs as UID/GID `10001`, uses Java 25
-with the project's Java 24 compilation target, and stores SQLite data under
-`/data`. Standalone image defaults place ref-docs and json-conf under
-`/data/ref-docs` and `/data/json-conf`, also preserved by this volume. Compose
-uses separate host folders for these files. The named volume preserves
-notifications when the container is removed.
-If using a host bind mount instead, give UID `10001` write access to that directory.
-If host port 6080 is occupied, use `-p 127.0.0.1:6081:8080`.
+Open http://localhost:6080. PostgreSQL stores notifications, and the
+`windlass-files` volume stores reference documents and JSON configuration.
+See the [deployment guide](docs/deployment.md) for storage and port settings.
 
 The [Docker image workflow](.github/workflows/docker.yml) builds on branch
 pushes, pull requests, `v*` tags, and manual runs. Builds on the repository's

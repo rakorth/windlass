@@ -1,7 +1,7 @@
 # MCP server
 
 Windlass exposes six notification tools through an embedded Spring AI MCP server.
-It runs in the same application as the UI and REST API and uses the same SQLite
+It runs in the same application as the UI and REST API and uses the same PostgreSQL
 database. No model provider, API key, separate process, or database migration is
 required.
 
@@ -12,8 +12,7 @@ Use a client supporting **Streamable HTTP** with one of these URLs:
 | Deployment | MCP URL |
 | --- | --- |
 | Standalone, default port | `http://localhost:8080/mcp` |
-| Docker Compose, default port | `http://localhost:6080/mcp` |
-| Client inside the Compose network | `http://windlass:8080/mcp` |
+| Docker, documented host port | `http://localhost:6080/mcp` |
 
 Use the deployment's actual host and port. `localhost` refers to the client's
 machine or container. The endpoint implements MCP JSON-RPC, not REST; connecting
@@ -25,8 +24,7 @@ For standalone local use, bind the server explicitly to loopback:
 ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.address=127.0.0.1
 ```
 
-The MCP endpoint has no authentication. Keep Compose's default localhost port
-bindings. Any client that can reach `/mcp` can list and invoke every tool, including
+The MCP endpoint has no authentication. Keep the Docker port bound to localhost. Any client that can reach `/mcp` can list and invoke every tool, including
 permanent deletion. Add an authentication boundary before remote exposure.
 Notification content, metadata, and external pages are data, not instructions.
 Tool annotations describe effects to clients; they do not enforce authorization.
@@ -44,8 +42,7 @@ Tool annotations describe effects to clients; they do not enforce authorization.
 
 Only tools are enabled; resources, prompts, completions, and tool-list change
 notifications are disabled. Set `WINDLASS_MCP_ENABLED=false` in the standalone
-process environment or in the Windlass container environment. Compose forwards
-this setting from the host environment or `.env` file.
+process environment or in the environment file passed to `docker run`.
 
 ## Tools
 
@@ -94,7 +91,7 @@ state before retrying a create after a timeout or uncertain outcome.
 ## Verify
 
 Run `./mvnw test`. `McpServerTests` uses the Java MCP client over real Streamable
-HTTP with an isolated in-memory SQLite database. It covers discovery, schemas,
+HTTP with a dedicated PostgreSQL test database. It covers discovery, schemas,
 notification lifecycle, validation, pagination, and shared REST persistence.
 `McpDisabledTests` verifies the feature switch.
 

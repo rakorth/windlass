@@ -15,7 +15,7 @@
 | Mark as seen | Per-card button or PATCH; removes unread emphasis and button |
 | Search | Local case-insensitive substring match on title, description, and source |
 | Refresh | Initial load and manual Refresh fetch the collection |
-| Persistence | SQLite file; startup upgrades for older schemas; Docker named volume |
+| Persistence | PostgreSQL database with Flyway startup migrations |
 | Agent integration | Reusable REST skill and endpoint documentation |
 | Container builds | Multi-stage Docker image and GitHub Actions build/publish workflow |
 
@@ -76,7 +76,7 @@ Read notifications are automatically deleted daily at 03:00 UTC when their
 `received_on` timestamp is older than `NOTIFICATION_RETENTION_DAYS` days (default
 `30`, positive integer). Age is measured from receipt, rather than when marked
 read. Unread notifications are retained. Restart after changing the environment
-variable; Docker Compose forwards it to Windlass.
+variable supplied to Windlass.
 
 ## Not implemented
 

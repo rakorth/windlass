@@ -9,9 +9,8 @@ trap 'rm -rf "$staging"' EXIT HUP INT TERM
 bundle="$staging/windlass-deployment"
 mkdir -p "$bundle"
 
-cp "$repo_dir/compose.deploy.yaml" "$bundle/compose.yaml"
 cp "$repo_dir/deploy/README.md" "$bundle/README.md"
-cp "$repo_dir/deploy/.env.example" "$bundle/.env.example"
+cp "$repo_dir/.env.example" "$bundle/.env.example"
 
 mkdir -p "$(dirname -- "$output")"
 tar -czf "$output" -C "$staging" windlass-deployment
