@@ -49,7 +49,7 @@ in the dialog. Failed requests show an error without claiming success.
 The notification count shows the total matching the source and unread filters.
 Previous/Next buttons navigate pages of 20 items. The source dropdown lists
 sources across all notifications and includes an **All sources** option.
-Changing the source or unread-only filter resets to the first page. Search and the unread count cover only the current page. Search does not include metadata, URLs, IDs, or dates.
+Changing the source or unread-only filter resets to the first page. Search and the inbox header’s unread count cover only the current page. The browser tab shows the total unread count across all sources and pages and refreshes it every 30 seconds. Search does not include metadata, URLs, IDs, or dates.
 
 Successful create, edit, delete, and mark-as-seen operations update the browser's
 current page by fetching it again. Changes from other clients require Refresh or a page reload;
