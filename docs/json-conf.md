@@ -39,6 +39,8 @@ Docker can share files by configuring the same host folder.
 Back up this directory separately; PostgreSQL backups do not include it.
 Deletion in Windlass deletes the host file. No authentication is provided.
 
+JSON configuration documents also support create, read, and write through [MCP document tools](mcp.md#document-tools).
+
 ## REST API
 
 | Method | Path | Result |

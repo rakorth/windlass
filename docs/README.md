@@ -14,7 +14,7 @@ These documents describe implemented behavior, not a roadmap.
 | Add or understand database migrations | [Database migrations](migrations.md) |
 | Understand fields, defaults, validation, and persistence | [Data model](data-model.md) |
 | Integrate through HTTP or generate API clients | [REST API](api.md) |
-| Connect an MCP client to notification tools | [MCP server](mcp.md) |
+| Connect an MCP client to notification and document tools | [MCP server](mcp.md) |
 | Run locally, use Docker, preserve data, or understand CI | [Deployment](deployment.md) |
 | Hand out a Docker deployment using the published image | [Portable deployment](deployment.md#portable-deployment-with-the-published-image) |
 | Find implementation files or decide what to test | [Architecture](architecture.md) |

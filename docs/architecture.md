@@ -35,6 +35,7 @@ Paths below are relative to this document; links point to the implementation.
 | Writable fields and validation annotations | [NotificationRequest.java](../src/main/java/dev/rakorth/windlass/notification/NotificationRequest.java) |
 | REST routes and success statuses | [NotificationController.java](../src/main/java/dev/rakorth/windlass/notification/NotificationController.java) |
 | MCP notification tools and validation | [NotificationTools.java](../src/main/java/dev/rakorth/windlass/mcp/NotificationTools.java) |
+| MCP reference and JSON document tools | [DocumentTools.java](../src/main/java/dev/rakorth/windlass/mcp/DocumentTools.java) |
 | SQL, defaults, ordering, link checks, seen operation | [NotificationService.java](../src/main/java/dev/rakorth/windlass/notification/NotificationService.java) |
 | Initial PostgreSQL schema | [V1__create_notifications.sql](../src/main/resources/db/migration/V1__create_notifications.sql) |
 | Schema initialization and restart test | [FlywayMigrationTests.java](../src/test/java/dev/rakorth/windlass/FlywayMigrationTests.java) |

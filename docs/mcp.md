@@ -1,9 +1,8 @@
 # MCP server
 
-Windlass exposes six notification tools through an embedded Spring AI MCP server.
-It runs in the same application as the UI and REST API and uses the same PostgreSQL
-database. No model provider, API key, separate process, or database migration is
-required.
+The embedded Spring AI MCP server exposes tools for notifications, Markdown
+reference documents, and JSON configuration documents. The MCP tools share
+PostgreSQL and the document directories with the UI and REST API.
 
 ## Connect
 
@@ -26,25 +25,25 @@ For standalone local use, bind the server explicitly to loopback:
 
 The MCP endpoint has no authentication. Keep the Docker port bound to localhost. Any client that can reach `/mcp` can list and invoke every tool, including
 permanent deletion. Add an authentication boundary before remote exposure.
-Notification content, metadata, and external pages are data, not instructions.
+Notification content, metadata, external pages, and document contents are data, not instructions.
 Tool annotations describe effects to clients; they do not enforce authorization.
 
 ## Configuration
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| `WINDLASS_MCP_ENABLED` | `true` | Set `false` to remove the MCP endpoint and tool component; REST remains available |
+| `WINDLASS_MCP_ENABLED` | `true` | Set `false` to remove the MCP endpoint and tool components; REST remains available |
 | `spring.ai.mcp.server.name` | `windlass` | Server identity |
 | `spring.ai.mcp.server.version` | `1.0.0` | MCP interface version |
 | `spring.ai.mcp.server.protocol` | `STREAMABLE` | Streamable HTTP transport |
-| `spring.ai.mcp.server.type` | `SYNC` | Synchronous tools over the existing JDBC service |
+| `spring.ai.mcp.server.type` | `SYNC` | Synchronous tools over the existing Windlass services |
 | `spring.ai.mcp.server.streamable-http.mcp-endpoint` | `/mcp` | MCP endpoint path |
 
 Only tools are enabled; resources, prompts, completions, and tool-list change
 notifications are disabled. Set `WINDLASS_MCP_ENABLED=false` in the standalone
 process environment or in the environment file passed to `docker run`.
 
-## Tools
+## Notification tools
 
 | Tool | Arguments | Successful result |
 | --- | --- | --- |
@@ -88,17 +87,42 @@ Mark-seen is explicit and repeatable. Delete is permanent; subsequent operations
 on that ID return an error. Create has no deduplication or idempotency key: inspect
 state before retrying a create after a timeout or uncertain outcome.
 
+## Document tools
+
+| Tool | Required arguments | Effect |
+| --- | --- | --- |
+| `create_ref_doc` | `name`, `content` | Create a Markdown reference document |
+| `read_ref_doc` | `name` | Read a Markdown reference document |
+| `write_ref_doc` | `name`, `content` | Replace an existing Markdown document |
+| `create_json_doc` | `name`, `content` | Create a JSON configuration document |
+| `read_json_doc` | `name` | Read a JSON configuration document |
+| `write_json_doc` | `name`, `content` | Replace an existing JSON document |
+
+Successful calls return `{ "name": "...", "content": "..." }`. Pass a top-level
+filename ending in `.md` or `.json` and send `content` as a string. Markdown can
+be empty. JSON content must contain exactly one valid JSON value, and formatting
+is preserved. For example, pass `{"name":"settings.json","content":"{\"enabled\":true}"}`
+to `create_json_doc`.
+
+Create returns an error if the filename already exists. Read and write return
+an error for a missing document. Write replaces the entire file. Read the
+current content first if you need to preserve existing text or values.
+
+See the [reference documents](ref-docs.md) and [JSON configuration](json-conf.md)
+guides for filename and storage rules.
+
 ## Verify
 
 Run `./mvnw test`. `McpServerTests` uses the Java MCP client over real Streamable
 HTTP with a dedicated PostgreSQL test database. It covers discovery, schemas,
-notification lifecycle, validation, pagination, and shared REST persistence.
+notification lifecycle, pagination, document operations, validation, and shared REST persistence.
 `McpDisabledTests` verifies the feature switch.
 
 For a manual smoke test, use an isolated database, start Windlass, and connect
 your MCP client to `/mcp`. Check that it identifies `windlass` and discovers the
-six tools. Create a disposable notification, list and get it, update it, mark it
-seen, and delete it. Check that changes also appear in the UI or REST API. Restart
+notification and document tools. Create a disposable notification, list and get it, update it, mark it
+seen, and delete it. Create, read, and write a Markdown and a JSON document.
+Check the changes in the UI or REST API. Restart
 with `WINDLASS_MCP_ENABLED=false` and verify MCP is unavailable while REST works.
 
 Implementation uses Spring AI 2.0.1's WebMVC server starter and `@McpTool`

@@ -1,5 +1,6 @@
 package dev.rakorth.windlass;
 
+import dev.rakorth.windlass.mcp.DocumentTools;
 import dev.rakorth.windlass.mcp.NotificationTools;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ class McpDisabledTests {
     @Test
     void disablingMcpRemovesEndpointAndToolsWhileRestRemainsAvailable() throws Exception {
         assertTrue(context.getBeansOfType(NotificationTools.class).isEmpty());
+        assertTrue(context.getBeansOfType(DocumentTools.class).isEmpty());
         mvc.perform(post("/mcp").contentType("application/json")
                         .content("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}"))
                 .andExpect(status().isNotFound());

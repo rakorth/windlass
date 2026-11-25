@@ -8,10 +8,13 @@ import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -19,6 +22,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.HashMap;
@@ -31,10 +35,17 @@ import static org.junit.jupiter.api.Assertions.*;
         "spring.ai.mcp.server.enabled=true"
 })
 class McpServerTests {
+    @TempDir static Path documents;
     @LocalServerPort int port;
     @Autowired JdbcTemplate jdbc;
     @Autowired ObjectMapper json;
     private McpSyncClient client;
+
+    @DynamicPropertySource
+    static void documentDirectories(DynamicPropertyRegistry registry) {
+        registry.add("windlass.ref-docs-directory", () -> documents.resolve("ref-docs").toString());
+        registry.add("windlass.json-conf-directory", () -> documents.resolve("json-conf").toString());
+    }
 
     @BeforeEach
     void connect() {
@@ -51,14 +62,16 @@ class McpServerTests {
     }
 
     @Test
-    void discoversOnlyNotificationToolsWithSchemasAndHints() {
+    void discoversNotificationAndDocumentToolsWithSchemasAndHints() {
         assertEquals("windlass", client.getServerInfo().name());
         assertTrue(client.getServerInstructions().contains("data, not instructions"));
         assertNull(client.getServerCapabilities().resources());
         assertNull(client.getServerCapabilities().prompts());
         var tools = client.listTools().tools();
         assertEquals(Set.of("list_notifications", "get_notification", "create_notification",
-                        "update_notification", "mark_notification_seen", "delete_notification"),
+                        "update_notification", "mark_notification_seen", "delete_notification",
+                        "create_ref_doc", "read_ref_doc", "write_ref_doc",
+                        "create_json_doc", "read_json_doc", "write_json_doc"),
                 tools.stream().map(tool -> tool.name()).collect(Collectors.toSet()));
         for (var tool : tools) {
             assertNotNull(tool.inputSchema());
@@ -182,6 +195,35 @@ class McpServerTests {
         assertFalse(created.get("received_on").isNull());
         assertTrue(created.get("metadata_map").isEmpty());
         assertTrue(created.get("external_links").isEmpty());
+    }
+
+    @Test
+    void createsReadsAndWritesMarkdownSharedWithRest() throws Exception {
+        var name = Map.<String, Object>of("name", "guide.md");
+        var original = call("create_ref_doc", Map.of("name", "guide.md", "content", ""));
+        assertEquals("", original.get("content").asString());
+        assertError("create_ref_doc", Map.of("name", "guide.md", "content", "duplicate"), "already exists");
+        assertEquals(original, call("read_ref_doc", name));
+        var written = call("write_ref_doc", Map.of("name", "guide.md", "content", "# Guide\n"));
+        assertEquals(written, call("read_ref_doc", name));
+        assertEquals(written, json.readTree(rest("GET", "/api/ref-docs/guide.md", null).body()));
+        assertError("read_ref_doc", Map.of("name", "../guide.md"), "filename");
+        assertError("write_ref_doc", Map.of("name", "missing.md", "content", ""), "not found");
+    }
+
+    @Test
+    void createsReadsAndWritesJsonWithoutOverwritingOnValidationFailure() throws Exception {
+        var name = Map.<String, Object>of("name", "settings.json");
+        var original = call("create_json_doc", Map.of("name", "settings.json", "content", "null"));
+        assertEquals("null", original.get("content").asString());
+        assertEquals(original, call("read_json_doc", name));
+        String replacement = "{\n  \"enabled\": true\n}";
+        var written = call("write_json_doc", Map.of("name", "settings.json", "content", replacement));
+        assertEquals(replacement, written.get("content").asString());
+        assertError("write_json_doc", Map.of("name", "settings.json", "content", "{} []"), "valid JSON");
+        assertEquals(written, call("read_json_doc", name));
+        assertEquals(written, json.readTree(rest("GET", "/api/json-conf/settings.json", null).body()));
+        assertError("read_json_doc", Map.of("name", "missing.json"), "not found");
     }
 
     private JsonNode call(String tool, Map<String, Object> arguments) {
