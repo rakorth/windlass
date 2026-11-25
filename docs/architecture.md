@@ -6,7 +6,7 @@
 Browser UI or REST client
     -> NotificationController (HTTP routing and request validation)
     -> NotificationService (normalization, URL checks, CRUD, seen state)
-    -> JdbcTemplate -> SQLite notifications table
+    -> JdbcTemplate -> PostgreSQL notifications table
 ```
 
 Spring Boot also serves static files from `src/main/resources/static` at the
@@ -19,7 +19,7 @@ transport. `NotificationTools` validates writable requests and calls the same
 persistence and normalization. See [MCP server](mcp.md) for the interface.
 
 The stack is Spring Boot 4.1.1, Spring MVC, Jakarta Validation, Spring JDBC,
-Jackson JSON serialization, SQLite JDBC, and vanilla HTML/CSS/JavaScript.
+Jackson JSON serialization, PostgreSQL JDBC, and vanilla HTML/CSS/JavaScript.
 The Maven Java compilation target is 24. Runtime Docker images use Java 25.
 There is no JPA repository, Vaadin UI, or Spring Data REST layer in the current app.
 
@@ -36,9 +36,8 @@ Paths below are relative to this document; links point to the implementation.
 | REST routes and success statuses | [NotificationController.java](../src/main/java/dev/rakorth/windlass/notification/NotificationController.java) |
 | MCP notification tools and validation | [NotificationTools.java](../src/main/java/dev/rakorth/windlass/mcp/NotificationTools.java) |
 | SQL, defaults, ordering, link checks, seen operation | [NotificationService.java](../src/main/java/dev/rakorth/windlass/notification/NotificationService.java) |
-| Initial SQLite tables | [V1__create_initial_tables.sql](../src/main/resources/db/migration/V1__create_initial_tables.sql) |
-| Compatibility upgrade for pre-Flyway databases | [V2__upgrade_legacy_columns.java](../src/main/java/db/migration/V2__upgrade_legacy_columns.java) |
-| Fresh, legacy, and restart migration tests | [FlywayMigrationTests.java](../src/test/java/dev/rakorth/windlass/FlywayMigrationTests.java) |
+| Initial PostgreSQL schema | [V1__create_notifications.sql](../src/main/resources/db/migration/V1__create_notifications.sql) |
+| Schema initialization and restart test | [FlywayMigrationTests.java](../src/test/java/dev/rakorth/windlass/FlywayMigrationTests.java) |
 | Datasource and server defaults | [application.yaml](../src/main/resources/application.yaml) |
 | Page, dialog, and card template | [index.html](../src/main/resources/static/index.html) |
 | Shared bookmarkable list state | [list-url.js](../src/main/resources/static/list-url.js) |
@@ -46,7 +45,6 @@ Paths below are relative to this document; links point to the implementation.
 | Dark theme and compact responsive layout | [styles.css](../src/main/resources/static/styles.css) |
 | API and migration integration tests | [WindlassApplicationTests.java](../src/test/java/dev/rakorth/windlass/WindlassApplicationTests.java) |
 | Application container | [Dockerfile](../Dockerfile) |
-| Windlass service, volume, and port | [compose.yaml](../compose.yaml) |
 | GitHub image build/publish automation | [docker.yml](../.github/workflows/docker.yml) |
 | Agent REST workflow | [SKILL.md](../skills/windlass-rest/SKILL.md) |
 
@@ -67,22 +65,19 @@ Paths below are relative to this document; links point to the implementation.
 ./mvnw test
 ./mvnw package
 node --check src/main/resources/static/app.js
-docker compose config --quiet
 ```
 
-The notification integration tests use an isolated in-memory SQLite database and
+The notification integration tests use a dedicated PostgreSQL test database and
 cover CRUD, missing IDs, defaults, validation, nested metadata, external-link
-persistence and invalid URLs, legacy-schema migration, unread persistence across
+persistence and invalid URLs, schema initialization, unread persistence across
 edits, repeated mark-as-seen calls, newest-first ordering, and static UI delivery.
 They do not exercise browser layout or click interactions in a real browser.
 MCP tests exercise the real Streamable HTTP endpoint with the Java MCP client,
 including discovery, schemas, CRUD, validation, pagination, shared REST data,
 and disabling MCP while keeping REST available.
-The Java suite runs as part of the application Docker build.
-
-For container changes, `docker build -t windlass:local .` runs Maven `verify`
-inside the build stage. A runtime smoke check should verify the UI/API and a
-write/read in an isolated database volume as the non-root user. Do not use real
+CI runs the Java suite against PostgreSQL before building the Docker image.
+For container changes, build with `docker build -t windlass:local .` and
+verify a write/read through the running container against a test database. Do not use real
 notifications as disposable test data. GitHub workflow behavior can be checked
 with `actionlint` when available; a local build does not verify registry access.
 

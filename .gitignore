@@ -33,11 +33,7 @@ build/
 ### VS Code ###
 .vscode/
 
-# Local SQLite storage
-*.db
-*.db-shm
-*.db-wal
-*.db-journal
+# Local environment settings
 /.env
 
 # Local Markdown documents

@@ -24,16 +24,13 @@ spring:
           preserve fields. Deletion is permanent. Create is not idempotent: inspect
           state before retrying a create whose outcome is uncertain.
   datasource:
-    url: ${DATABASE_URL:jdbc:sqlite:./notifications.db}
-    driver-class-name: org.sqlite.JDBC
-    hikari:
-      maximum-pool-size: 1
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME:}
+    password: ${DATABASE_PASSWORD:}
   sql:
     init:
       mode: never
   flyway:
-    baseline-on-migrate: true
-    baseline-version: "0"
     clean-disabled: true
   servlet:
     multipart:

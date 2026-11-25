@@ -1,37 +1,20 @@
 # Database migrations
 
-Windlass uses the Spring Boot Flyway starter and the configured SQLite datasource
+Windlass uses the Spring Boot Flyway starter and the configured PostgreSQL datasource
 (`DATABASE_URL`). Flyway runs automatically at startup, including in integration
 tests. There is no separate migration command required for deployment.
 `spring.sql.init.mode` is `never`; Flyway owns schema initialization.
 
-## Initial adoption
+## Initial schema
 
-- [V1](../src/main/resources/db/migration/V1__create_initial_tables.sql) creates
-  missing notification, task, and task-template tables. `IF NOT EXISTS` lets it
-  also run against existing pre-Flyway databases.
-- [V2](../src/main/java/db/migration/V2__upgrade_legacy_columns.java) inspects
-  existing columns and adds missing notification `external_links` and `unread`
-  fields and task/template `webhooks` fields. Existing values are preserved;
-  missing fields default to `{}`, `1`, and `[]`, respectively.
-
-- [V3](../src/main/resources/db/migration/V3__remove_task_system.sql) removes the
-  retired `tasks` and `task_templates` tables and their data. Notification records,
-  metadata, links, and unread state are preserved. Back up an existing database
-  before upgrading if you need to retain historical task or template data.
-
-For an existing database without Flyway history, `baseline-on-migrate: true`
-and `baseline-version: "0"` record the pre-Flyway state at version 0. V1, V2,
-and V3 then run, so adoption works for older and fully upgraded databases.
-New databases run V1, V2, and V3 directly. Flyway records applied versions in
-`flyway_schema_history`; subsequent starts only execute pending migrations.
-Automatic adoption assumes `DATABASE_URL` points at a Windlass database.
-It does not repair arbitrary or manually corrupted schemas.
+Use an empty PostgreSQL schema for a new installation.
+[V1](../src/main/resources/db/migration/V1__create_notifications.sql) creates the
+notifications table. Flyway tracks applied versions in `flyway_schema_history`.
 
 ## Adding a migration
 
 1. Add the next unused version to `src/main/resources/db/migration`, for example
-   `V4__add_notification_index.sql`. Use two underscores between version and name.
+   `V2__add_notification_index.sql`. Use two underscores between version and name.
 2. Write the change against the schema produced by all previous migrations.
    For example: `CREATE INDEX idx_notifications_source ON notifications(notification_source);`.
 3. Add migration tests for existing records as well as empty databases, and run
@@ -40,10 +23,8 @@ It does not repair arbitrary or manually corrupted schemas.
 
 For changes needing Java logic, put a `BaseJavaMigration` subclass in
 `src/main/java/db/migration` using the same version naming convention. Use the
-connection supplied by Flyway's migration context. V2 uses Java because SQLite
-requires inspecting columns before conditionally adding them.
+connection supplied by Flyway's migration context.
 
-Never edit or renumber a migration that has shipped; add a new version instead.
 Flyway validates applied SQL checksums at startup and fails startup on validation
 or migration errors. Java migrations do not have automatic checksum validation.
 Do not restore `schema.sql` initialization or add startup components that alter
@@ -51,9 +32,8 @@ schema outside Flyway.
 
 ## Deployment and recovery
 
-Keep a consistent SQLite backup before deploying schema changes (stop Windlass
-before copying its database, or use SQLite's backup facilities). Deploy normally;
-migrations use the same database file and volume as the application. Flyway clean
+Keep a consistent PostgreSQL backup before deploying schema changes. Migrations
+run against the configured application database. Flyway clean
 is disabled to prevent accidental schema deletion.
 
 If migration fails, inspect the startup error and the database state before

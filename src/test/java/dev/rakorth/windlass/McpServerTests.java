@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "spring.datasource.url=jdbc:sqlite::memory:", "spring.ai.mcp.server.enabled=true"
+        "spring.ai.mcp.server.enabled=true"
 })
 class McpServerTests {
     @LocalServerPort int port;

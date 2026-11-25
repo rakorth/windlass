@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Windlass is a Java 24 Spring Boot notification manager with SQLite persistence and a vanilla JavaScript UI. Backend code lives in `src/main/java/dev/rakorth/windlass/`, organized into `notification`, `mcp`, `refdocs`, and `jsonconf` packages. Configuration and SQL schema live in `src/main/resources/`; HTML, CSS, and JavaScript assets are in its `static/` directory. Java integration tests live in `src/test/java/dev/rakorth/windlass/`.
+Windlass is a Java 24 Spring Boot notification manager with PostgreSQL persistence and a vanilla JavaScript UI. Backend code lives in `src/main/java/dev/rakorth/windlass/`, organized into `notification`, `mcp`, `refdocs`, and `jsonconf` packages. Configuration and SQL schema live in `src/main/resources/`; HTML, CSS, and JavaScript assets are in its `static/` directory. Java integration tests live in `src/test/java/dev/rakorth/windlass/`.
 
 `deploy/` and `scripts/` support portable deployment bundles. Start with `docs/README.md` for architecture, API, and deployment documentation.
 
@@ -21,7 +21,7 @@ Use JDK 24 or newer and the Maven wrapper:
 - `./mvnw spring-boot:run`: run locally at `http://localhost:8080`.
 - `./mvnw test`: run Java integration tests.
 - `./mvnw package`: test and build the executable JAR in `target/`.
-- `docker compose up -d --build`: build and run Windlass; Windlass is available on port 6080.
+- `docker build -t windlass:local .`: build Windlass. See [deployment](docs/deployment.md) for running it.
 - `sh scripts/package-deployment.sh`: create `target/windlass-deployment.tar.gz`.
 
 There is no separate frontend build.
@@ -32,7 +32,7 @@ Follow surrounding code: four-space indentation in Java, two spaces in JavaScrip
 
 ## Testing Guidelines
 
-Java tests use JUnit Jupiter, Spring Boot, and MockMvc with isolated in-memory SQLite databases. Name classes `*Tests` and methods after the behavior being verified. Cover changed API behavior, validation, persistence, and migrations. No numeric coverage threshold is configured. Manually verify UI changes in the browser.
+Java tests use JUnit Jupiter, Spring Boot, and MockMvc with a dedicated PostgreSQL test database configured with `TEST_DATABASE_URL`, `TEST_DATABASE_USERNAME`, and `TEST_DATABASE_PASSWORD`. Name classes `*Tests` and methods after the behavior being verified. Cover changed API behavior, validation, persistence, and migrations. No numeric coverage threshold is configured. Manually verify UI changes in the browser.
 
 ## Commit & Pull Request Guidelines
 
@@ -40,4 +40,4 @@ History follows Conventional Commits, including `feat: ...`, scoped messages suc
 
 ## Security & Configuration Tips
 
-Use `DATABASE_URL` and `SERVER_PORT` for local configuration. The application has no authentication; retain localhost bindings unless access is protected. Never commit databases, backup archives, or credentials. Avoid `docker compose down --volumes` unless intentionally deleting persistent data.
+Use `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `SERVER_PORT` for local configuration. The application has no authentication; retain localhost bindings unless access is protected. Never commit databases, backup archives, or credentials.

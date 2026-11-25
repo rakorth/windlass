@@ -12,9 +12,7 @@ import tools.jackson.databind.ObjectMapper;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:sqlite::memory:"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 class WindlassApplicationTests {
     @Autowired MockMvc mvc;

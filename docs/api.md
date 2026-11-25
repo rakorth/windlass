@@ -1,8 +1,8 @@
 # REST API
 
-Base URL defaults to `http://localhost:6080` in Docker Compose and
-`http://localhost:8080` for standalone runs. The examples below use the standalone
-port; use 6080 for Docker Compose. All routes below are relative to the base URL.
+The examples use `http://localhost:8080` for standalone runs. The Docker
+deployment guide publishes `http://localhost:6080`. All routes below are
+relative to the deployment's base URL.
 POST/PUT consume JSON with `Content-Type: application/json`. Success bodies
 are JSON except DELETE, which has no body. There is no built-in authentication.
 
@@ -95,7 +95,7 @@ Read notifications are automatically deleted daily at 03:00 UTC when their
 `received_on` timestamp is older than `NOTIFICATION_RETENTION_DAYS` days (default
 `30`, positive integer). Age is measured from receipt, rather than when marked
 read. Unread notifications are retained. Restart after changing the environment
-variable; Docker Compose forwards it to Windlass.
+variable supplied to Windlass.
 
 ## Delete
 

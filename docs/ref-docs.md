@@ -13,7 +13,7 @@ can be overwritten.
 
 ## Storage and Docker
 
-Files are stored on the server's filesystem, separate from SQLite. Standalone
+Files are stored on the server's filesystem, separate from PostgreSQL. Standalone
 runs default to `./ref-docs`; set `REF_DOCS_DIRECTORY` to another directory.
 Windlass creates the directory on startup and requires read/write access.
 Only top-level files are supported, with filenames starting with an ASCII
@@ -21,13 +21,12 @@ letter or digit and containing ASCII letters, digits, spaces, dots, underscores,
 or hyphens, at most 199 characters. Subdirectories and symlinks are excluded. The text editor and JSON create/update
 endpoints only support `.md` files as UTF-8 text; other files use upload/download.
 
-Both Compose configurations bind-mount `${REF_DOCS_HOST_DIRECTORY:-./ref-docs}`
-on the host to `/ref-docs` in the container. Set `REF_DOCS_HOST_DIRECTORY` in
-`.env` to an absolute path to use an existing local folder. This is a host bind
-mount, so files survive image rebuilds and container removal and can be opened
-with local tools. With a remote Docker daemon, the folder is on the daemon host.
+The Docker image uses `/data/ref-docs`. A named volume mounted at `/data`
+preserves the files across container replacement. To use a host folder, bind
+mount it at `/data/ref-docs`. With a remote Docker daemon, the source path is
+on the daemon host.
 
-Prepare the folder before starting Docker. The application runs as UID/GID
+Prepare a bind-mounted folder before starting Docker. The application runs as UID/GID
 10001; the folder must be writable by that account, using ownership or an ACL.
 For a new default folder on Linux:
 
@@ -41,7 +40,7 @@ using your preferred permissions policy. Do not change ownership of an existing
 folder without considering other applications that use it. Standalone runs and
 Docker can share files by configuring the same host folder.
 
-Back up this directory separately; SQLite backups do not include it.
+Back up this directory separately; PostgreSQL backups do not include it.
 Deletion in Windlass deletes the host file. No authentication is provided.
 
 ## REST API

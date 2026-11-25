@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite::memory:")
+@SpringBootTest
 @AutoConfigureMockMvc
 class JsonConfTests {
     @TempDir static Path directory;

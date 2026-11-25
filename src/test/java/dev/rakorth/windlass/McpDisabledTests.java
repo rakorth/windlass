@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:sqlite::memory:", "WINDLASS_MCP_ENABLED=false"
+        "WINDLASS_MCP_ENABLED=false"
 })
 @AutoConfigureMockMvc
 class McpDisabledTests {
